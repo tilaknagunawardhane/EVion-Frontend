@@ -3,6 +3,8 @@ import { Link } from 'expo-router';
 import CustomButton from '../../components/CustomButton';
 import {router} from 'expo-router';
 import React from 'react';
+import strings from '../../constants/strings';
+import colors from '../../constants/color';
 
 export default function Tab() {
   return (
@@ -15,6 +17,12 @@ export default function Tab() {
         // style={{ backgroundColor: '#00e194' }}  
         // textStyle={{ fontSize: 18, color: '#fff' }}
       />
+
+      <CustomButton
+        title={strings.sample1ButtonText}
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/sample1')}
+        />
     </View>
   );
 }

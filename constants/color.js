@@ -15,7 +15,8 @@ const colors = {
     textColor:'#8e8f91',
     filterButtonColor:'#fff',
     inputColor:'#f2f2f2',
-    red:'#b80202'
+    red:'#b80202',
+    black: '#000000',
 };
 
 export default colors;

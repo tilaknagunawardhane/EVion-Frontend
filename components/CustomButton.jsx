@@ -13,7 +13,7 @@ export default function CustomButton({ title, onPress, disabled = false, loading
       {loading ? (
         <ActivityIndicator size="small" color={colors.white} />
       ) : (
-        <Text style={styles.buttonText}>{title}</Text>
+        <Text style={[styles.buttonText, textStyle]}>{title}</Text>
       )}
     </TouchableOpacity>
   )
@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   disabledButton: {
     backgroundColor: colors.disableButtonColor,
