@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import Sample1 from './pages/sample1';
+import Sample1 from './screens/SignInScreen';
 
 export default function Layout() {
   return (

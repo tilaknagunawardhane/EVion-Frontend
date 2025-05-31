@@ -12,8 +12,8 @@ export default function Tab() {
       <Text>Tab [Home]</Text>
 
       <CustomButton
-        title="Go to Sample 1"
-        onPress={() => router.push('/pages/sample1')}
+        title="Signin"
+        onPress={() => router.push('/screens/SignInScreen.jsx')}
         // style={{ backgroundColor: '#00e194' }}  
         // textStyle={{ fontSize: 18, color: '#fff' }}
       />
@@ -21,7 +21,7 @@ export default function Tab() {
       <CustomButton
         title={strings.sample1ButtonText}
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/sample1')}
+        onPress={() => router.push('/screens/SignInScreen.jsx')}
         />
     </View>
   );
