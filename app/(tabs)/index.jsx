@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
-import CustomButton from '../../components/CustomButton';
+import CustomButton from '../components/CustomButton';
 import {router} from 'expo-router';
 import React from 'react';
 import strings from '../../constants/strings';

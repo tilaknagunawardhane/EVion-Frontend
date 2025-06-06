@@ -7,6 +7,10 @@ const index = () => {
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': require('../assets/fonts/PlusJakartaSans[wght].ttf'),
     'PlusJakartaSans-Italic': require('../assets/fonts/PlusJakartaSans-Italic[wght].ttf'),
+    'PlusJakartaSans-Medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
+    'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
+    'PlusJakartaSans-SemiBoldItalic': require('../assets/fonts/PlusJakartaSans-SemiBoldItalic.ttf'),
+
   });
 
   if (!fontsLoaded) {
