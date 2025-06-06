@@ -7,12 +7,15 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
+
 import CustomInput from '../../components/CustomInput';
 import PasswordInput from '../../components/PasswordInput';
 import DividerWithText from '../../components/DividerWithText';
 import BottomStroke from '../../components/BottomStroke';
 import CustomButton from '../../components/CustomButton';
 
+import colors from '../../constants/colors';
+import fonts from '../../constants/fonts';
 
 const SignUp = () => {
   const [name, setName] = useState('');
@@ -27,7 +30,7 @@ const SignUp = () => {
 
   return (
     <View style={styles.container}>
-      <StatusBar backgroundColor="#FFFFFF" barStyle="dark-content" />
+      <StatusBar backgroundColor={colors.white} barStyle="dark-content" />
       <Text style={styles.heading}>Let’s Get Started</Text>
       <Text style={styles.subheading}>Welcome! Please enter your details.</Text>
 
@@ -88,30 +91,32 @@ export default SignUp;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     paddingHorizontal: 24,
     paddingTop: 50,
   },
   heading: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#111827',
+    color: colors.black,
     marginBottom: 6,
+    fontFamily: fonts.PlusJakartaSans,
   },
   subheading: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textColor,
     marginBottom: 24,
+    fontFamily: fonts.PlusJakartaSans,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderColor: '#D1D5DB',
+    borderColor: colors.darkGray,
     borderWidth: 1,
     borderRadius: 8,
     paddingVertical: 14,
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
   googleLogo: {
     width: 20,
@@ -122,6 +127,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374151',
     fontWeight: '500',
+    fontFamily: fonts.PlusJakartaSans,
   },
   signInContainer: {
     flexDirection: 'row',
@@ -130,24 +136,28 @@ const styles = StyleSheet.create({
   },
   signInText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textColor,
+    fontFamily: fonts.PlusJakartaSans,
   },
   signInLink: {
     fontSize: 13,
-    color: '#00B894',
+    color: colors.green,
     fontWeight: '600',
+    fontFamily: fonts.PlusJakartaSans,
   },
   footerText: {
     fontSize: 12,
-    color: '#9CA3AF',
+    color: colors.darkGray,
     textAlign: 'center',
     marginTop: 30,
+    fontFamily: fonts.PlusJakartaSans,
   },
   termsLink: {
     fontSize: 12,
-    color: '#00B894',
+    color: colors.green,
     textAlign: 'center',
     marginTop: 4,
     fontWeight: '500',
+    fontFamily: fonts.PlusJakartaSans,
   },
 });
