@@ -2,6 +2,7 @@ import { View } from 'react-native'
 import React from 'react'
 import { useFonts } from 'expo-font';
 import SignInScreen from './pages/SignInScreen';
+import SignIn2FP from './pages/SignIn2FP';
 
 
 export default function Index() {

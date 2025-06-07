@@ -10,6 +10,8 @@ import CustomButton from '../../components/CustomButton';
 // Make sure that '../components/CustomButton' exists and exports a valid component
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
+import AppBar from '../../components/AppBar';
+
 
 
 const ForgotPasswordScreen = () => {
@@ -21,42 +23,9 @@ const ForgotPasswordScreen = () => {
 console.log('Requesting OTP for:', phoneNumber);
   };
 
-   useEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      headerTitle: '',
-      headerLeft: () => (
-        <TouchableOpacity
-          style={styles.headerBackButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Image
-            source={require('../../assets/back-icon.png')}
-            style={[styles.headerBackIcon, { tintColor: colors.mainTextColor }]} // Use primary color for back icon
-          />
-        </TouchableOpacity>
-      ),
-      headerStyle: {
-        backgroundColor: 'backgroundColor: colors.background, // Use background color from constants',
-        elevation: 0,
-        shadowOpacity: 0,
-      },
-      headerLeftContainerStyle: {
-        paddingLeft: 16,
-      },
-    });
-   }, [navigation]);
-
-  // Removed useEffect for header customization.
-  // Header and navigation options should be set in your navigator (e.g., in your stack navigator file).
- 
-  // Connect InputField and CustomButton from their respective files
-  // (Already imported above as InputField and CustomButton)
-  // Font loading logic removed. 
-  // Make sure to load fonts in your app entry point (e.g., App.js) using Font.loadAsync or useFonts from expo-font.
-
   return (
     <View style={styles.container}>
+      <AppBar />
       <View style={styles.mainContent}>
         {/* Title */}
       <Text style={styles.title}>Forgot Password</Text>
@@ -77,7 +46,7 @@ console.log('Requesting OTP for:', phoneNumber);
 
         
         {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 450, marginBottom: 0 }]}>
+        <View style={[styles.signupContainer, { marginTop: 374, marginBottom: 0 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.signupLink}>Sign up</Text>
@@ -127,7 +96,7 @@ const styles = StyleSheet.create({
   signupLink: {
     color: colors.primary ,
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
   },
   headerBackButton: {
     padding: 5,

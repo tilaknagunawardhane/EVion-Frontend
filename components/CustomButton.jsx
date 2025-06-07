@@ -45,17 +45,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     marginTop: 10,
+    justifyContent: 'center'
 
   },
   primaryButtonText: {
     color: colors.background, // Use imported color
     fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    paddingVertical: 1,
+    fontFamily: fonts.PlusJakartaSansBold,
+    paddingVertical: 2,
     borderRadius: 8,
     alignItems: 'center',
     borderColor: colors.secondaryText , // Use imported color if available
     borderWidth: 0,
+    textAlign: 'center',
   },
   secondaryButtonText: {
     color: colors.secondaryText , // Use imported color if available
@@ -75,12 +77,12 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: colors.mainTextColor, // Use imported color if available
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
   buttonIcon: {
-    width: 20,
-    height: 20,
+    width: 32,
+    height: 32,
     marginRight: 8,
   },
 });

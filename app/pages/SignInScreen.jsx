@@ -51,8 +51,8 @@ import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 
 const SignInScreen = () => {
-  const [email, setEmail] = useState('johndoe123@gmail.com');
-  const [password, setPassword] = useState('xxxxxxxx');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
@@ -80,7 +80,7 @@ const SignInScreen = () => {
           label="Email Address*"
           value={email}
           onChangeText={setEmail}
-          placeholder="Enter your email"
+          placeholder="johndoe123@gmail.com"
           keyboardType="email-address"
           autoCapitalize="none"
         />
@@ -90,13 +90,13 @@ const SignInScreen = () => {
           label="Password (At least 8 characters)*"
           value={password}
           onChangeText={setPassword}
-          placeholder="Enter your password"
+          placeholder="xxxxxxxx"
           isPassword={true}
           showPassword={showPassword}
           setShowPassword={setShowPassword}
         />
 
-        <TouchableOpacity style={styles.forgotPassword}>
+        <TouchableOpacity style={styles.forgotPassword} onPress={() => router.push('/pages/SignIn2FP')}>
           <Text style={[styles.forgotPasswordText, { color: colors.primary }]}>Forgot Password</Text>
         </TouchableOpacity>
 
@@ -123,7 +123,7 @@ const SignInScreen = () => {
         />
 
         {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 130, marginBottom: 10 }]}>
+        <View style={[styles.signupContainer, { marginTop: 110, marginBottom: 10 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/sign-up')}>
             <Text style={styles.signupLink}>Sign up</Text>
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   },
   orText: {
     marginHorizontal: 10,
-    color: colors.stroke,
+    color: colors.secondaryText,
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
   },
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   signupLink: {
     color: colors.primary,
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans,
+    fontFamily: fonts.PlusJakartaSansBold,
   },
   headerBackButton: {
     padding: 5,

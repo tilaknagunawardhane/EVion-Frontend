@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
@@ -16,12 +16,15 @@ const InputField = ({
   setShowPassword,
   isPassword = false,
 }) => {
+
+  const [isFocused, setIsFocused] = useState(false); 
+
   return (
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={isPassword ? styles.passwordContainer : null}>
         <TextInput
-          style={[styles.input, isPassword ? styles.passwordInput : null]}
+          style={[styles.input, isPassword ? styles.passwordInput : null, isFocused && { borderColor: colors.primary },]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -29,6 +32,8 @@ const InputField = ({
           secureTextEntry={isPassword ? !showPassword : false}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          onFocus={() => setIsFocused(true)} 
+          onBlur={() => setIsFocused(false)} 
         />
         {isPassword && (
           <TouchableOpacity
@@ -56,9 +61,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.Primary,
+    color: colors.mainTextColor,
     marginBottom: 8,
   },
   input: {
@@ -68,7 +73,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
-    fontSize: 14,
+    fontSize: 16,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },
