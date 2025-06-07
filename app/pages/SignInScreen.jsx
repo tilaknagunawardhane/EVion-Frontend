@@ -39,18 +39,15 @@ const sample1 = () => {
 export default <sample1></sample1>
 */
 // screens/SignInScreen.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity } from 'react-native';
-
-// InputField import is already present below as:
-// import InputField from '../components/InputField';
+import { router } from 'expo-router';
 import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
-import InputField from '../components/InputField';
+import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
-
 
 const SignInScreen = () => {
   const [email, setEmail] = useState('johndoe123@gmail.com');
@@ -59,45 +56,16 @@ const SignInScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
 
-   useEffect(() => {
-    navigation.setOptions({
-      headerShown: true,
-      headerTitle: '',
-      headerLeft: () => (
-        <TouchableOpacity
-          style={styles.headerBackButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Image
-            source={require('../../assets/back-icon.png')}
-            style={[styles.headerBackIcon, { tintColor: '#000' }]}
-          />
-        </TouchableOpacity>
-      ),
-      headerStyle: {
-        backgroundColor: '#FFFFFF',
-        elevation: 0,
-        shadowOpacity: 0,
-      },
-      headerLeftContainerStyle: {
-        paddingLeft: 16,
-      },
-    });
-   }, [navigation]);
-
-  // Removed useEffect for header customization.
-  // Header and navigation options should be set in your navigator (e.g., in your stack navigator file).
- 
-  // Connect InputField and CustomButton from their respective files
-  // (Already imported above as InputField and CustomButton)
-  // Font loading logic removed. 
-  // Make sure to load fonts in your app entry point (e.g., App.js) using Font.loadAsync or useFonts from expo-font.
+  const handleSignIn = () => {
+    // Add your sign in logic here
+    router.replace('/(tabs)');
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.mainContent}>
         <Text style={styles.title}>Welcome Back</Text>
-        <Text style={[styles.subtitle, { color: colors.secondaryText } ]}>Please enter your details.</Text>
+        <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Please enter your details.</Text>
 
         {/* Email Input */}
         <InputField
@@ -127,11 +95,11 @@ const SignInScreen = () => {
         {/* Sign In Button */}
         <CustomButton
           title="Sign in"
-          onPress={() => {}}
+          onPress={handleSignIn}
           type="primary"
         />
 
-           {/* OR Separator */}
+        {/* OR Separator */}
         <View style={styles.orSeparator}>
           <View style={styles.line} />
           <Text style={styles.orText}>or</Text>
@@ -149,7 +117,7 @@ const SignInScreen = () => {
         {/* Sign Up Link moved higher */}
         <View style={[styles.signupContainer, { marginTop: 200, marginBottom: 0 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+          <TouchableOpacity onPress={() => router.push('/sign-up')}>
             <Text style={styles.signupLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
@@ -161,7 +129,7 @@ const SignInScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background ,
+    backgroundColor: colors.background,
   },
   mainContent: {
     flex: 1,
@@ -171,13 +139,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSansBold,
     marginBottom: 4,
-    color: colors.mainTextColor ,
+    color: colors.mainTextColor,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
     marginBottom: 32,
     color: colors.secondaryText,
   },
@@ -187,9 +155,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   forgotPasswordText: {
-    color: colors.primary ,
+    color: colors.primary,
     fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
   },
   orSeparator: {
     flexDirection: 'row',
@@ -199,15 +167,14 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.secondaryText ,
+    backgroundColor: colors.secondaryText,
   },
   orText: {
     marginHorizontal: 10,
-    color: colors.mainTextColor ,
+    color: colors.mainTextColor,
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
   },
-
   signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -217,14 +184,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   signupText: {
-    color: colors.textPrimary ,
+    color: colors.textPrimary,
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
   },
   signupLink: {
-    color: colors.primary ,
+    color: colors.primary,
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
   },
   headerBackButton: {
     padding: 5,

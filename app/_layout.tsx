@@ -1,11 +1,17 @@
 import { Stack } from 'expo-router';
-import Sample1 from './pages/SignInScreen';
+import React from 'react';
 
 export default function Layout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      {/* <Stack.Screen name="sample1" component={Sample1} options={{ title: 'Sample 1' }}/> */}
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="index"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="(tabs)"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
