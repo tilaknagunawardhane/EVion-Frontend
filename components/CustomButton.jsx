@@ -1,5 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, Image, StyleSheet, View } from 'react-native';
+import colors from '../constants/colors';
+import fonts from '../constants/fonts';
 
 const CustomButton = ({
   title,
@@ -37,7 +39,7 @@ const CustomButton = ({
 
 const styles = StyleSheet.create({
   primaryButton: {
-    backgroundColor: '#00B894',
+    backgroundColor: colors.primary, // Use imported color
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
@@ -45,38 +47,35 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: colors.white, // Use imported color
     fontSize: 16,
-    fontFamily: 'PlusJakartaSans-Medium',
-  },
-  secondaryButton: {
-    backgroundColor: '#FFFFFF',
+    fontFamily: fonts.PlusJakartaSansMedium,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: 'center',
-    borderColor: '#D1D1D1',
+    borderColor: colors.borderGray , // Use imported color if available
     borderWidth: 1,
   },
   secondaryButtonText: {
-    color: '#2D3436',
+    color: colors.textDark , // Use imported color if available
     fontSize: 16,
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: fonts.PlusJakartaSansMedium,
   },
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white, // Use imported color
     paddingVertical: 14,
     borderRadius: 8,
-    borderColor: '#D1D1D1',
+    borderColor: colors.borderGray , // Use imported color if available
     borderWidth: 1,
     marginBottom: 32,
   },
   googleButtonText: {
-    color: '#2D3436',
+    color: colors.textDark, // Use imported color if available
     fontSize: 14,
-    fontFamily: 'PlusJakartaSans-Medium',
+    fontFamily: fonts.PlusJakartaSansMedium,
   },
   buttonIcon: {
     width: 20,
