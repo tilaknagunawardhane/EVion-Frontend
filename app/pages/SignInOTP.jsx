@@ -48,7 +48,7 @@ return (
             <Text style={styles.title}>Forgot Password</Text>
             <Text style={styles.subtitle}>Enter the 6 digit verification code.</Text>
 
-            <Text style={[styles.mainTextColor, { fontSize: 16 }]}>OTP</Text>
+            <Text style={[styles.mainTextColor, { fontSize: 16, fontFamily: fonts.PlusJakartaSans }]}>OTP</Text>
                 
             <View style={styles.otpContainer}>
                 {otp.map((digit, index) => (
@@ -60,7 +60,7 @@ return (
                         onKeyPress={(e) => handleKeyPress(e, index)}
                         keyboardType="numeric"
                         maxLength={1}
-                        style={[styles.otpInput, styles.signupText, { fontSize: 16 }]} // Set font size to 16
+                        style={[styles.otpInput, styles.signupText, { fontSize: 20 }]} // Set font size to 16
                     />
                 ))}
             </View>
@@ -112,16 +112,7 @@ container: {
     marginTop: 8,
     paddingHorizontal: 24,
   },
-  signupText: {
-    color: colors.mainTextColor ,
-    fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
-  },
-  signupLink: {
-    color: colors.primary ,
-    fontSize: 13,
-    fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
-  },
+  
   headerBackButton: {
     padding: 5,
   },
@@ -133,8 +124,8 @@ container: {
   flexDirection: 'row',
   justifyContent: 'space-between',
   alignItems: 'center',
-  marginTop: 32,
-  marginBottom: 32,
+  marginTop: 12,
+  marginBottom: 28,
   // Removed marginHorizontal: 24
 
 
@@ -146,20 +137,20 @@ container: {
     borderColor: colors.stroke,
     borderRadius: 8,
     textAlign: 'center',
-    fontSize: 18,
+    fontSize: 20,
     fontFamily: fonts.PlusJakartaSansBold,
   },
   resendText: {
     textAlign: 'center',
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    marginTop:374,
+    color: colors.mainTextColor,
+    marginTop:350,
     marginBottom: 50,
   },
   resendLink: {
     color: colors.primary,
-    fontFamily: fonts.PlusJakartaSansMedium,
+    fontFamily: fonts.PlusJakartaSansBold,
     
   },
 });
