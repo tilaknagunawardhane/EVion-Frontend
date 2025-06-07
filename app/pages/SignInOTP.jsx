@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, handleRequestOTP, Platform } from 'react-native';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
-import CustomButton from '../../components/CustomButton';
+import CustomButton from '../../components/CustomButton.jsx';
 import AppBar from '../../components/AppBar.jsx';
 import InputField from '../../components/InputField.jsx';
 import * as Font from 'expo-font';
