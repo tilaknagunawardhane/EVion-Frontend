@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    backgroundColor: colors.stroke,
+    backgroundColor: `${colors.stroke}4D`,
     borderRadius: 20,
     padding: 10,
     marginRight: 16,

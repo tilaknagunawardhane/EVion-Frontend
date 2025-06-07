@@ -175,12 +175,12 @@ const styles = StyleSheet.create({
   line: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.secondaryText,
+    backgroundColor: colors.stroke,
   },
   orText: {
     marginHorizontal: 10,
-    color: colors.mainTextColor,
-    fontSize: 13,
+    color: colors.stroke,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
   },
   signupContainer: {
