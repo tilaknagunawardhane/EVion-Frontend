@@ -8,7 +8,7 @@ const InputField = ({
   value,
   onChangeText,
   placeholder,
-  placeholderTextColor = colors.gray, // Use color from color file
+  placeholderTextColor = colors.secondaryText, // Use color from color file
   secureTextEntry = false,
   keyboardType = 'default',
   autoCapitalize = 'sentences',
@@ -58,18 +58,18 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 14,
     fontFamily: fonts.medium,
-    color: colors.textPrimary,
+    color: colors.Primary,
     marginBottom: 8,
   },
   input: {
     height: 50,
-    backgroundColor: colors.white,
-    borderColor: colors.border,
+    backgroundColor: colors.background,
+    borderColor: colors.secondaryText,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 14,
-    color: colors.textSecondary,
+    color: colors.secondaryText,
     fontFamily: fonts.regular,
   },
   passwordContainer: {
@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   eyeIconImage: {
     width: 22,
     height: 22,
-    tintColor: colors.iconTint,
+    tintColor: colors.secondaryText,
   },
 });
 

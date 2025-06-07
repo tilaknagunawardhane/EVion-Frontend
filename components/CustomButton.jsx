@@ -40,17 +40,17 @@ const CustomButton = ({
 const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: colors.primary, // Use imported color
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 10,
+    borderRadius: 10,
     alignItems: 'center',
     marginBottom: 16,
-    marginTop: 8,
+    marginTop: 10,
   },
   primaryButtonText: {
     color: colors.background, // Use imported color
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
-    paddingVertical: 14,
+    paddingVertical: 1,
     borderRadius: 8,
     alignItems: 'center',
     borderColor: colors.secondaryText , // Use imported color if available
@@ -65,15 +65,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white, // Use imported color
+    backgroundColor: colors.background, // Use imported color
     paddingVertical: 14,
     borderRadius: 8,
-    borderColor: colors.borderGray , // Use imported color if available
+    borderColor: colors.stroke , // Use imported color if available
     borderWidth: 1,
     marginBottom: 32,
   },
   googleButtonText: {
-    color: colors.textDark, // Use imported color if available
+    color: colors.mainTextColor, // Use imported color if available
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
   },

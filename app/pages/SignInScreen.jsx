@@ -56,12 +56,18 @@ const SignInScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
 
+  
+
   const handleSignIn = () => {
     // Add your sign in logic here
     router.replace('/(tabs)');
   };
 
+  
+
   return (
+
+    
     <View style={styles.container}>
       <View style={styles.mainContent}>
         <Text style={styles.title}>Welcome Back</Text>
@@ -115,7 +121,7 @@ const SignInScreen = () => {
         />
 
         {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 200, marginBottom: 0 }]}>
+        <View style={[styles.signupContainer, { marginTop: 270, marginBottom: 0 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/sign-up')}>
             <Text style={styles.signupLink}>Sign up</Text>

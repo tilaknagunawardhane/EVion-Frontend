@@ -32,12 +32,12 @@ console.log('Requesting OTP for:', phoneNumber);
         >
           <Image
             source={require('../../assets/back-icon.png')}
-            style={[styles.headerBackIcon, { tintColor: '#000' }]}
+            style={[styles.headerBackIcon, { tintColor: colors.mainTextColor }]} // Use primary color for back icon
           />
         </TouchableOpacity>
       ),
       headerStyle: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'backgroundColor: colors.background, // Use background color from constants',
         elevation: 0,
         shadowOpacity: 0,
       },
@@ -72,12 +72,12 @@ console.log('Requesting OTP for:', phoneNumber);
         autoCapitalize="none"
       /> 
       {/* Request OTP Button */}
-      <CustomButton title="Request OTP" onPress={handleRequestOTP} />
+      <CustomButton title="Request  OTP" onPress={handleRequestOTP} />
      
 
         
         {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 460, marginBottom: 0 }]}>
+        <View style={[styles.signupContainer, { marginTop: 450, marginBottom: 0 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.signupLink}>Sign up</Text>
