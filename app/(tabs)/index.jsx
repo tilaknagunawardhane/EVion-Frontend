@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from 'react-native';
-import { Link } from 'expo-router';
+// import { Link } from 'expo-router';
 import CustomButton from '../../components/CustomButton';
 import {router} from 'expo-router';
 import React from 'react';
@@ -12,16 +12,18 @@ export default function Tab() {
       <Text>Tab [Home]</Text>
 
       <CustomButton
-        title="Go to Sample 1"
-        onPress={() => router.push('/pages/sample1')}
+        title="Signin"
+        type="primary"
+        onPress={() => router.push('/pages/SignInScreen.jsx')}
         // style={{ backgroundColor: '#00e194' }}  
         // textStyle={{ fontSize: 18, color: '#fff' }}
       />
 
       <CustomButton
         title={strings.sample1ButtonText}
+        type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/sample1')}
+        onPress={() => router.push('/pages/SignInScreen.jsx')}
         />
     </View>
   );
