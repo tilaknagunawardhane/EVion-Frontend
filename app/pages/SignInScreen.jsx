@@ -171,13 +171,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 26,
-    fontFamily: fonts.bold, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
     marginBottom: 4,
     color: colors.mainTextColor ,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: fonts.regular, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
     marginBottom: 32,
     color: colors.secondaryText,
   },
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     color: colors.primary ,
     fontSize: 14,
-    fontFamily: fonts.regular, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
   },
   orSeparator: {
     flexDirection: 'row',
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     color: colors.mainTextColor ,
     fontSize: 13,
-    fontFamily: fonts.regular, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
   },
 
   signupContainer: {
@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
   signupText: {
     color: colors.textPrimary ,
     fontSize: 13,
-    fontFamily: fonts.regular, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
   },
   signupLink: {
     color: colors.primary ,
     fontSize: 13,
-    fontFamily: fonts.regular, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
   },
   headerBackButton: {
     padding: 5,

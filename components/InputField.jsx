@@ -14,10 +14,7 @@ const InputField = ({
   setShowPassword,
   isPassword = false,
 }) => {
-  return (
-
-    
-       useEffect(() => {
+   useEffect(() => {
         navigation.setOptions({
           headerShown: true,
           headerTitle: '',
@@ -42,6 +39,11 @@ const InputField = ({
           },
         });
        }, [navigation]);
+
+  return (
+
+    
+      
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={isPassword ? styles.passwordContainer : null}>
@@ -74,7 +76,7 @@ const InputField = ({
       </View>
     </View>
   
-};
+)};
 
 const styles = StyleSheet.create({
   inputContainer: {
