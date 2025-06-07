@@ -47,7 +47,7 @@ import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity } 
 import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 import InputField from '../components/InputField';
-import CustomButton from '../components/CustomButton';
+import CustomButton from '../../components/CustomButton';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 

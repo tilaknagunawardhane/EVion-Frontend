@@ -39,8 +39,8 @@ const InputField = ({
             <Image
               source={
                 showPassword
-                  ? require('../../assets/eye-open.png')
-                  : require('../../assets/eye-icon.png')
+                  ? require('../assets/eye-open.png')
+                  : require('../assets/eye-closed.png')
               }
               style={styles.eyeIconImage}
             />
