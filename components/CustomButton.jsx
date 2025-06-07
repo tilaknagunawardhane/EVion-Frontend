@@ -31,6 +31,8 @@ const CustomButton = ({
       <Text style={[textStyles[type], textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
+  
+
 };
 
 const styles = StyleSheet.create({

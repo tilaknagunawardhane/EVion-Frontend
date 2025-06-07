@@ -29,6 +29,8 @@ const InputField = ({
           autoCapitalize={autoCapitalize}
         />
         {isPassword && (
+
+          
           <TouchableOpacity
             style={styles.eyeIcon}
             onPress={() => setShowPassword(!showPassword)}
@@ -43,11 +45,16 @@ const InputField = ({
               style={styles.eyeIconImage}
             />
           </TouchableOpacity>
+
+          
         )}
       </View>
+      
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   inputContainer: {
@@ -88,6 +95,15 @@ const styles = StyleSheet.create({
     height: 22,
     tintColor: '#B2BEC3',
   },
+
+  headerStyle: {
+        backgroundColor: '#FFFFFF',
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+      headerLeftContainerStyle: {
+        paddingLeft: 16,
+      },
 });
 
 export default InputField;

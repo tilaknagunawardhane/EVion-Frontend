@@ -15,6 +15,33 @@ const InputField = ({
   isPassword = false,
 }) => {
   return (
+
+    
+       useEffect(() => {
+        navigation.setOptions({
+          headerShown: true,
+          headerTitle: '',
+          headerLeft: () => (
+            <TouchableOpacity
+              style={styles.headerBackButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Image
+                source={require('../../assets/back-icon.png')}
+                style={[styles.headerBackIcon, { tintColor: '#000' }]}
+              />
+            </TouchableOpacity>
+          ),
+          headerStyle: {
+            backgroundColor: '#FFFFFF',
+            elevation: 0,
+            shadowOpacity: 0,
+          },
+          headerLeftContainerStyle: {
+            paddingLeft: 16,
+          },
+        });
+       }, [navigation]);
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={isPassword ? styles.passwordContainer : null}>
@@ -46,7 +73,7 @@ const InputField = ({
         )}
       </View>
     </View>
-  );
+  
 };
 
 const styles = StyleSheet.create({
