@@ -46,6 +46,7 @@ import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
+import AppBar from '../../components/AppBar';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 
@@ -69,6 +70,7 @@ const SignInScreen = () => {
 
     
     <View style={styles.container}>
+    <AppBar />
       <View style={styles.mainContent}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Please enter your details.</Text>
@@ -121,7 +123,7 @@ const SignInScreen = () => {
         />
 
         {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 270, marginBottom: 0 }]}>
+        <View style={[styles.signupContainer, { marginTop: 130, marginBottom: 10 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/sign-up')}>
             <Text style={styles.signupLink}>Sign up</Text>

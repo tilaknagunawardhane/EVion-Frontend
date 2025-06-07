@@ -57,7 +57,7 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.Primary,
     marginBottom: 8,
   },
@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 14,
     color: colors.secondaryText,
-    fontFamily: fonts.regular,
+    fontFamily: fonts.PlusJakartaSans,
   },
   passwordContainer: {
     position: 'relative',

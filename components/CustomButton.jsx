@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, Image, StyleSheet, View } from 'react-native';
 import colors from '../constants/color';
-import fonts from '../constants/fonts.js';
+import fonts from '../constants/fonts';
 
 const CustomButton = ({
   title,
@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
     marginTop: 10,
+
   },
   primaryButtonText: {
     color: colors.background, // Use imported color
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     borderColor: colors.secondaryText , // Use imported color if available
-    borderWidth: 1,
+    borderWidth: 0,
   },
   secondaryButtonText: {
     color: colors.secondaryText , // Use imported color if available
