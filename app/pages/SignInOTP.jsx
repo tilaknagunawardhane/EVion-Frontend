@@ -51,25 +51,30 @@ return (
             <Text style={[styles.mainTextColor, { fontSize: 16, fontFamily: fonts.PlusJakartaSans }]}>OTP</Text>
                 
             <View style={styles.otpContainer}>
-                {otp.map((digit, index) => (
-                    <TextInput
-                        key={index}
-                        ref={(ref) => (inputRefs.current[index] = ref)}
-                        value={digit}
-                        onChangeText={(text) => handleOtpChange(text, index)}
-                        onKeyPress={(e) => handleKeyPress(e, index)}
-                        keyboardType="numeric"
-                        maxLength={1}
-                        style={[styles.otpInput, styles.signupText, { fontSize: 20 }]} // Set font size to 16
-                    />
-                ))}
-            </View>
+  {otp.map((digit, index) => (
+    <TextInput
+      key={index}
+      ref={(ref) => (inputRefs.current[index] = ref)}
+      value={digit}
+      onChangeText={(text) => handleOtpChange(text, index)}
+      onKeyPress={(e) => handleKeyPress(e, index)}
+      keyboardType="numeric"
+      maxLength={1}
+      style={[
+        styles.otpInput,
+        index === otp.length - 1 && { marginRight: 0 }, // Remove margin from last box
+      ]}
+    />
+  ))}
+</View>
 
-            {/* Continue Button */}
-            <CustomButton
-                title="Continue"
-                onPress={handleContinue}
-            />
+<CustomButton
+  title="Continue"
+  onPress={handleContinue}
+  type="primary"
+  style={styles.continueButton}
+/>
+
 
             <Text style={styles.resendText}>
                 Don’t you receive any code?{' '}
@@ -82,9 +87,9 @@ return (
 );
 };
 const styles = StyleSheet.create({
-container: {
+  container: {
     flex: 1,
-    backgroundColor: colors.background ,
+    backgroundColor: colors.background,
   },
   mainContent: {
     flex: 1,
@@ -94,17 +99,17 @@ container: {
   },
   title: {
     fontSize: 26,
-    fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSansBold,
     marginBottom: 4,
-    color: colors.mainTextColor ,
+    color: colors.mainTextColor,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
     marginBottom: 32,
     color: colors.secondaryText,
   },
-    signupContainer: {
+  signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -113,6 +118,7 @@ container: {
     paddingHorizontal: 24,
   },
   
+  
   headerBackButton: {
     padding: 5,
   },
@@ -120,38 +126,37 @@ container: {
     width: 24,
     height: 24,
   },
- otpContainer: {
+  otpContainer: {
   flexDirection: 'row',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  marginTop: 12,
-  marginBottom: 28,
-  // Removed marginHorizontal: 24
+  justifyContent: 'center',
+  marginBottom: 10, // ✅ Reduced gap
+},
 
-
-  },
+  
   otpInput: {
     width: 48,
     height: 56,
     borderWidth: 1,
-    borderColor: colors.stroke,
+    borderColor: colors.stroke, // <-- Use color from colors file
     borderRadius: 8,
     textAlign: 'center',
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+    backgroundColor: colors.background, // <-- Use color from colors file
+    marginRight: 16,
   },
   resendText: {
     textAlign: 'center',
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
-    marginTop:350,
+    marginTop: 430,
     marginBottom: 50,
   },
   resendLink: {
     color: colors.primary,
     fontFamily: fonts.PlusJakartaSansBold,
-    
   },
 });
 
