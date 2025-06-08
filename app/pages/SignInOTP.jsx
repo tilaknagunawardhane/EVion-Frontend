@@ -42,48 +42,54 @@ const handleResendCode = () => {
 };
 
 return (
-    <View style={styles.container}>
-        <AppBar />
-        <View style={styles.mainContent}>
-            <Text style={styles.title}>Forgot Password</Text>
-            <Text style={styles.subtitle}>Enter the 6 digit verification code.</Text>
+  <View style={styles.container}>
+    <AppBar />
+    <View style={styles.mainContent}>
+      <Text style={styles.title}>Forgot Password</Text>
+      <Text style={styles.subtitle}>Enter the 6 digit verification code.</Text>
 
-            <Text style={[styles.mainTextColor, { fontSize: 16, fontFamily: fonts.PlusJakartaSans }]}>OTP</Text>
-                
-            <View style={styles.otpContainer}>
-  {otp.map((digit, index) => (
-    <TextInput
-      key={index}
-      ref={(ref) => (inputRefs.current[index] = ref)}
-      value={digit}
-      onChangeText={(text) => handleOtpChange(text, index)}
-      onKeyPress={(e) => handleKeyPress(e, index)}
-      keyboardType="numeric"
-      maxLength={1}
-      style={[
-        styles.otpInput,
-        index === otp.length - 1 && { marginRight: 0 }, // Remove margin from last box
-      ]}
-    />
-  ))}
-</View>
+      <Text
+        style={[
+          styles.mainTextColor,
+          { fontSize: 16, fontFamily: fonts.PlusJakartaSans, marginBottom: 8}, // <-- Added marginBottom for gap
+        ]}
+      >
+        OTP
+      </Text>
+        
+      <View style={styles.otpContainer}>
+        {otp.map((digit, index) => (
+          <TextInput
+            key={index}
+            ref={(ref) => (inputRefs.current[index] = ref)}
+            value={digit}
+            onChangeText={(text) => handleOtpChange(text, index)}
+            onKeyPress={(e) => handleKeyPress(e, index)}
+            keyboardType="numeric"
+            maxLength={1}
+            style={[
+              styles.otpInput,
+              index === otp.length - 1 && { marginRight: 0 }, // Remove margin from last box
+            ]}
+          />
+        ))}
+      </View>
 
-<CustomButton
-  title="Continue"
-  onPress={handleContinue}
-  type="primary"
-  style={styles.continueButton}
-/>
+      <CustomButton
+        title="Continue"
+        onPress={handleContinue}
+        type="primary"
+        style={styles.continueButton}
+      />
 
-
-            <Text style={styles.resendText}>
-                Don’t you receive any code?{' '}
-                <Text style={styles.resendLink} onPress={handleResendCode}>
-                    Resend Code
-                </Text>
-            </Text>
-        </View>
+      <Text style={styles.resendText}>
+        Don’t you receive any code?{' '}
+        <Text style={styles.resendLink} onPress={handleResendCode}>
+          Resend Code
+        </Text>
+      </Text>
     </View>
+  </View>
 );
 };
 const styles = StyleSheet.create({
