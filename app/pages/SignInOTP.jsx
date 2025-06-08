@@ -7,6 +7,7 @@ import AppBar from '../../components/AppBar.jsx';
 import InputField from '../../components/InputField.jsx';
 import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
 const OTPScreen = ({ navigation }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -31,7 +32,7 @@ const OTPScreen = ({ navigation }) => {
   const handleContinue = () => {
     const otpValue = otp.join('');
     console.log('Entered OTP:', otpValue);
-    navigation.navigate('NextScreen');
+    router.push('/pages/ResetPW', { otp: otpValue });
   };
 
 // Resend code handler
@@ -77,6 +78,7 @@ return (
 
       <CustomButton
         title="Continue"
+        // onPress={() => {router.push('/pages/ResetPW', { otp: otp.join('') })}}
         onPress={handleContinue}
         type="primary"
         style={styles.continueButton}
@@ -157,7 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
-    marginTop: 430,
+    marginTop: 370,
     marginBottom: 50,
   },
   resendLink: {

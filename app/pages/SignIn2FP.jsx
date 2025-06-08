@@ -21,7 +21,8 @@ const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
 
   const handleRequestOTP = () => {
-    router.replace('/pages/SignInOTP', { phoneNumber });
+    router.push('/pages/SignInOTP', { phoneNumber });
+    // router.replace('/pages/SignInOTP', { phoneNumber });
     
 console.log('Requesting OTP for:', phoneNumber);
   };
