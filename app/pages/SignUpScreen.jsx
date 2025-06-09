@@ -7,6 +7,8 @@ import CustomButton from '../../components/CustomButton';
 import AppBar from '../../components/AppBar';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 
 const SignUpScreen = () => {
   const [name, setName] = useState('');
@@ -15,10 +17,71 @@ const SignUpScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
 
-  const handleSignUp = () => {
-    // Add sign-up logic here
-    router.replace('/(tabs)');
+  const handleSignUp = async () => {
+    if (!name) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter your name.',
+      });
+      return;
+    } else if (!email) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter your email address.',
+      });
+      return;
+    } else if (!password || password.length < 8) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter a valid password (at least 8 characters).',
+      });
+      console.log('Password validation failed');
+      return;
+    }
+
+    try {
+
+      const response = await fetch('http://10.21.130.173:5000/api/evowners/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
+
+      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Success',
+        textBody: 'You have signed up successfully!',
+      });
+
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 1500);
+    } catch (error) {
+      console.error('Error during sign-up:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'An unexpected error occurred. Please try again later.',
+      });
+    }
   };
+
 
   return (
     <View style={styles.container}>
