@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, handleRequestOTP, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, handleRequestOTP, Platform } from 'react-native';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 import CustomButton from '../../components/CustomButton.jsx';
@@ -45,6 +45,10 @@ const handleResendCode = () => {
 return (
   <View style={styles.container}>
     <AppBar />
+    <ScrollView 
+                contentContainerStyle={styles.scrollContainer}
+                keyboardShouldPersistTaps="handled"
+              >
     <View style={styles.mainContent}>
       <Text style={styles.title}>Forgot Password</Text>
       <Text style={styles.subtitle}>Enter the 6 digit verification code.</Text>
@@ -91,6 +95,7 @@ return (
         </Text>
       </Text>
     </View>
+    </ScrollView>
   </View>
 );
 };
