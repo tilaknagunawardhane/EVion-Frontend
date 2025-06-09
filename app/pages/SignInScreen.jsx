@@ -1,46 +1,6 @@
-/*import { View, Text } from 'react-native'
-import React from 'react'
-
-const sample1 = () => {
-  return (
-    <View>
-      <Text>sample1</Text>
-    </View>
-  )
-}
-
-export default <sample1></sample1>
-*/
-/*import { View, Text } from 'react-native'
-import React from 'react'
-
-const sample1 = () => {
-  return (
-    <View>
-      <Text>sample1</Text>
-    </View>
-  )
-}
-
-export default <sample1></sample1>
-*/
-// app/pages/SignInScreen.jsx
-/*import { View, Text } from 'react-native'
-import React from 'react'
-
-const sample1 = () => {
-  return (
-    <View>
-      <Text>sample1</Text>
-    </View>
-  )
-}
-
-export default <sample1></sample1>
-*/
 // screens/SignInScreen.jsx
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
@@ -71,6 +31,10 @@ const SignInScreen = () => {
     
     <View style={styles.container}>
     <AppBar />
+    <ScrollView 
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
       <View style={styles.mainContent}>
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={[styles.subtitle, { color: colors.secondaryText }]}>Please enter your details.</Text>
@@ -122,14 +86,16 @@ const SignInScreen = () => {
           icon={require('../../assets/google-icon.png')}
         />
 
+      
         {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 110, marginBottom: 10 }]}>
+        <View style={[styles.signupContainer, { marginTop: 110, marginBottom: 0 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.push('/pages/SignUpScreen')}>
             <Text style={styles.signupLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     </View>
   );
 };
@@ -138,6 +104,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 10, 
   },
   mainContent: {
     flex: 1,
@@ -187,19 +157,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    marginTop: 8,
-    paddingHorizontal: 24,
+    marginBottom: 30,
   },
   signupText: {
-    color: colors.mainTextColor,
+    textAlign: 'center',
     fontSize: 13,
     fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginBottom: 3, 
   },
   signupLink: {
-    color: colors.primary,
+     color: colors.primary,
     fontSize: 13,
     fontFamily: fonts.PlusJakartaSansBold,
+    textAlign: 'center',
   },
   headerBackButton: {
     padding: 5,

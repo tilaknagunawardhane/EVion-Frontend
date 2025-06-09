@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 
 // InputField import is already present below as:
@@ -30,6 +30,10 @@ console.log('Requesting OTP for:', phoneNumber);
   return (
     <View style={styles.container}>
       <AppBar />
+      <ScrollView 
+                  contentContainerStyle={styles.scrollContainer}
+                  keyboardShouldPersistTaps="handled"
+                >
       <View style={styles.mainContent}>
         {/* Title */}
       <Text style={styles.title}>Forgot Password</Text>
@@ -57,6 +61,7 @@ console.log('Requesting OTP for:', phoneNumber);
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
     </View>
   );
 };
@@ -88,19 +93,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    marginTop: 8,
-    paddingHorizontal: 24,
+    marginBottom: 30,
   },
   signupText: {
-    color: colors.mainTextColor ,
+    textAlign: 'center',
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginBottom: 3, 
   },
   signupLink: {
-    color: colors.primary ,
+     color: colors.primary,
     fontSize: 13,
-    fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
+    fontFamily: fonts.PlusJakartaSansBold,
+    textAlign: 'center',
   },
   headerBackButton: {
     padding: 5,

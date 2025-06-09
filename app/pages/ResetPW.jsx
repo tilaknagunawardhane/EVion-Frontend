@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../constants/color.js';
@@ -16,7 +16,10 @@ const ResetPasswordScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* App Bar */}
       <AppBar />
-
+<ScrollView 
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+          >
       {/* Main Content */}
       <View style={styles.mainContent}>
         <Text style={styles.title}>Reset Password</Text>
@@ -48,6 +51,7 @@ const ResetPasswordScreen = ({ navigation }) => {
         {/* Done Button */}
         <CustomButton title="Done" onPress={() => { /* Handle password reset */ }} />
       </View>
+      </ScrollView>
     </View>
   );
 };
