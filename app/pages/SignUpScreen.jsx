@@ -23,7 +23,7 @@ const SignUpScreen = () => {
   return (
     <View style={styles.container}>
       <AppBar />
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
       >
@@ -61,7 +61,7 @@ const SignUpScreen = () => {
             title="Sign up"
             onPress={handleSignUp}
             type="primary"
-            style={styles.signUpButton} 
+            style={styles.signUpButton}
           />
 
           <View style={styles.orSeparator}>
@@ -72,7 +72,7 @@ const SignUpScreen = () => {
 
           <CustomButton
             title="Sign up with Google"
-            onPress={() => {}}
+            onPress={() => { }}
             type="google"
             icon={require('../../assets/google-icon.png')}
           />
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 10, 
+    paddingBottom: 10,
   },
   mainContent: {
     flex: 1,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    marginBottom: 3, 
+    marginBottom: 3,
   },
   linkText: {
     color: colors.primary,

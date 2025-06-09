@@ -17,50 +17,50 @@ import AppBar from '../../components/AppBar';
 
 const ForgotPasswordScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  
+
   const navigation = useNavigation();
 
   const handleRequestOTP = () => {
     router.push('/pages/SignInOTP', { phoneNumber });
     // router.replace('/pages/SignInOTP', { phoneNumber });
-    
-console.log('Requesting OTP for:', phoneNumber);
+
+    console.log('Requesting OTP for:', phoneNumber);
   };
 
   return (
     <View style={styles.container}>
       <AppBar />
-      <ScrollView 
-                  contentContainerStyle={styles.scrollContainer}
-                  keyboardShouldPersistTaps="handled"
-                >
-      <View style={styles.mainContent}>
-        {/* Title */}
-      <Text style={styles.title}>Forgot Password</Text>
-      <Text style={styles.subtitle}>Enter your phone number to verify.</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.mainContent}>
+          {/* Title */}
+          <Text style={styles.title}>Forgot Password</Text>
+          <Text style={styles.subtitle}>Enter your phone number to verify.</Text>
 
-  {/* Phone Input */}
-      <InputField
-        label="Phone Number*"
-        value={phoneNumber}
-        onChangeText={setPhoneNumber}
-        placeholder="07X XXX XXXX"
-        keyboardType="phone-pad"
-        autoCapitalize="none"
-      /> 
-      {/* Request OTP Button */}
-      <CustomButton title="Request  OTP" onPress={handleRequestOTP} />
-     
+          {/* Phone Input */}
+          <InputField
+            label="Phone Number*"
+            value={phoneNumber}
+            onChangeText={setPhoneNumber}
+            placeholder="07X XXX XXXX"
+            keyboardType="phone-pad"
+            autoCapitalize="none"
+          />
+          {/* Request OTP Button */}
+          <CustomButton title="Request  OTP" onPress={handleRequestOTP} />
 
-        
-        {/* Sign Up Link moved higher */}
-        <View style={[styles.signupContainer, { marginTop: 374, marginBottom: 0 }]}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.signupLink}>Sign up</Text>
-          </TouchableOpacity>
+
+
+          {/* Sign Up Link moved higher */}
+          <View style={[styles.signupContainer, { marginTop: 374, marginBottom: 0 }]}>
+            <Text style={styles.signupText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.signupLink}>Sign up</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
       </ScrollView>
     </View>
   );
@@ -69,7 +69,7 @@ console.log('Requesting OTP for:', phoneNumber);
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background ,
+    backgroundColor: colors.background,
   },
   mainContent: {
     flex: 1,
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontFamily: fonts.PlusJakartaSansBold, // Use font from fonts.js
     marginBottom: 4,
-    color: colors.mainTextColor ,
+    color: colors.mainTextColor,
   },
   subtitle: {
     fontSize: 14,
@@ -100,10 +100,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
-    marginBottom: 3, 
+    marginBottom: 3,
   },
   signupLink: {
-     color: colors.primary,
+    color: colors.primary,
     fontSize: 13,
     fontFamily: fonts.PlusJakartaSansBold,
     textAlign: 'center',

@@ -8,6 +8,9 @@ import InputField from '../../components/InputField.jsx';
 import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
+import { Dimensions } from 'react-native';
+
+const screenWidth = Dimensions.get('window').width;
 
 const OTPScreen = ({ navigation }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -35,69 +38,69 @@ const OTPScreen = ({ navigation }) => {
     router.push('/pages/ResetPW', { otp: otpValue });
   };
 
-// Resend code handler
-const handleResendCode = () => {
+  // Resend code handler
+  const handleResendCode = () => {
     // Add your resend OTP logic here (e.g., API call)
     console.log('Resend code requested');
     // Optionally, show a message to the user
-};
+  };
 
-return (
-  <View style={styles.container}>
-    <AppBar />
-    <ScrollView 
-                contentContainerStyle={styles.scrollContainer}
-                keyboardShouldPersistTaps="handled"
-              >
-    <View style={styles.mainContent}>
-      <Text style={styles.title}>Forgot Password</Text>
-      <Text style={styles.subtitle}>Enter the 6 digit verification code.</Text>
-
-      <Text
-        style={[
-          styles.mainTextColor,
-          { fontSize: 16, fontFamily: fonts.PlusJakartaSans, marginBottom: 8}, // <-- Added marginBottom for gap
-        ]}
+  return (
+    <View style={styles.container}>
+      <AppBar />
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
       >
-        OTP
-      </Text>
-        
-      <View style={styles.otpContainer}>
-        {otp.map((digit, index) => (
-          <TextInput
-            key={index}
-            ref={(ref) => (inputRefs.current[index] = ref)}
-            value={digit}
-            onChangeText={(text) => handleOtpChange(text, index)}
-            onKeyPress={(e) => handleKeyPress(e, index)}
-            keyboardType="numeric"
-            maxLength={1}
+        <View style={styles.mainContent}>
+          <Text style={styles.title}>Forgot Password</Text>
+          <Text style={styles.subtitle}>Enter the 6 digit verification code.</Text>
+
+          <Text
             style={[
-              styles.otpInput,
-              index === otp.length - 1 && { marginRight: 0 }, // Remove margin from last box
+              styles.mainTextColor,
+              { fontSize: 16, fontFamily: fonts.PlusJakartaSans, marginBottom: 8 }, // <-- Added marginBottom for gap
             ]}
+          >
+            OTP
+          </Text>
+
+          <View style={styles.otpContainer}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => (inputRefs.current[index] = ref)}
+                value={digit}
+                onChangeText={(text) => handleOtpChange(text, index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                keyboardType="numeric"
+                maxLength={1}
+                style={[
+                  styles.otpInput,
+                  index === otp.length - 1 && { marginRight: 0 }, // Remove margin from last box
+                ]}
+              />
+            ))}
+          </View>
+
+          <CustomButton
+            title="Continue"
+            // onPress={() => {router.push('/pages/ResetPW', { otp: otp.join('') })}}
+            onPress={handleContinue}
+            type="primary"
+            style={styles.continueButton}
           />
-        ))}
-      </View>
 
-      <CustomButton
-        title="Continue"
-        // onPress={() => {router.push('/pages/ResetPW', { otp: otp.join('') })}}
-        onPress={handleContinue}
-        type="primary"
-        style={styles.continueButton}
-      />
-
-      <Text style={styles.resendText}>
-        Don’t you receive any code?{' '}
-        <Text style={styles.resendLink} onPress={handleResendCode}>
-          Resend Code
-        </Text>
-      </Text>
+          <Text style={styles.resendText}>
+            Don’t you receive any code?{' '}
+            <Text style={styles.resendLink} onPress={handleResendCode}>
+              Resend Code
+            </Text>
+          </Text>
+        </View>
+      </ScrollView>
     </View>
-    </ScrollView>
-  </View>
-);
+  );
 };
 const styles = StyleSheet.create({
   container: {
@@ -130,8 +133,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingHorizontal: 24,
   },
-  
-  
+
+
   headerBackButton: {
     padding: 5,
   },
@@ -140,25 +143,25 @@ const styles = StyleSheet.create({
     height: 24,
   },
   otpContainer: {
-  flexDirection: 'row',
-  justifyContent: 'center',
-  marginBottom: 10, // ✅ Reduced gap
-},
-
-  
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 10, // ✅ Reduced gap
+  },
   otpInput: {
-    width: 48,
+    width: (screenWidth - 24 * 2 - 8 * 5) / 6, // Padding + margins
     height: 56,
     borderWidth: 1,
-    borderColor: colors.stroke, // <-- Use color from colors file
+    borderColor: colors.stroke,
     borderRadius: 8,
     textAlign: 'center',
     fontSize: 18,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    backgroundColor: colors.background, // <-- Use color from colors file
-    marginRight: 16,
+    backgroundColor: colors.background,
+    marginRight: 8,
+
   },
+
   resendText: {
     textAlign: 'center',
     fontSize: 14,

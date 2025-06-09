@@ -33,7 +33,7 @@ const CustomButton = ({
       <Text style={[textStyles[type], textStyle]}>{title}</Text>
     </TouchableOpacity>
   );
-  
+
 
 };
 
@@ -55,12 +55,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 8,
     alignItems: 'center',
-    borderColor: colors.secondaryText , // Use imported color if available
+    borderColor: colors.secondaryText, // Use imported color if available
     borderWidth: 0,
     textAlign: 'center',
   },
   secondaryButtonText: {
-    color: colors.secondaryText , // Use imported color if available
+    color: colors.secondaryText, // Use imported color if available
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background, // Use imported color
     paddingVertical: 14,
     borderRadius: 8,
-    borderColor: colors.stroke , // Use imported color if available
+    borderColor: colors.stroke, // Use imported color if available
     borderWidth: 1,
     marginBottom: 32,
   },

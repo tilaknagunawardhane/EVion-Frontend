@@ -16,41 +16,41 @@ const ResetPasswordScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* App Bar */}
       <AppBar />
-<ScrollView 
-            contentContainerStyle={styles.scrollContainer}
-            keyboardShouldPersistTaps="handled"
-          >
-      {/* Main Content */}
-      <View style={styles.mainContent}>
-        <Text style={styles.title}>Reset Password</Text>
-        <Text style={styles.subtitle}>Create your new password.</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Main Content */}
+        <View style={styles.mainContent}>
+          <Text style={styles.title}>Reset Password</Text>
+          <Text style={styles.subtitle}>Create your new password.</Text>
 
-        {/* Input Fields */}
-        <InputField
-          label="New Password*"
-          value={password}
-          onChangeText={setPassword}
-          placeholder="XXXXXXXX"
-          secureTextEntry={!showPassword}
-          showPassword={showPassword}
-          setShowPassword={setShowPassword}
-          isPassword
-        />
+          {/* Input Fields */}
+          <InputField
+            label="New Password*"
+            value={password}
+            onChangeText={setPassword}
+            placeholder="XXXXXXXX"
+            secureTextEntry={!showPassword}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            isPassword
+          />
 
-        <InputField
-          label="Enter new password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          placeholder="XXXXXXXX"
-          secureTextEntry={!showConfirmPassword}
-          showPassword={showConfirmPassword}
-          setShowPassword={setShowConfirmPassword}
-          isPassword
-        />
+          <InputField
+            label="Enter new password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="XXXXXXXX"
+            secureTextEntry={!showConfirmPassword}
+            showPassword={showConfirmPassword}
+            setShowPassword={setShowConfirmPassword}
+            isPassword
+          />
 
-        {/* Done Button */}
-        <CustomButton title="Done" onPress={() => { /* Handle password reset */ }} />
-      </View>
+          {/* Done Button */}
+          <CustomButton title="Done" onPress={() => { /* Handle password reset */ }} />
+        </View>
       </ScrollView>
     </View>
   );
@@ -72,12 +72,12 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
     marginBottom: 4,
   },
-subtitle: {
-  fontSize: 13,
-  fontFamily: fonts.PlusJakartaSans,
-  color: colors.secondaryText,
-  marginBottom: 40, // updated from 26 to 16
-},
+  subtitle: {
+    fontSize: 13,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 40, // updated from 26 to 16
+  },
 
 });
 
