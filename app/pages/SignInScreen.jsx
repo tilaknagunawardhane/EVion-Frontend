@@ -125,7 +125,7 @@ const SignInScreen = () => {
         {/* Sign Up Link moved higher */}
         <View style={[styles.signupContainer, { marginTop: 110, marginBottom: 10 }]}>
           <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => router.push('/sign-up')}>
+          <TouchableOpacity onPress={() => router.push('/pages/SignUpScreen')}>
             <Text style={styles.signupLink}>Sign up</Text>
           </TouchableOpacity>
         </View>
