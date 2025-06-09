@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   signupText: {
-    color: colors.textPrimary,
+    color: colors.mainTextColor,
     fontSize: 13,
     fontFamily: fonts.PlusJakartaSans,
   },

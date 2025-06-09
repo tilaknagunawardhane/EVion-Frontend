@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, Platform, StatusBar, TouchableOpacity } from 'react-native';
+import { router } from 'expo-router';
 
 // InputField import is already present below as:
 // import InputField from '../components/InputField';
@@ -20,6 +21,9 @@ const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
 
   const handleRequestOTP = () => {
+    router.push('/pages/SignInOTP', { phoneNumber });
+    // router.replace('/pages/SignInOTP', { phoneNumber });
+    
 console.log('Requesting OTP for:', phoneNumber);
   };
 
