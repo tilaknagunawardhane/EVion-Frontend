@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
 import CustomButton from '../../components/CustomButton';
-import InputField from '../../components/InputField';
 import AppBar from '../../components/AppBar';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
@@ -28,43 +27,50 @@ const AddYourEVScreen = () => {
   return (
     <View style={styles.container}>
       <AppBar />
-      <Text style={styles.title}>Add Your EV</Text>
-      <Text style={styles.subtitle}>Upload an image of your vehicle</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Title and Subtitle */}
+        <Text style={styles.title}>Add Your EV</Text>
+        <Text style={styles.subtitle}>Upload an image of your vehicle</Text>
 
-      {/* Step indicator */}
-      <View style={styles.stepIndicator}>
-        <View style={styles.dot} />
-        <View style={styles.dot} />
-         <View style={styles.dot} />
-        <View style={[styles.dot, styles.activeDot]} />
-        
-      </View>
+        {/* Step indicator */}
+        <View style={styles.stepIndicator}>
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+          <View style={[styles.dot, styles.activeDot]} />
+        </View>
 
-      <Text style={styles.sectionTitle}>Vehicle Photo</Text>
+        <Text style={styles.sectionTitle}>Vehicle Photo</Text>
 
-      <View style={styles.uploadBox}>
-        <Image
-          source={require('../../assets/upload.png')} // Replace with your actual icon
-          style={styles.uploadIcon}
-        />
-        <Text style={styles.uploadText}>Upload files here</Text>
-        <TouchableOpacity style={styles.selectButton} onPress={handleSelectFiles}>
-          <Text style={styles.selectButtonText}>Select Files</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.uploadBox}>
+          <Image
+            source={require('../../assets/upload.png')}
+            style={styles.uploadIcon}
+          />
+          <Text style={styles.uploadText}>Upload files here</Text>
+          <TouchableOpacity style={styles.selectButton} onPress={handleSelectFiles}>
+            <Text style={styles.selectButtonText}>Select Files</Text>
+          </TouchableOpacity>
+        </View>
+        </ScrollView>
 
-      <View style={{ flex: 1 }} />
-
+        {/* Moved outside ScrollView to stay near bottom */}
+    <View style={styles.bottomSection}>
       <TouchableOpacity onPress={handleSkip}>
         <Text style={styles.skipText}>Skip for now</Text>
       </TouchableOpacity>
-
       <CustomButton
         title="Add Vehicle"
         onPress={handleAddVehicle}
         type="primary"
         style={styles.addButton}
       />
+    </View>
+      
     </View>
   );
 };
@@ -73,7 +79,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: 24,
+    paddingTop: 24,
+  },
+  scrollContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 24,
@@ -157,11 +167,15 @@ const styles = StyleSheet.create({
     height: 48,
     alignSelf: 'center',
   },
-  bottomSection: {
-    alignItems: 'center',
-    gap: 16, // Adds space between skip text and button
-    paddingBottom: 99, // Increased value brings the section up
-  },
+bottomSection: {
+  paddingHorizontal: 24,
+  paddingBottom: 32,
+  paddingTop: 8,
+  alignItems: 'center',
+  gap: 9,
+  backgroundColor: colors.background,
+},
+
 });
 
 export default AddYourEVScreen;
