@@ -1,11 +1,20 @@
 import { Stack } from 'expo-router';
-import Sample1 from './pages/sample1';
+import React from 'react';
+// import ForgotPasswordScreen from './pages/SignIn2FP';
+
 
 export default function Layout() {
   return (
-    <Stack>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      {/* <Stack.Screen name="sample1" component={Sample1} options={{ title: 'Sample 1' }}/> */}
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen
+        name="index"
+        options={{ headerShown: false }}
+      />
+      
+      <Stack.Screen
+        name="(tabs)"
+        options={{ headerShown: false }}
+      />
     </Stack>
   );
 }
