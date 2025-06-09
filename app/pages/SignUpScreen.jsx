@@ -9,6 +9,7 @@ import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
 
 const SignUpScreen = () => {
   const [name, setName] = useState('');
@@ -44,7 +45,7 @@ const SignUpScreen = () => {
 
     try {
 
-      const response = await fetch('http://10.21.130.173:5000/api/evowners/register', {
+      const response = await fetch(`${API_BASE_URL}/api/evowners/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
