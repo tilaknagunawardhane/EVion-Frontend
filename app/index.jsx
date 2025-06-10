@@ -4,6 +4,7 @@ import { useFonts } from 'expo-font';
 import { SplashScreen, router } from 'expo-router';
 import IsUserLoggedIn from '../hooks/IsUserLoggedIn';
 import SignInScreen from './pages/SignInScreen';
+import SignUpScreen from './pages/SignUpScreen';
 
 export default function Index() {
   const isLoggedIn = IsUserLoggedIn();
@@ -16,24 +17,25 @@ export default function Index() {
     'PlusJakartaSans-SemiBoldItalic': require('../assets/fonts/PlusJakartaSans-SemiBoldItalic.ttf'),
   });
 
-  useEffect(() => {
-    const prepare = async () => {
-      if (fontsLoaded || error) {
-        await SplashScreen.hideAsync();
-        if (isLoggedIn) {
-          router.replace('/pages/SignInScreen');
-        } else {
-          router.replace('/pages/SignUpScreen');
-        }
-      }
-    };
+  // useEffect(() => {
+  //   const prepare = async () => {
+  //     if (fontsLoaded || error) {
+  //       await SplashScreen.hideAsync();
+  //       if (isLoggedIn) {
+  //         router.replace('/pages/SignInScreen');
+  //       } else {
+  //         router.replace('/pages/SignUpScreen');
+  //       }
+  //     }
+  //   };
 
-    prepare();
-  }, [fontsLoaded, error, isLoggedIn]);
+  //   prepare();
+  // }, [fontsLoaded, error, isLoggedIn]);
 
   if (!fontsLoaded && !error) {
     return null; // Show nothing until fonts are loaded
   }
 
-  return <View />; // Loading Screen
+  // return <View />; // Loading Screen
+   return <SignUpScreen />;
 }
