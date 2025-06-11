@@ -8,14 +8,22 @@ import VehicleCard from '../../components/VehicleCard';
 import { useNavigation } from '@react-navigation/native';
 import InputField from '../../components/InputField';
 
-const VehicleAddedScreen = ({ navigation }) => {
+const VehicleAddedScreen = ({ navigation, route }) => {
+  // Get vehicle parameters from route params
+  const vehicleParams = route?.params?.vehicle || {};
+
+  const handleAddVehicle = () => {
+    navigation.navigate('AddVehicle');
+  };
+
   const handleAddAnotherVehicle = () => {
-    // navigation logic for adding another vehicle
+    navigation.navigate('AddVehicle');
   };
 
   const handleContinue = () => {
-    // navigation logic for continuing
+    navigation.navigate('Home'); // or your next screen
   };
+  
 
   return (
     <View style={styles.container}>
@@ -24,14 +32,13 @@ const VehicleAddedScreen = ({ navigation }) => {
 
         <VehicleProfile />
 
-        {/* Added spacing between profile and subtitle */}
         <View style={{ height: 20 }} />
 
         <Text style={styles.subTitle}>New Vehicle Added!</Text>
 
-        <VehicleCard />
+        {/* Pass all vehicle parameters to VehicleCard */}
+        <VehicleCard {...vehicleParams} />
 
-        {/* Action Buttons */}
         <View style={styles.bottomSection}>
           <Text style={styles.addAnotherText}></Text>
           <View style={{ marginBottom: -40 }} />
@@ -92,3 +99,4 @@ const styles = StyleSheet.create({
 });
 
 export default VehicleAddedScreen;
+ 
