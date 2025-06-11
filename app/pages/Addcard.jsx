@@ -1,124 +1,126 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import InputField from '../../components/InputField';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
-import AppBar from '../../components/AppBar';
 import { useNavigation } from '@react-navigation/native';
-
-
-const AddCardScreen = () => {
+import AppBar from '../../components/AppBar';
+const AddPaymentMethodScreen = () => {
   const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [cardHolderName, setCardHolderName] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+  const [cardholderName, setCardholderName] = useState('');
+
+  const handleSave = () => {
+    // handle save logic
+  };
+
+  const handleSkip = () => {
+    // handle skip logic
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
-        <AppBar />
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-      ></ScrollView>
-      <StatusBar barStyle="dark-content" />
-      <View style={styles.header}>
-        <Text style={styles.title}>Add Payment Method</Text>
-        <Text style={styles.subtitle}> Please add your payment card.All your details are encrypted and safely stored.</Text>
-      </View>
-      <View style={styles.form}>
-        <InputField
-          label="Card Number*"
-          value={cardNumber}
-          onChangeText={setCardNumber}
-          placeholder="**** **** **** ****"
-          keyboardType="numeric"
-        />
-        <View style={styles.row}>
+    <View style={styles.container}>
+    <AppBar />
+     
+    <ScrollView contentContainerStyle={styles.container}>
+       <View style={styles.mainContent}></View>
+      <Text style={styles.title}>Add Payment Method</Text>
+      <Text style={styles.subText}>
+        Please add your payment card.{' '}
+        <Text style={styles.highlightText}>All your details are encrypted and safely stored.</Text>
+      </Text>
+
+      <InputField
+        label="Card Number*"
+        value={cardNumber}
+        onChangeText={setCardNumber}
+        placeholder="•••• •••• •••• ••••"
+        keyboardType="number-pad"
+      />
+
+      <View style={styles.row}>
+        <View style={styles.halfWidth}>
           <InputField
             label="Expires*"
-            value={expiryDate}
-            onChangeText={setExpiryDate}
+            value={expiry}
+            onChangeText={setExpiry}
             placeholder="mm/yy"
-            keyboardType="numeric"
-            style={styles.halfInput}
+            keyboardType="number-pad"
           />
+        </View>
+        <View style={styles.halfWidth}>
           <InputField
             label="CVV*"
-            value={cardCvv}
-            onChangeText={setCardCvv}
-            placeholder="***"
-            keyboardType="numeric"
-            secureTextEntry
-            style={styles.halfInput}
+            value={cvv}
+            onChangeText={setCvv}
+            placeholder="•••"
+            keyboardType="number-pad"
           />
         </View>
-        <InputField
-          label="Cardholder Name"
-          value={cardHolderName}
-          onChangeText={setCardHolderName}
-          placeholder="John Doe"
-          autoCapitalize="words"
-        />
-
-        {/* Centered Skip Button */}
-        <View style={{ alignItems: 'center', marginVertical: 80}}>
-          <CustomButton
-            title="Skip for now"
-            type="secondary"
-            onPress={() => console.log('Skip pressed')}
-           
-          />
-        </View>
-
-        <CustomButton
-          title="Save"
-          type="primary"
-          onPress={() => console.log('Save pressed')}
-        />
       </View>
-    </SafeAreaView>
+
+      <InputField
+        label="Cardholder Name"
+        value={cardholderName}
+        onChangeText={setCardholderName}
+        placeholder="John Doe"
+        keyboardType="default"
+      />
+
+      <TouchableOpacity onPress={handleSkip}>
+        <Text style={styles.skipText}>Skip for now</Text>
+      </TouchableOpacity>
+
+      <CustomButton title="Save" onPress={handleSave} />
+    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    padding: 8,
     backgroundColor: colors.background,
-    paddingTop: StatusBar.currentHeight,
-  },
-  header: {
-    padding:16,
+    flexGrow: 1,
   },
   title: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
+    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSans,
+  subText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansRegular,
     color: colors.secondaryText,
-    marginTop: 4,
+    marginBottom: 24,
+    lineHeight: 20,
   },
-  form: {
-    padding: 16,
+  highlightText: {
+    color: colors.HighlightText,
+    fontFamily: fonts.PlusJakartaSansMedium,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  halfInput: {
-    flex: 0.48,
+  halfWidth: {
+    width: '48%',
   },
-  skipButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.stroke,
+  skipText: {
+    fontSize: 14,
+    color: colors.secondaryText,
     textAlign: 'center',
-   
-  
+    fontFamily: fonts.PlusJakartaSansMedium,
+    marginTop: 250, // Increased margin to push down
+    marginBottom: 0,
+  },
+  buttonContainer: {
+    marginTop: 32,
+    marginBottom: 24,
   },
 });
 
-export default AddCardScreen;
+export default AddPaymentMethodScreen;
