@@ -6,6 +6,7 @@ import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import AppBar from '../../components/AppBar';
+
 const AddPaymentMethodScreen = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -22,68 +23,82 @@ const AddPaymentMethodScreen = () => {
 
   return (
     <View style={styles.container}>
-    <AppBar />
-     
-    <ScrollView contentContainerStyle={styles.container}>
-       <View style={styles.mainContent}></View>
-      <Text style={styles.title}>Add Payment Method</Text>
-      <Text style={styles.subText}>
-        Please add your payment card.{' '}
-        <Text style={styles.highlightText}>All your details are encrypted and safely stored.</Text>
-      </Text>
+      <AppBar />
 
-      <InputField
-        label="Card Number*"
-        value={cardNumber}
-        onChangeText={setCardNumber}
-        placeholder="•••• •••• •••• ••••"
-        keyboardType="number-pad"
-      />
+      <ScrollView contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled">
 
-      <View style={styles.row}>
-        <View style={styles.halfWidth}>
+        <View style={styles.mainContent}>
+          <Text style={styles.title}>Add Payment Method</Text>
+          <Text style={styles.subText}>
+            Please add your payment card.{' '}
+            <Text style={styles.highlightText}>All your details are encrypted and safely stored.</Text>
+          </Text>
+
           <InputField
-            label="Expires*"
-            value={expiry}
-            onChangeText={setExpiry}
-            placeholder="mm/yy"
+            label="Card Number*"
+            value={cardNumber}
+            onChangeText={setCardNumber}
+            placeholder="•••• •••• •••• ••••"
             keyboardType="number-pad"
           />
-        </View>
-        <View style={styles.halfWidth}>
+
+          <View style={styles.row}>
+            <View style={styles.halfWidth}>
+              <InputField
+                label="Expires*"
+                value={expiry}
+                onChangeText={setExpiry}
+                placeholder="mm/yy"
+                keyboardType="number-pad"
+              />
+            </View>
+            <View style={styles.halfWidth}>
+              <InputField
+                label="CVV*"
+                value={cvv}
+                onChangeText={setCvv}
+                placeholder="•••"
+                keyboardType="number-pad"
+              />
+            </View>
+          </View>
+
           <InputField
-            label="CVV*"
-            value={cvv}
-            onChangeText={setCvv}
-            placeholder="•••"
-            keyboardType="number-pad"
+            label="Cardholder Name"
+            value={cardholderName}
+            onChangeText={setCardholderName}
+            placeholder="John Doe"
+            keyboardType="default"
           />
+
+          <View style={styles.footerButtons}>
+            <TouchableOpacity onPress={handleSkip}>
+              <Text style={styles.skipText}>Skip for now</Text>
+            </TouchableOpacity>
+          </View>
+            <CustomButton title="Save" type="primary" onPress={handleSave} />
+
         </View>
-      </View>
-
-      <InputField
-        label="Cardholder Name"
-        value={cardholderName}
-        onChangeText={setCardholderName}
-        placeholder="John Doe"
-        keyboardType="default"
-      />
-
-      <TouchableOpacity onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip for now</Text>
-      </TouchableOpacity>
-
-      <CustomButton title="Save" onPress={handleSave} />
-    </ScrollView>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8,
     backgroundColor: colors.background,
+    flex: 1
+  },
+  scrollContainer: {
     flexGrow: 1,
+    paddingBottom: 10,
+  },
+  mainContent: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    justifyContent: 'flex-start',
   },
   title: {
     fontSize: 22,
@@ -93,7 +108,7 @@ const styles = StyleSheet.create({
   },
   subText: {
     fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansRegular,
+    fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     marginBottom: 24,
     lineHeight: 20,
@@ -109,14 +124,17 @@ const styles = StyleSheet.create({
   halfWidth: {
     width: '48%',
   },
+  footerButtons: {
+    marginTop: 160,
+    alignItems: 'center',
+  },
   skipText: {
     fontSize: 14,
     color: colors.secondaryText,
-    textAlign: 'center',
     fontFamily: fonts.PlusJakartaSansMedium,
-    marginTop: 250, // Increased margin to push down
-    marginBottom: 0,
+    marginBottom: 10,
   },
+
   buttonContainer: {
     marginTop: 32,
     marginBottom: 24,

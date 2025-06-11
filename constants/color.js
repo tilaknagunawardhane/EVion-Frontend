@@ -4,7 +4,7 @@ const colors = {
     background: '#f9f9f9', //white
     secondaryText: '#959595', //light gray
     stroke: '#dedede',
-    HighlightText: '#F5A623', //orange
+    HighlightText: '#D68400', //orange
     
 };
 
