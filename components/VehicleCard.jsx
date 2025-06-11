@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const VehicleCard = () => {
+const VehicleCard = ({image, name, year, batteryCapacity, batteryHealth, connector1_image, connector1_name, connector2_image, connector2_name  }) => {
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
