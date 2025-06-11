@@ -22,7 +22,9 @@ export default function Index() {
       if (fontsLoaded || error) {
         await SplashScreen.hideAsync();
         if (isLoggedIn) {
+          // router.replace('/(tabs)');
           router.replace('/pages/SignInScreen');
+
         } else {
           router.replace('/pages/SignUpScreen');
         }
