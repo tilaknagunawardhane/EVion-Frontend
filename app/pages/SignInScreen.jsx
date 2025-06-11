@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: colors.primary,
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
   },
   orSeparator: {
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   orText: {
     marginHorizontal: 10,
     color: colors.secondaryText,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
   },
   signupContainer: {

@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   orText: {
     marginHorizontal: 10,
     color: colors.secondaryText,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
   },
   signinContainer: {

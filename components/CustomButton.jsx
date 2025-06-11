@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: colors.background, // Use imported color
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSansBold,
     paddingVertical: 2,
     borderRadius: 8,
@@ -77,12 +77,12 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     color: colors.mainTextColor, // Use imported color if available
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
   buttonIcon: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     marginRight: 8,
   },
 });

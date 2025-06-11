@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   inputLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
     marginBottom: 8,
@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 12,
-    fontSize: 16,
+    fontSize: 14,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },
