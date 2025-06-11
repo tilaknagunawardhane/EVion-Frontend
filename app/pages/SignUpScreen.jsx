@@ -16,8 +16,7 @@ const SignUpScreen = () => {
   const navigation = useNavigation();
 
   const handleSignUp = () => {
-    // Add sign-up logic here
-    router.replace('/(tabs)');
+    router.replace('/pages/AddVehicle1'); // Navigate to the next screen after sign-up
   };
 
   return (
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   title: {
-    fontSize: 26,
+    fontSize: 32,
     fontFamily: fonts.PlusJakartaSansBold,
     marginBottom: 4,
     color: colors.mainTextColor,
