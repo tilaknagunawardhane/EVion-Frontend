@@ -4,18 +4,20 @@ import { useNavigation } from '@react-navigation/native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const AppBar = ({ title }) => {
+const AppBar = ({ title, buttonVisibility = true }) => {
   const navigation = useNavigation();
 
-  return (
+ return (
     <View style={styles.container}>
       <View style={styles.inner}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Image
-            source={require('../assets/back-icon.png')} // Make sure it's a left arrow icon (like ←)
-            style={styles.backIcon}
-          />
-        </TouchableOpacity>
+        {buttonVisibility && (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Image
+              source={require('../assets/back-icon.png')}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+        )}
         <Text style={styles.title}>{title}</Text>
       </View>
     </View>

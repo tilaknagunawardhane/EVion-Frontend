@@ -86,7 +86,7 @@ const SignUpScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar />
+      <AppBar buttonVisibility={false}/>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
