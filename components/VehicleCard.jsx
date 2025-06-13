@@ -3,22 +3,32 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const VehicleCard = ({image, name, year, batteryCapacity, batteryHealth, connector1_image, connector1_name, connector2_image, connector2_name  }) => {
+const VehicleCard = ({
+  image,
+  name,
+  year,
+  batteryCapacity,
+  batteryHealth,
+  connector1_image,
+  connector1_name,
+  connector2_image,
+  connector2_name
+}) => {
   return (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.cardInnerIconCircle}>
           <Image
-            source={require('../assets/car.png')}
+            source={image}
             style={styles.cardIcon}
             resizeMode="contain"
           />
         </View>
         <View style={styles.cardText}>
-          <Text style={styles.cardTitle}>BYD Atto 3 (SUV)</Text>
-          <Text style={styles.cardYear}>2022</Text>
-          <Text style={styles.cardSpec}>Battery Capacity: 60.48kWh</Text>
-          <Text style={styles.cardSpec}>Battery Health: 94%</Text>
+          <Text style={styles.cardTitle}>{name}</Text>
+          <Text style={styles.cardYear}>{year}</Text>
+          <Text style={styles.cardSpec}>Battery Capacity: {batteryCapacity}</Text>
+          <Text style={styles.cardSpec}>Battery Health: {batteryHealth}</Text>
         </View>
       </View>
 
@@ -27,24 +37,25 @@ const VehicleCard = ({image, name, year, batteryCapacity, batteryHealth, connect
       <View style={styles.chargerRow}>
         <View style={styles.chargerItem}>
           <Image
-            source={require('../assets/type2charger.png')}
+            source={connector1_image}
             style={styles.chargerIcon}
             resizeMode="contain"
           />
-          <Text style={styles.chargerText}>Type 2 (Mennekes)</Text>
+          <Text style={styles.chargerText}>{connector1_name}</Text>
         </View>
         <View style={styles.chargerItem}>
           <Image
-            source={require('../assets/chademocharger.png')}
+            source={connector2_image}
             style={styles.chargerIcon}
             resizeMode="contain"
           />
-          <Text style={styles.chargerText}>CHAdeMO</Text>
+          <Text style={styles.chargerText}>{connector2_name}</Text>
         </View>
       </View>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   card: {

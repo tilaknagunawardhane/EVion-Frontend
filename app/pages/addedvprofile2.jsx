@@ -23,7 +23,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
   const handleContinue = () => {
     navigation.navigate('Home'); // or your next screen
   };
-  
+
 
   return (
     <View style={styles.container}>
@@ -37,7 +37,18 @@ const VehicleAddedScreen = ({ navigation, route }) => {
         <Text style={styles.subTitle}>New Vehicle Added!</Text>
 
         {/* Pass all vehicle parameters to VehicleCard */}
-        <VehicleCard {...vehicleParams} />
+        <VehicleCard
+          image={require('../../assets/car.png')}
+          name="BYD Atto 3 (SUV)"
+          year="2022"
+          batteryCapacity="60.48kWh"
+          batteryHealth="94%"
+          connector1_image={require('../../assets/type2charger.png')}
+          connector1_name="Type 2 (Mennekes)"
+          connector2_image={require('../../assets/chademocharger.png')}
+          connector2_name="CHAdeMO"
+        />
+
 
         <View style={styles.bottomSection}>
           <Text style={styles.addAnotherText}></Text>
@@ -79,7 +90,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   bottomSection: {
-    marginTop: 10,
+    marginTop: 0,
     marginBottom: 20,
   },
   addAnotherText: {
@@ -99,4 +110,3 @@ const styles = StyleSheet.create({
 });
 
 export default VehicleAddedScreen;
- 
