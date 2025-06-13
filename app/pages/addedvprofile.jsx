@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
   dot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.secondaryText,
+    borderRadius: 8,
+    backgroundColor: colors.stroke,
     marginHorizontal: 4,
   },
   activeDot: {
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   addButton: {
     width: '100%',
