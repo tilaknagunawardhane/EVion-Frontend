@@ -30,9 +30,19 @@ const VehicleAddedScreen = ({ navigation, route }) => {
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <Text style={styles.title}>My Vehicles</Text>
 
-        <VehicleProfile />
+        <View style={styles.vehicleListContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+            <VehicleProfile
+              image={require('../../assets/car.png')}
+              name={'BYD Atto 3\n(SUV)'}
+            />
+            <VehicleProfile
+              image={require('../../assets/car.png')}
+              name={'Tesla Model 3\n(Sedan)'}
+            />
+          </ScrollView>
+        </View>
 
-        <View style={{ height: 20 }} />
 
         <Text style={styles.subTitle}>New Vehicle Added!</Text>
 
@@ -50,18 +60,20 @@ const VehicleAddedScreen = ({ navigation, route }) => {
         />
 
 
-        <View style={styles.bottomSection}>
-          <Text style={styles.addAnotherText}></Text>
-          <View style={{ marginBottom: -40 }} />
-          <Text
-            style={styles.addAnotherLink}
-            onPress={handleAddAnotherVehicle}
-          >
-            Add Another Vehicle
-          </Text>
-          <CustomButton title="Continue" onPress={handleContinue} />
-        </View>
       </ScrollView>
+      <View />
+      <View style={styles.bottomSection}>
+        <Text style={styles.addAnotherText}></Text>
+        <View style={{ marginBottom: -40 }} />
+        <Text
+          style={styles.addAnotherLink}
+          onPress={handleAddAnotherVehicle}
+        >
+          Add Another Vehicle
+        </Text>
+        <CustomButton title="Continue" onPress={handleContinue} />
+      </View>
+
     </View>
   );
 };
@@ -82,6 +94,18 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
     marginBottom: 20,
   },
+  vehicleListContainer: {
+    height: 140, // Adjust based on your VehicleProfile card height
+    marginBottom: 30,
+  },
+
+  horizontalScroll: {
+    flexDirection: 'row',
+    gap: 16, // Space between cards
+    paddingBottom: 10,
+    paddingHorizontal: 10,
+  },
+
   subTitle: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
@@ -90,15 +114,17 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   bottomSection: {
-    marginTop: 0,
+    marginTop: 20,
     marginBottom: 20,
+    paddingHorizontal: 20,
   },
   addAnotherText: {
     color: colors.primary,
     fontSize: 1,
     fontFamily: fonts.PlusJakartaSansMedium,
     textAlign: 'center',
-    marginBottom: 270,
+    marginBottom: 30,
+    // marginTop: 10
   },
   addAnotherLink: {
     color: colors.primary,
