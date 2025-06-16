@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fonts.PlusJakartaSans,
     marginBottom: 32,
     color: colors.secondaryText,
@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
   },
   signinText: {
     color: colors.textPrimary,
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
   },
   signinLink: {
     color: colors.primary,
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
   },
   termsContainer: {
@@ -164,14 +164,14 @@ const styles = StyleSheet.create({
   },
   termsText: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     marginBottom: 3, 
   },
   linkText: {
     color: colors.primary,
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     textAlign: 'center',
   },
