@@ -1,5 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Modal, FlatList } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  Modal,
+  FlatList,
+  Dimensions,
+  UIManager,
+  findNodeHandle
+} from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
@@ -11,14 +22,25 @@ const DropdownField = ({
   options = [],
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownTop, setDropdownTop] = useState(0);
+  const dropdownRef = useRef(null);
+
+  const openDropdown = () => {
+    const handle = findNodeHandle(dropdownRef.current);
+    UIManager.measure(handle, (x, y, width, height, pageX, pageY) => {
+      setDropdownTop(pageY + height - 20);
+      setIsOpen(true);
+    });
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
 
       <TouchableOpacity
+        ref={dropdownRef}
         style={styles.dropdown}
-        onPress={() => setIsOpen(true)}
+        onPress={openDropdown}
         activeOpacity={0.7}
       >
         <Text
@@ -31,19 +53,19 @@ const DropdownField = ({
         </Text>
 
         <Image
-          source={require('../assets/down-arrow.png')} // Ensure you have this asset
+          source={require('../assets/down-arrow.png')}
           style={styles.icon}
         />
       </TouchableOpacity>
 
-      {/* Modal for dropdown */}
+      {/* Modal rendered absolutely below dropdown */}
       <Modal visible={isOpen} transparent animationType="fade">
         <TouchableOpacity
           style={styles.modalOverlay}
           onPress={() => setIsOpen(false)}
           activeOpacity={1}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.dropdownModal, { top: dropdownTop }]}>
             <FlatList
               data={options}
               keyExtractor={(item, index) => index.toString()}
@@ -58,7 +80,10 @@ const DropdownField = ({
                   <Text style={styles.optionText}>{item}</Text>
                 </TouchableOpacity>
               )}
+              style={{ maxHeight: 250 }} // You can adjust this height as needed
+              scrollEnabled={true}
             />
+
           </View>
         </TouchableOpacity>
       </Modal>
@@ -71,7 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
     marginBottom: 8,
@@ -86,7 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   valueText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
   },
   icon: {
@@ -98,25 +123,31 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
   },
-  modalContent: {
+  dropdownModal: {
+    position: 'absolute',
+    left: 24, // match your padding
+    right: 24,
     backgroundColor: colors.background,
     borderRadius: 8,
     paddingVertical: 10,
-    maxHeight: '50%',
+    elevation: 5,
+    maxHeight: '30%',
+    shadowColor: colors.mainTextColor,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   option: {
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
   optionText: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
   },
 });
+
 
 export default DropdownField;

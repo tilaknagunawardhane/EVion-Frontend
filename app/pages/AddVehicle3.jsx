@@ -104,14 +104,14 @@ const styles = StyleSheet.create({
   activeDot: {
     width: 34,
     height: 6,
-    borderRadius: 2,
+    borderRadius: 8,
     backgroundColor: colors.primary,
     marginRight: 6,
   },
   inactiveDot: {
     width: 6,
     height: 6,
-    borderRadius: 2,
+    borderRadius: 8,
     backgroundColor: colors.stroke,
     marginRight: 6,
   },
