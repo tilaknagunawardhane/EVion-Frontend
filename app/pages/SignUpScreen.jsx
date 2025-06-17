@@ -16,8 +16,7 @@ const SignUpScreen = () => {
   const navigation = useNavigation();
 
   const handleSignUp = () => {
-    // Add sign-up logic here
-    router.replace('/(tabs)');
+    router.replace('/pages/AddVehicle1'); // Navigate to the next screen after sign-up
   };
 
   return (
@@ -111,13 +110,13 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
   title: {
-    fontSize: 26,
+    fontSize: 32,
     fontFamily: fonts.PlusJakartaSansBold,
     marginBottom: 4,
     color: colors.mainTextColor,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fonts.PlusJakartaSans,
     marginBottom: 32,
     color: colors.secondaryText,
@@ -151,12 +150,12 @@ const styles = StyleSheet.create({
   },
   signinText: {
     color: colors.textPrimary,
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
   },
   signinLink: {
     color: colors.primary,
-    fontSize: 13,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
   },
   termsContainer: {
@@ -165,14 +164,14 @@ const styles = StyleSheet.create({
   },
   termsText: {
     textAlign: 'center',
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     marginBottom: 3,
   },
   linkText: {
     color: colors.primary,
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     textAlign: 'center',
   },

@@ -8,7 +8,7 @@ const InputField = ({
   value,
   onChangeText,
   placeholder,
-  placeholderTextColor = colors.secondaryText, // Use color from color file
+  placeholderTextColor = colors.secondaryText,
   secureTextEntry = false,
   keyboardType = 'default',
   autoCapitalize = 'sentences',
@@ -16,15 +16,19 @@ const InputField = ({
   setShowPassword,
   isPassword = false,
 }) => {
-
-  const [isFocused, setIsFocused] = useState(false); 
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <View style={styles.inputContainer}>
       <Text style={styles.inputLabel}>{label}</Text>
       <View style={isPassword ? styles.passwordContainer : null}>
         <TextInput
-          style={[styles.input, isPassword ? styles.passwordInput : null, isFocused && { borderColor: colors.primary },]}
+          style={[
+            styles.input,
+            isPassword && styles.passwordInput,
+            isFocused && { borderColor: colors.primary },
+            { color: value ? 'black' : colors.mainTextColor }, //  change text color based on value
+          ]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
@@ -32,8 +36,8 @@ const InputField = ({
           secureTextEntry={isPassword ? !showPassword : false}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)} 
-          onBlur={() => setIsFocused(false)} 
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
         {isPassword && (
           <TouchableOpacity
@@ -74,7 +78,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     fontSize: 16,
-    color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },
   passwordContainer: {
