@@ -11,6 +11,7 @@ import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const SignInScreen = () => {
@@ -65,6 +66,9 @@ const SignInScreen = () => {
         });
         return;
       }
+       await AsyncStorage.setItem('user', JSON.stringify(data));
+  const user = JSON.parse(await AsyncStorage.getItem('user'));
+  console.log('User saved in AsyncStorage:', user);
 
       // Success
       Toast.show({
@@ -79,12 +83,12 @@ const SignInScreen = () => {
 
     }
     catch (error) {
-       console.error('Network or unexpected error during sign-in:', error);
-    Toast.show({
-      type: ALERT_TYPE.DANGER,
-      title: 'Error',
-      textBody: 'A network error occurred. Please try again later.',
-    });
+      console.error('Network or unexpected error during sign-in:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'A network error occurred. Please try again later.',
+      });
     }
     // Add your sign in logic here
 
