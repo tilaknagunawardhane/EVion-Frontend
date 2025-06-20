@@ -12,20 +12,94 @@ import CustomButton from '../../components/CustomButton';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 import AppBar from '../../components/AppBar';
-
+import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 
 
 const ForgotPasswordScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
-
+  const [error, setError] = useState('');
+  const [user, setUser] = useState(null);
   const navigation = useNavigation();
 
-  const handleRequestOTP = () => {
-    router.push('/pages/SignInOTP', { phoneNumber });
-    // router.replace('/pages/SignInOTP', { phoneNumber });
+  useEffect(() => {
+    async function getUser() {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        // console.log(user);
+        setUser(JSON.parse(user));
+      }
+    }
+    getUser();
+  }, []);
 
-    console.log('Requesting OTP for:', phoneNumber);
+  const handleRequestOTP = async () => {
+    const trimmedPhone = phoneNumber.trim();
+    const phoneRegex = /^07\d{8}$/;
+
+    if (!phoneRegex.test(trimmedPhone)) {
+      setError('Please enter a valid phone number (e.g., 07X XXX XXXX).');
+      return;
+    }
+
+    try {
+      setError('');
+      console.log(user);
+
+      if (user && user.email) {
+        const userEmail = user.email;
+        console.log(userEmail);
+
+        const response = await fetch(`${API_BASE_URL}/api/evowners/send-otp`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userEmail,
+            mobile: trimmedPhone,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: 'Error',
+            textBody: data.message || 'Failed to send OTP',
+          });
+          return;
+        }
+
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: 'OTP sent successfully!',
+        });
+
+        console.log('Requesting OTP for:', trimmedPhone);
+        router.push('/pages/SignInOTP', { phoneNumber: trimmedPhone });
+      } else {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: 'Please Sign Up first',
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message,
+      });
+    }
   };
+
+
+
 
   return (
     <View style={styles.container}>
@@ -43,10 +117,14 @@ const ForgotPasswordScreen = () => {
           <InputField
             label="Phone Number*"
             value={phoneNumber}
-            onChangeText={setPhoneNumber}
+            onChangeText={(text) => {
+              setPhoneNumber(text);
+              if (error) setError(''); // Clear error on typing
+            }}
             placeholder="07X XXX XXXX"
             keyboardType="phone-pad"
             autoCapitalize="none"
+            error={error}
           />
           {/* Request OTP Button */}
           <CustomButton title="Request  OTP" onPress={handleRequestOTP} />

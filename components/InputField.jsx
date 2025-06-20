@@ -15,9 +15,10 @@ const InputField = ({
   showPassword,
   setShowPassword,
   isPassword = false,
+  error
 }) => {
 
-  const [isFocused, setIsFocused] = useState(false); 
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <View style={styles.inputContainer}>
@@ -32,8 +33,8 @@ const InputField = ({
           secureTextEntry={isPassword ? !showPassword : false}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)} 
-          onBlur={() => setIsFocused(false)} 
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
         {isPassword && (
           <TouchableOpacity
@@ -51,7 +52,9 @@ const InputField = ({
             />
           </TouchableOpacity>
         )}
+
       </View>
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 };
@@ -95,6 +98,13 @@ const styles = StyleSheet.create({
     height: 22,
     tintColor: colors.secondaryText,
   },
+  errorText: {
+    color: 'red',
+    fontSize: 13,
+    fontFamily: fonts.PlusJakartaSans,
+    marginTop: 6,
+  }
+
 });
 
 export default InputField;
