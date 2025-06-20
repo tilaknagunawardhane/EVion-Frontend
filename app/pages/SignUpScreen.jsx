@@ -59,10 +59,16 @@ const SignUpScreen = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Signup failed');
+       Toast.show({
+                 type: ALERT_TYPE.DANGER,
+                 title: 'Error',
+                 textBody: data.message || 'Failed to sign in. Please try again.',
+               });
+               return;
       }
-
-      await AsyncStorage.setItem('user', JSON.stringify(data.user));
+ await AsyncStorage.setItem('user', JSON.stringify(data));
+  const user = JSON.parse(await AsyncStorage.getItem('user'));
+  console.log('User saved in AsyncStorage:', user);
 
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
