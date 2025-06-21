@@ -9,6 +9,10 @@ import CustomButton from '../../components/CustomButton';
 import AppBar from '../../components/AppBar';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const SignInScreen = () => {
   const [email, setEmail] = useState('');
@@ -19,9 +23,75 @@ const SignInScreen = () => {
 
 
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
+    if (!email) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter your email address.',
+      });
+      return;
+    }
+    // if (!password || password.length < 8) {
+    if (!password) {
+
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter a valid password (at least 8 characters).',
+      });
+      console.log('Password validation failed');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/evowners/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Show backend error message
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: data.message || 'Failed to sign in. Please try again.',
+        });
+        return;
+      }
+       await AsyncStorage.setItem('user', JSON.stringify(data));
+  const user = JSON.parse(await AsyncStorage.getItem('user'));
+  console.log('User saved in AsyncStorage:', user);
+
+      // Success
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Success',
+        textBody: 'You have signed up successfully!',
+      });
+      console.log('User signed in successfully:', data);
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 1500);
+
+    }
+    catch (error) {
+      console.error('Network or unexpected error during sign-in:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'A network error occurred. Please try again later.',
+      });
+    }
     // Add your sign in logic here
-    router.replace('/(tabs)');
+
   };
 
 
@@ -134,7 +204,7 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     color: colors.primary,
-    fontSize: 14,
+    fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
   },
   orSeparator: {
@@ -150,7 +220,7 @@ const styles = StyleSheet.create({
   orText: {
     marginHorizontal: 10,
     color: colors.secondaryText,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
   },
   signupContainer: {

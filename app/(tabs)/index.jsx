@@ -5,6 +5,7 @@ import {router} from 'expo-router';
 import React from 'react';
 import strings from '../../constants/strings';
 import colors from '../../constants/color';
+import ClearUserButton from '../../components/ClearUserButton';
 
 export default function Tab() {
   return (
@@ -19,12 +20,7 @@ export default function Tab() {
         // textStyle={{ fontSize: 18, color: '#fff' }}
       />
 
-      <CustomButton
-        title={strings.sample1ButtonText}
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/SignInScreen.jsx')}
-        />
+      <ClearUserButton/>
     </View>
   );
 }

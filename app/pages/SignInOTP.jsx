@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, handleRequestOTP, Platform } from 'react-native';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
@@ -9,12 +9,33 @@ import * as Font from 'expo-font';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { Dimensions } from 'react-native';
+import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLocalSearchParams } from 'expo-router';
 
 const screenWidth = Dimensions.get('window').width;
 
 const OTPScreen = ({ navigation }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
+  const [user, setUser] = useState(null);
+const { phoneNumber } = useLocalSearchParams();
+
+// useEffect(() => {
+//   console.log('Extracted phone number:', phoneNumber);
+// }, [phoneNumber]); // ✅ track actual phone number
+
+  useEffect(() => {
+    async function getUser() {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        // console.log(user);
+        setUser(JSON.parse(user));
+      }
+    }
+    getUser();
+  }, []);
 
   const handleOtpChange = (text, index) => {
     const newOtp = [...otp];
@@ -32,18 +53,115 @@ const OTPScreen = ({ navigation }) => {
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     const otpValue = otp.join('');
     console.log('Entered OTP:', otpValue);
-    router.push('/pages/ResetPW', { otp: otpValue });
+
+    try {
+
+      if (user && user.email) {
+        const userEmail = user.email;
+        console.log(userEmail);
+
+        const response = await fetch(`${API_BASE_URL}/api/evowners/verify-otp`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            otp: otpValue,
+            email: userEmail,
+          }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: 'Error',
+            textBody: data.error || data.message || 'OTP verification failed.',
+          });
+          return;
+        }
+
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: 'OTP sent successfully!',
+        });
+
+         setOtp(['', '', '', '', '', '']);
+        router.push('/pages/ResetPW');
+      }
+      else {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: 'Please Sign Up first',
+        });
+      }
+
+
+    } catch (error) {
+      console.error('OTP verification error:', error);
+    Toast.show({
+      type: ALERT_TYPE.DANGER,
+      title: 'Error',
+      textBody: error.message || 'Something went wrong.',
+    });
+    }
+
+    // router.push('/pages/ResetPW', { otp: otpValue });
   };
 
   // Resend code handler
-  const handleResendCode = () => {
-    // Add your resend OTP logic here (e.g., API call)
-    console.log('Resend code requested');
-    // Optionally, show a message to the user
-  };
+const handleResendCode = async () => {
+  try {
+    if (!phoneNumber) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Phone number is missing.',
+      });
+      return;
+    }
+
+    const userEmail = user.email;
+    const response = await fetch(`${API_BASE_URL}/api/evowners/send-otp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mobile: phoneNumber, email: userEmail }), // assuming email is optional
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: data.error || data.message || 'Failed to resend OTP',
+      });
+      return;
+    }
+
+    Toast.show({
+      type: ALERT_TYPE.SUCCESS,
+      title: 'Success',
+      textBody: 'OTP resent successfully!',
+    });
+
+    console.log('New OTP sent to:', phoneNumber);
+  } catch (error) {
+    console.error('Resend OTP error:', error);
+    Toast.show({
+      type: ALERT_TYPE.DANGER,
+      title: 'Error',
+      textBody: error.message || 'Something went wrong',
+    });
+  }
+};
 
   return (
     <View style={styles.container}>

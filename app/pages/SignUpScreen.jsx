@@ -7,6 +7,9 @@ import CustomButton from '../../components/CustomButton';
 import AppBar from '../../components/AppBar';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
 
 const SignUpScreen = () => {
   const [name, setName] = useState('');
@@ -15,13 +18,81 @@ const SignUpScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
 
-  const handleSignUp = () => {
-    router.replace('/pages/AddVehicle1'); // Navigate to the next screen after sign-up
+  const handleSignUp = async () => {
+    if (!name) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter your name.',
+      });
+      return;
+    } else if (!email) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter your email address.',
+      });
+      return;
+    } else if (!password || password.length < 8) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter a valid password (at least 8 characters).',
+      });
+      console.log('Password validation failed');
+      return;
+    }
+
+    try {
+
+      const response = await fetch(`${API_BASE_URL}/api/evowners/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+        }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+       Toast.show({
+                 type: ALERT_TYPE.DANGER,
+                 title: 'Error',
+                 textBody: data.message || 'Failed to sign in. Please try again.',
+               });
+               return;
+      }
+ await AsyncStorage.setItem('user', JSON.stringify(data));
+  const user = JSON.parse(await AsyncStorage.getItem('user'));
+  console.log('User saved in AsyncStorage:', user);
+
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Success',
+        textBody: 'You have signed up successfully!',
+      });
+
+      setTimeout(() => {
+        router.replace('/(tabs)');
+      }, 1500);
+    } catch (error) {
+      console.error('Error during sign-up:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'An unexpected error occurred. Please try again later.',
+      });
+    }
   };
+
 
   return (
     <View style={styles.container}>
-      <AppBar />
+      <AppBar buttonVisibility={false}/>
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
@@ -138,7 +209,7 @@ const styles = StyleSheet.create({
   orText: {
     marginHorizontal: 10,
     color: colors.secondaryText,
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
   },
   signinContainer: {
