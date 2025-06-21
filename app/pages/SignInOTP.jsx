@@ -90,6 +90,7 @@ const { phoneNumber } = useLocalSearchParams();
           textBody: 'OTP sent successfully!',
         });
 
+         setOtp(['', '', '', '', '', '']);
         router.push('/pages/ResetPW');
       }
       else {
