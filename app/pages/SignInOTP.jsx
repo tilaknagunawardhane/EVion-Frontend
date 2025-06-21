@@ -22,9 +22,9 @@ const OTPScreen = ({ navigation }) => {
   const [user, setUser] = useState(null);
 const { phoneNumber } = useLocalSearchParams();
 
-useEffect(() => {
-  console.log('Extracted phone number:', phoneNumber);
-}, [phoneNumber]); // ✅ track actual phone number
+// useEffect(() => {
+//   console.log('Extracted phone number:', phoneNumber);
+// }, [phoneNumber]); // ✅ track actual phone number
 
   useEffect(() => {
     async function getUser() {
