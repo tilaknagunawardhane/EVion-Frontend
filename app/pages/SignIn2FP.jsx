@@ -80,7 +80,7 @@ const ForgotPasswordScreen = () => {
         });
 
         console.log('Requesting OTP for:', trimmedPhone);
-        router.push('/pages/SignInOTP', { phoneNumber: trimmedPhone });
+          router.push(`/pages/SignInOTP?phoneNumber=${trimmedPhone}`);
       } else {
         Toast.show({
           type: ALERT_TYPE.DANGER,
