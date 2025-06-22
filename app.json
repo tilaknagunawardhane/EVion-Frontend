@@ -46,6 +46,7 @@
       [
         "expo-maps",
         {
+          "googleMapsApiKey": "AIzaSyAghlt-S0i8b8IJLixLEl5fmTFqGfTqyfM",
           "requestLocationPermission": true,
           "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
         }
