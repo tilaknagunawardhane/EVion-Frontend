@@ -114,12 +114,12 @@ export default function MapScreen() {
         }}
         markers={[
           {
-            id: 'user-location', // ✅ Unique ID is required
-            coordinate: {
+            coordinates: {
               latitude: location.latitude,
               longitude: location.longitude,
             },
             title: 'You are here',
+            snippet: 'Current location',
             description: 'Current location',
           },
         ]}
