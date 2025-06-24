@@ -201,13 +201,9 @@ return (
         </View> 
        
         <View style={styles.kwBox}></View>
-        
-        <View style={styles.kwBox}></View>
-        
-        <View style={styles.kwBox}></View>
-        
-        <View style={styles.kwBox}></View>
-<View
+      
+
+        <View
             style={{
                 color: colors.secondaryText,
                 borderRadius: 4,
