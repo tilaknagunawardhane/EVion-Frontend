@@ -96,7 +96,7 @@ return (
         {/* Small gray test box */}
         <View
             style={{
-                backgroundColor: '#E0E0E0',
+              color: colors. secondaryText,
                 borderRadius: 4,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
@@ -105,7 +105,7 @@ return (
                 justifyContent: 'center',
                 minWidth: 32,
                 borderWidth: 1,
-                borderColor: '#B0B0B0',
+               Color: colors.boder,
             }}
         >
             <Text
@@ -122,7 +122,7 @@ return (
 
         <View
             style={{
-                backgroundColor: '#E0E0E0',
+               Color: colors.secondaryText,
                 borderRadius: 4,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
@@ -131,7 +131,7 @@ return (
                 justifyContent: 'center',
                 minWidth: 32,
                 borderWidth: 1,
-                borderColor: '#B0B0B0',
+               Color:colors.border ,
             }}
         >
             <Text
@@ -176,7 +176,7 @@ return (
     <View style={[styles.powerRow, { gap: 4 }]}>
         <View
             style={{
-                backgroundColor: '#E0E0E0',
+            Color:colors.secondaryText,
                 borderRadius: 4,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
@@ -185,7 +185,7 @@ return (
                 justifyContent: 'center',
                 minWidth: 32,
                 borderWidth: 1,
-                borderColor: '#B0B0B0',
+                Color: colors.border ,
             }}
           >
             <Text
@@ -201,9 +201,15 @@ return (
         </View> 
        
         <View style={styles.kwBox}></View>
+        
+        <View style={styles.kwBox}></View>
+        
+        <View style={styles.kwBox}></View>
+        
+        <View style={styles.kwBox}></View>
 <View
             style={{
-                backgroundColor: '#E0E0E0',
+                color: colors.secondaryText,
                 borderRadius: 4,
                 paddingHorizontal: 8,
                 paddingVertical: 2,
@@ -212,7 +218,7 @@ return (
                 justifyContent: 'center',
                 minWidth: 32,
                 borderWidth: 1,
-                borderColor: '#B0B0B0',
+               color: colors.boder,
             }}
         >
             <Text
@@ -223,7 +229,7 @@ return (
                     fontWeight: 'bold', // Extra boldness for safety
                 }}
             >
-               LKR 55.00 /kW
+                LKR 55.00 /kW
             </Text>
         </View> 
        
