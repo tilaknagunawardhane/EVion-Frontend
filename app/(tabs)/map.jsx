@@ -6,39 +6,28 @@ import {
   Platform,
   ActivityIndicator,
   TouchableOpacity,
+  TextInput,
+  FlatList,
+  Image,
+  Alert
 } from 'react-native';
 import * as Location from 'expo-location';
 import * as ExpoMaps from 'expo-maps';
 import { MaterialIcons } from '@expo/vector-icons';
+import stationIcon from '../../assets/map/station-icon.png';
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [nearbyStations, setNearbyStations] = useState([]);
+  const [showDropdown, setShowDropdown] = useState(false);
   const mapRef = useRef(null);
 
-  // Example charging stations (replace with backend later)
   const chargingStations = [
-    {
-      id: 'station1',
-      latitude: 6.9271,
-      longitude: 79.8612,
-      title: 'Station 1',
-      description: 'Charging Station 1',
-    },
-    {
-      id: 'station2',
-      latitude: 6.9150,
-      longitude: 79.8630,
-      title: 'Station 2',
-      description: 'Charging Station 2',
-    },
-    {
-      id: 'station3',
-      latitude: 6.9300,
-      longitude: 79.8700,
-      title: 'Station 3',
-      description: 'Charging Station 3',
-    },
+    { id: 'station1', latitude: 6.9271, longitude: 79.8612, title: 'Station 1', description: 'Charging Station 1' },
+    { id: 'station2', latitude: 6.9150, longitude: 79.8630, title: 'Station 2', description: 'Charging Station 2' },
+    { id: 'station3', latitude: 6.9300, longitude: 79.8700, title: 'Station 3', description: 'Charging Station 3' },
   ];
 
   useEffect(() => {
@@ -60,7 +49,6 @@ export default function MapScreen() {
           accuracy: Location.Accuracy.High,
           timeout: 15000,
         });
-        console.log('Location data:', loc.coords);
         setLocation(loc.coords);
       } catch (err) {
         console.error('Location error:', err);
@@ -72,27 +60,78 @@ export default function MapScreen() {
   useEffect(() => {
     if (location && mapRef.current?.setCameraPosition) {
       mapRef.current.setCameraPosition({
-        coordinates: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-        },
+        coordinates: { latitude: location.latitude, longitude: location.longitude },
         zoom: 15,
         duration: 1000,
       });
     }
   }, [location]);
 
+  const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c;
+    return d;
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+
+    try {
+      const geocodedLocations = await Location.geocodeAsync(searchQuery);
+      if (geocodedLocations.length === 0) {
+        Alert.alert('No results found for this location.');
+        setShowDropdown(false);
+        return;
+      }
+
+      const { latitude, longitude } = geocodedLocations[0];
+
+      mapRef.current?.setCameraPosition({
+        coordinates: { latitude, longitude },
+        zoom: 14,
+        duration: 1000,
+      });
+
+      const nearby = chargingStations.filter((station) => {
+        const distance = getDistanceFromLatLonInKm(latitude, longitude, station.latitude, station.longitude);
+        return distance <= 3;
+      });
+
+      if (nearby.length === 0) {
+        Alert.alert('No nearby stations found within 3 km.');
+        setShowDropdown(false);
+        return;
+      }
+
+      setNearbyStations(nearby);
+      setShowDropdown(true);
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      Alert.alert('Error searching for location.');
+      setShowDropdown(false);
+    }
+  };
+
   const reCenter = () => {
     if (mapRef.current?.setCameraPosition && location) {
       mapRef.current.setCameraPosition({
-        coordinates: {
-          latitude: location.latitude,
-          longitude: location.longitude,
-        },
+        coordinates: { latitude: location.latitude, longitude: location.longitude },
         zoom: 15,
         duration: 1000,
       });
     }
+    setNearbyStations([]);
+    setSearchQuery('');
+    setShowDropdown(false);
   };
 
   if (errorMsg) {
@@ -124,38 +163,63 @@ export default function MapScreen() {
         userLocationPriority="high"
         userLocationUpdateInterval={5000}
         camera={{
-          centerCoordinate: {
-            latitude: location.latitude,
-            longitude: location.longitude,
-          },
+          centerCoordinate: { latitude: location.latitude, longitude: location.longitude },
           zoom: 15,
         }}
         markers={[
-          // User's location marker
-          {
-            id: 'user-location',
-            coordinates: {
-              latitude: location.latitude,
-              longitude: location.longitude,
-            },
-            title: 'You are here',
-            snippet: 'Current location',
-            description: 'Current location',
-          },
-          // Charging station markers
+          { id: 'user-location', coordinates: { latitude: location.latitude, longitude: location.longitude }, title: 'You are here', snippet: 'Current location', description: 'Current location' },
           ...chargingStations.map((station) => ({
             id: station.id,
-            coordinates: {
-              latitude: station.latitude,
-              longitude: station.longitude,
-            },
+            coordinates: { latitude: station.latitude, longitude: station.longitude },
             title: station.title,
             snippet: station.description,
             description: station.description,
-            icon: require('../../assets/map/station-icon.png'), // Replace with your icon path
+            icon: { uri: Image.resolveAssetSource(stationIcon).uri, width: 40, height: 40 },
           })),
         ]}
       />
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search an area..."
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onSubmitEditing={handleSearch}
+        />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <MaterialIcons name="search" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Show Nearby Stations Dropdown */}
+      {showDropdown && nearbyStations.length > 0 && (
+        <View style={styles.resultsContainer}>
+          <FlatList
+            data={nearbyStations}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.resultItem}
+                onPress={() => {
+                  mapRef.current?.setCameraPosition({
+                    coordinates: { latitude: item.latitude, longitude: item.longitude },
+                    zoom: 17,
+                    duration: 1000,
+                  });
+                  setShowDropdown(false);
+                  setSearchQuery(item.title);
+                }}
+              >
+                <Text>{item.title}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+
+      {/* Recenter Button */}
       <TouchableOpacity style={styles.fab} onPress={reCenter}>
         <MaterialIcons name="my-location" size={24} color="#fff" />
       </TouchableOpacity>
@@ -166,6 +230,52 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
+  searchContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 80,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  searchInput: { flex: 1, paddingVertical: 8 },
+  searchButton: {
+    position: 'absolute',
+    right: -50,
+    top: 5,
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 20,
+    elevation: 3,
+  },
+  resultsContainer: {
+    position: 'absolute',
+    top: 110,
+    left: 20,
+    right: 20,
+    maxHeight: 200,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  resultItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ddd',
+  },
   fab: {
     position: 'absolute',
     bottom: 30,
