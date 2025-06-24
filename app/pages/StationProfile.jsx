@@ -71,6 +71,7 @@ return (
       <View style={styles.connectorHeader}>
         <Text style={[styles.availableText, { color: colors.primary }]}>Available</Text>
         <Text style={styles.connectorID}>ID: #E0299</Text>
+      
       </View>
       {/* Charger name and image row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
@@ -80,24 +81,79 @@ return (
         />
         <Text style={styles.connectorType}>CCS 2</Text>
       </View>
-      {/* Separator line */}
-      <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
-      <View style={styles.batteryInfo}>
-        <Text style={styles.batteryText}>Battery Gain: ~35% in 30 mins</Text>
-        <Text style={styles.batteryText}>Est. Time to 80%: ~45 mins</Text>
-      </View>
-      <View style={styles.powerRow}>
-        <Text style={styles.powerText}>⚡ 50kW (DC)</Text>
-        <View style={styles.kwBox}></View>
-        <Text style={styles.priceText}>LKR 55.00 /kW</Text>
-      </View>
+    {/* Separator line */}
+    <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
+    <View style={[styles.batteryInfo, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }]}>
+        <Text style={styles.batteryText}>Battery Gain:</Text>
+        <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>~35% in 30 mins</Text>
     </View>
-    <View style={styles.connectorCard}>
-      <View style={styles.connectorHeader}>
-        <Text style={[styles.busyText, { color: 'orange' }]}>Charger Busy</Text>
-        <Text style={styles.connectorID}>ID: #E1121</Text>
-      </View>
-      {/* Charger name and image row */}
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <Text style={styles.batteryText}>Est. Time to 80%:</Text>
+        <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>~45 mins</Text>
+    </View>
+    <View style={styles.powerRow}>
+       
+        {/* Small gray test box */}
+        <View
+            style={{
+                backgroundColor: '#E0E0E0',
+                borderRadius: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                marginHorizontal: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 32,
+                borderWidth: 1,
+                borderColor: '#B0B0B0',
+            }}
+        >
+            <Text
+                style={{
+                    color: colors.mainTextColor,
+                    fontSize: 12,
+                    fontFamily: fonts.PlusJakartaSansBold, // Make it bolder
+                    fontWeight: 'bold', // Extra boldness for safety
+                }}
+            >
+                ⚡ 50kW (DC)
+            </Text>
+        </View>
+
+        <View
+            style={{
+                backgroundColor: '#E0E0E0',
+                borderRadius: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                marginHorizontal: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 32,
+                borderWidth: 1,
+                borderColor: '#B0B0B0',
+            }}
+        >
+            <Text
+                style={{
+                    color: colors.mainTextColor,
+                    fontSize: 12,
+                    fontFamily: fonts.PlusJakartaSansBold, // Make it bolder
+                    fontWeight: 'bold', // Extra boldness for safety
+                }}
+            >
+                LKR 55.00 /kW
+            </Text>
+        </View>
+        </View>
+       
+        </View>
+        <View style={styles.connectorCard}>
+            <View style={styles.connectorHeader}>
+                <Text style={[styles.busyText, { color: 'orange' }]}>Charger Busy</Text>
+                <Text style={styles.connectorID}>ID: #E1121</Text>
+            </View>
+            {/* Charger name and image row */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
         <Image
           source={require('../../assets/type2.png')}
@@ -105,16 +161,74 @@ return (
         />
         <Text style={styles.connectorType}>Type 2 (Mennekes)</Text>
       </View>
-      {/* Separator line */}
-      <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
-      <View style={styles.batteryInfo}>
-        <Text style={styles.batteryText}>Battery Gain: ~20% in 30 mins</Text>
-        <Text style={styles.batteryText}>Est. Time to 80%: ~2.5 - 3 hrs</Text>
-      </View>
-      <View style={styles.powerRow}>
-        <Text style={styles.powerText}>⚡ 22kW (AC)</Text>
+    /* Separator line */
+    <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
+    <View style={styles.batteryInfo}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.batteryText}>Battery Gain:</Text>
+            <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>~20% in 30 mins</Text>
+        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.batteryText}>Est. Time to 80%:</Text>
+            <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>~2.5 - 3 hrs</Text>
+        </View>
+    </View>
+    <View style={[styles.powerRow, { gap: 4 }]}>
+        <View
+            style={{
+                backgroundColor: '#E0E0E0',
+                borderRadius: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                marginHorizontal: 4, // reduced from 8 to 4
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 32,
+                borderWidth: 1,
+                borderColor: '#B0B0B0',
+            }}
+          >
+            <Text
+                style={{
+                  color: colors.mainTextColor,
+                  fontSize: 12,
+                  fontFamily: fonts.PlusJakartaSansBold, // Make it bolder
+                    fontWeight: 'bold', // Extra boldness for safety
+                }}
+            >
+               ⚡ 22kW (AC)
+            </Text>
+        </View> 
+       
         <View style={styles.kwBox}></View>
-        <Text style={styles.priceText}>LKR 55.00 /kW</Text>
+<View
+            style={{
+                backgroundColor: '#E0E0E0',
+                borderRadius: 4,
+                paddingHorizontal: 8,
+                paddingVertical: 2,
+                marginHorizontal: 8,
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 32,
+                borderWidth: 1,
+                borderColor: '#B0B0B0',
+            }}
+        >
+            <Text
+                style={{
+                    color: colors.mainTextColor,
+                    fontSize: 12,
+                    fontFamily: fonts.PlusJakartaSansBold, // Make it bolder
+                    fontWeight: 'bold', // Extra boldness for safety
+                }}
+            >
+               LKR 55.00 /kW
+            </Text>
+        </View> 
+       
+
+        <View style={styles.kwBox}></View>
       </View>
     </View>
 
@@ -134,8 +248,8 @@ return (
     <TouchableOpacity onPress={handleReport}>
       <Text style={styles.reportText}>Report</Text>
     </TouchableOpacity>
-  </ScrollView>
-</View>
+    </ScrollView>
+  </View>
 );
 }
 
