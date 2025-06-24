@@ -152,6 +152,7 @@ export default function MapScreen() {
             title: station.title,
             snippet: station.description,
             description: station.description,
+            icon: require('../../assets/map/station-icon.png'), // Replace with your icon path
           })),
         ]}
       />
