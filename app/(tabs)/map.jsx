@@ -11,10 +11,14 @@ import {
   Image,
   Alert
 } from 'react-native';
+import axios from 'axios';
 import * as Location from 'expo-location';
 import * as ExpoMaps from 'expo-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import stationIcon from '../../assets/map/station-icon.png';
+import {GOOGLE_MAPS_API_KEY} from '@env'; // Ensure you have the correct path to your .env file
+
+const GOOGLE_API_KEY = {GOOGLE_MAPS_API_KEY}; // 🔑 Replace with your key
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
@@ -22,6 +26,7 @@ export default function MapScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [nearbyStations, setNearbyStations] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
   const mapRef = useRef(null);
 
   const chargingStations = [
@@ -82,11 +87,46 @@ export default function MapScreen() {
     return d;
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+  const fetchSuggestions = async (input) => {
+    if (!input) {
+      setSuggestions([]);
+      return;
+    }
 
     try {
-      const geocodedLocations = await Location.geocodeAsync(searchQuery);
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_API_KEY}`
+      );
+
+      if (response.data.status === 'OK') {
+        setSuggestions(response.data.predictions);
+      } else {
+        setSuggestions([]);
+      }
+    } catch (error) {
+      console.error('Places API error:', error);
+    }
+  };
+
+  const handleSearch = async (placeId = null, description = null) => {
+    if (!searchQuery.trim() && !description) return;
+
+    try {
+      let geocodedLocations;
+
+      if (placeId) {
+        // Get coordinates from place ID
+        const response = await axios.get(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
+        );
+
+        const { lat, lng } = response.data.result.geometry.location;
+        geocodedLocations = [{ latitude: lat, longitude: lng }];
+        setSearchQuery(description);
+      } else {
+        geocodedLocations = await Location.geocodeAsync(searchQuery);
+      }
+
       if (geocodedLocations.length === 0) {
         Alert.alert('No results found for this location.');
         setShowDropdown(false);
@@ -114,8 +154,9 @@ export default function MapScreen() {
 
       setNearbyStations(nearby);
       setShowDropdown(true);
+      setSuggestions([]);
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error('Search error:', error);
       Alert.alert('Error searching for location.');
       setShowDropdown(false);
     }
@@ -132,6 +173,7 @@ export default function MapScreen() {
     setNearbyStations([]);
     setSearchQuery('');
     setShowDropdown(false);
+    setSuggestions([]);
   };
 
   if (errorMsg) {
@@ -185,13 +227,33 @@ export default function MapScreen() {
           style={styles.searchInput}
           placeholder="Search an area..."
           value={searchQuery}
-          onChangeText={setSearchQuery}
-          onSubmitEditing={handleSearch}
+          onChangeText={(text) => {
+            setSearchQuery(text);
+            fetchSuggestions(text);
+          }}
         />
-        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+        <TouchableOpacity style={styles.searchButton} onPress={() => handleSearch()}>
           <MaterialIcons name="search" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
+
+      {/* Suggestions Dropdown */}
+      {suggestions.length > 0 && (
+        <View style={styles.resultsContainer}>
+          <FlatList
+            data={suggestions}
+            keyExtractor={(item) => item.place_id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.resultItem}
+                onPress={() => handleSearch(item.place_id, item.description)}
+              >
+                <Text>{item.description}</Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
 
       {/* Show Nearby Stations Dropdown */}
       {showDropdown && nearbyStations.length > 0 && (
@@ -270,6 +332,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+    zIndex: 10,
   },
   resultItem: {
     padding: 10,
