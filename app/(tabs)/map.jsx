@@ -16,27 +16,49 @@ export default function MapScreen() {
   const [errorMsg, setErrorMsg] = useState(null);
   const mapRef = useRef(null);
 
-   useEffect(() => {
+  // Example charging stations (replace with backend later)
+  const chargingStations = [
+    {
+      id: 'station1',
+      latitude: 6.9271,
+      longitude: 79.8612,
+      title: 'Station 1',
+      description: 'Charging Station 1',
+    },
+    {
+      id: 'station2',
+      latitude: 6.9150,
+      longitude: 79.8630,
+      title: 'Station 2',
+      description: 'Charging Station 2',
+    },
+    {
+      id: 'station3',
+      latitude: 6.9300,
+      longitude: 79.8700,
+      title: 'Station 3',
+      description: 'Charging Station 3',
+    },
+  ];
+
+  useEffect(() => {
     (async () => {
-      // 1. Check if services are enabled
       let servicesEnabled = await Location.hasServicesEnabledAsync();
       if (!servicesEnabled) {
         setErrorMsg('Enable location services in device settings');
         return;
       }
 
-      // 2. Request permissions
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Permission denied');
         return;
       }
 
-      // 3. Get location with high accuracy
       try {
         let loc = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.High,
-          timeout: 15000, // 15 seconds timeout
+          timeout: 15000,
         });
         console.log('Location data:', loc.coords);
         setLocation(loc.coords);
@@ -47,7 +69,6 @@ export default function MapScreen() {
     })();
   }, []);
 
-  // Auto-center map when location updates
   useEffect(() => {
     if (location && mapRef.current?.setCameraPosition) {
       mapRef.current.setCameraPosition({
@@ -61,7 +82,6 @@ export default function MapScreen() {
     }
   }, [location]);
 
-  // Re-center button functionality
   const reCenter = () => {
     if (mapRef.current?.setCameraPosition && location) {
       mapRef.current.setCameraPosition({
@@ -75,7 +95,6 @@ export default function MapScreen() {
     }
   };
 
-  // Error and loading states
   if (errorMsg) {
     return (
       <View style={styles.centered}>
@@ -93,7 +112,6 @@ export default function MapScreen() {
     );
   }
 
-  // Select correct map component
   const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
   const MapViewComponent = MapNamespace.View;
 
@@ -113,7 +131,9 @@ export default function MapScreen() {
           zoom: 15,
         }}
         markers={[
+          // User's location marker
           {
+            id: 'user-location',
             coordinates: {
               latitude: location.latitude,
               longitude: location.longitude,
@@ -122,6 +142,17 @@ export default function MapScreen() {
             snippet: 'Current location',
             description: 'Current location',
           },
+          // Charging station markers
+          ...chargingStations.map((station) => ({
+            id: station.id,
+            coordinates: {
+              latitude: station.latitude,
+              longitude: station.longitude,
+            },
+            title: station.title,
+            snippet: station.description,
+            description: station.description,
+          })),
         ]}
       />
       <TouchableOpacity style={styles.fab} onPress={reCenter}>
