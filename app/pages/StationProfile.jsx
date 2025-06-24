@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import InputField from '../../components/InputField';
 import DropdownField from '../../components/DropdownField';
 import { router } from 'expo-router';
+ 
 
 
 const ChargingStationScreen = () => {
@@ -26,97 +27,117 @@ const ChargingStationScreen = () => {
   };
 
 return (
-    <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-            <View style={styles.imageContainer}>
-                <Image source={require('../../assets/Station.jpg')} style={styles.stationImage} />
-            </View>
-            {/* Back Icon */}
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                <Image source={require('../../assets/back-icon.png')} style={styles.backIcon} />
-            </TouchableOpacity>
-
-            {/* Title with icons on the right */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 24, marginTop: 16, justifyContent: 'space-between' }}>
-                <Text style={[styles.title, { fontSize: 18, marginTop: 0, marginHorizontal: 0 }]}>Fonseka Charging Station</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <TouchableOpacity>
-                        <Image source={require('../../assets/bookmark.png')} style={[styles.bookmarkIcon, { width: 23, height: 24, marginRight: 8 }]} />
-                    </TouchableOpacity>
-                    <TouchableOpacity>
-                        <Image source={require('../../assets/navigation.png')} style={[styles.navigationIcon, { width: 23, height: 24 }]} />
-                    </TouchableOpacity>
-                </View>
-            </View>
-            <Text style={[styles.subtitle, { fontSize: 12 }]}>No: 2/82, Maha Payagala, Payagala</Text>
-
-            <View style={styles.statusRow}>
-                <View style={[styles.openBadge, { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 2 }]}>
-                    <Text style={[styles.openText, { fontSize: 10 }]}>Open</Text>
-                </View>
-                <View style={styles.ratingRow}>
-                    <Image source={require('../../assets/star.png')} style={styles.starIcon} />
-                    <Text style={[styles.ratingText, { fontSize: 10 }]}>4.5 (43 Reviews)</Text>
-                </View>
-            </View>
-
-            <Text style={[styles.sectionTitle, { fontSize: 13 }]}>Available Connectors</Text>
-            <View style={styles.connectorCard}>
-                <View style={styles.connectorHeader}>
-                    <Text style={styles.availableText}>Available</Text>
-                    <Text style={styles.connectorID}>ID: #E0299</Text>
-                </View>
-                <Text style={styles.connectorType}>CCS 2</Text>
-
-                <View style={styles.batteryInfo}>
-                    <Text style={styles.batteryText}>Battery Gain: ~35% in 30 mins</Text>
-                    <Text style={styles.batteryText}>Est. Time to 80%: ~45 mins</Text>
-                </View>
-
-                <View style={styles.powerRow}>
-                    <Text style={styles.powerText}>⚡ 50kW (DC)</Text>
-                    <Text style={styles.priceText}>LKR 55.00 /kW</Text>
-                </View>
-            </View>
-
-            {/* Connector Card 2 */}
-            <View style={styles.connectorCard}>
-                <View style={styles.connectorHeader}>
-                    <Text style={styles.busyText}>Charger Busy</Text>
-                    <Text style={styles.connectorID}>ID: #E1121</Text>
-                </View>
-                <Text style={styles.connectorType}>Type 2 (Mennekes)</Text>
-
-                <View style={styles.batteryInfo}>
-                    <Text style={styles.batteryText}>Battery Gain: ~20% in 30 mins</Text>
-                    <Text style={styles.batteryText}>Est. Time to 80%: ~2.5 - 3 hrs</Text>
-                </View>
-
-                <View style={styles.powerRow}>
-                    <Text style={styles.powerText}>⚡ 22kW (AC)</Text>
-                    <Text style={styles.priceText}>LKR 55.00 /kW</Text>
-                </View>
-            </View>
-
-            {/* Buttons */}
-            <CustomButton title="Book Now" onPress={handleBookNow} type="primary" style={styles.bookButton} />
-            <CustomButton
-                title="Check Availability"
-                onPress={handleCheckAvailability}
-                type="primary"
-                style={styles.checkButton}
-                textStyle={{ color: colors.primary }} // Ensure this prop is supported by CustomButton
-            />
-
-            {/* Report Link */}
-            <TouchableOpacity onPress={handleReport}>
-                <Text style={styles.reportText}>Report</Text>
-            </TouchableOpacity>
-
-        </ScrollView>
+<View style={styles.container}>
+  <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+    <View style={styles.imageContainer}>
+      <Image source={require('../../assets/Station.jpg')} style={styles.stationImage} />
+      {/* Back Icon */}
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Image source={require('../../assets/back-icon.png')} style={styles.backIcon} />
+      </TouchableOpacity>
     </View>
+
+    {/* Title with icons on the right */}
+    <View style={{ flexDirection: 'row', alignItems: 'center', marginHorizontal: 24, marginTop: 16, justifyContent: 'space-between' }}>
+      <Text style={[styles.title, { fontSize: 18, marginTop: 0, marginHorizontal: 0 }]}>Fonseka Charging Station</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <TouchableOpacity>
+          <Image source={require('../../assets/bookmark.png')} style={[styles.bookmarkIcon, { width: 23, height: 24, marginRight: 8 }]} />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          <Image source={require('../../assets/navigation.png')} style={[styles.navigationIcon, { width: 23, height: 24 }]} />
+        </TouchableOpacity>
+      </View>
+    </View>
+    <Text style={[styles.subtitle, { fontSize: 12 }]}>No: 2/82, Maha Payagala, Payagala</Text>
+
+    <View style={[styles.statusRow, { justifyContent: 'space-between' }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <View style={[styles.openBadge, { backgroundColor: colors.primary, paddingHorizontal: 16, paddingVertical: 2 }]}>
+          <Text style={[styles.openText, { fontSize: 10 }]}>Open</Text>
+        </View>
+        <View style={styles.ratingRow}>
+          <Image source={require('../../assets/star.png')} style={styles.starIcon} />
+          <Text style={[styles.ratingText, { fontSize: 10 }]}>4.5 (43 Reviews)</Text>
+        </View>
+      </View>
+      <TouchableOpacity onPress={handleReport}>
+        <Text style={styles.reportText}>Report</Text>
+      </TouchableOpacity>
+    </View>
+
+    <Text style={[styles.sectionTitle, { fontSize: 13 }]}>Available Connectors</Text>
+    <View style={styles.connectorCard}>
+      <View style={styles.connectorHeader}>
+        <Text style={[styles.availableText, { color: colors.primary }]}>Available</Text>
+        <Text style={styles.connectorID}>ID: #E0299</Text>
+      </View>
+      {/* Charger name and image row */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <Image
+          source={require('../../assets/ccs2.png')}
+          style={[styles.chargerIcon, { tintColor: colors.primary, marginRight: 8 }]}
+        />
+        <Text style={styles.connectorType}>CCS 2</Text>
+      </View>
+      {/* Separator line */}
+      <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
+      <View style={styles.batteryInfo}>
+        <Text style={styles.batteryText}>Battery Gain: ~35% in 30 mins</Text>
+        <Text style={styles.batteryText}>Est. Time to 80%: ~45 mins</Text>
+      </View>
+      <View style={styles.powerRow}>
+        <Text style={styles.powerText}>⚡ 50kW (DC)</Text>
+        <View style={styles.kwBox}></View>
+        <Text style={styles.priceText}>LKR 55.00 /kW</Text>
+      </View>
+    </View>
+    <View style={styles.connectorCard}>
+      <View style={styles.connectorHeader}>
+        <Text style={[styles.busyText, { color: 'orange' }]}>Charger Busy</Text>
+        <Text style={styles.connectorID}>ID: #E1121</Text>
+      </View>
+      {/* Charger name and image row */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        <Image
+          source={require('../../assets/type2.png')}
+          style={[styles.chargerIcon, { tintColor: colors.primary, marginRight: 8 }]}
+        />
+        <Text style={styles.connectorType}>Type 2 (Mennekes)</Text>
+      </View>
+      {/* Separator line */}
+      <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
+      <View style={styles.batteryInfo}>
+        <Text style={styles.batteryText}>Battery Gain: ~20% in 30 mins</Text>
+        <Text style={styles.batteryText}>Est. Time to 80%: ~2.5 - 3 hrs</Text>
+      </View>
+      <View style={styles.powerRow}>
+        <Text style={styles.powerText}>⚡ 22kW (AC)</Text>
+        <View style={styles.kwBox}></View>
+        <Text style={styles.priceText}>LKR 55.00 /kW</Text>
+      </View>
+    </View>
+
+    {/* Buttons */}
+    <View>
+      <CustomButton title="Book Now" onPress={handleBookNow} type="primary" style={styles.bookButton} />
+      <CustomButton
+        title="Check Availability"
+        onPress={handleCheckAvailability}
+        type="primary"
+        style={styles.checkButton}
+        textStyle={{ color: colors.primary }} // Ensure this prop is supported by CustomButton
+      />
+    </View>
+
+    {/* Report Link */}
+    <TouchableOpacity onPress={handleReport}>
+      <Text style={styles.reportText}>Report</Text>
+    </TouchableOpacity>
+  </ScrollView>
+</View>
 );
-};
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
@@ -130,7 +151,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontFamily: fonts.PlusJakartaSansBold, color: colors.mainTextColor, marginTop: 16, marginHorizontal: 24 },
   subtitle: { fontSize: 14, fontFamily: fonts.PlusJakartaSans, color: colors.secondaryText, marginBottom: 16, marginHorizontal: 24 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 16, marginHorizontal: 24 },
-  openBadge: { colors:colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
+  openBadge: { backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
   openText: { color: colors.background, fontFamily: fonts.PlusJakartaSansBold, fontSize: 12 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   starIcon: { width: 14, height: 14, tintColor: '#FFD700' },
