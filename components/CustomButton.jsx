@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: colors.background, // Use imported color
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSansBold,
     paddingVertical: 2,
     borderRadius: 8,

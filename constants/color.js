@@ -14,6 +14,8 @@ const colors = {
   cardBackground: '#f2fdfb',
   danger: '#ff3b30',
   rescheduleBg: '#e6faf7',
+  HighlightText: '#D68400', //orange
+
 };
 
 export default colors;
