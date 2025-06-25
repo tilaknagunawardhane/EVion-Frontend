@@ -43,20 +43,16 @@ export default function DirectionsScreen() {
   }, [routePoints]);
 
   useEffect(() => {
-    if (mapReady && routePoints.length > 0 && mapRef.current?.fitCameraToCoordinates) {
-      console.log('Fitting camera to coordinates');
-      // Include both start and end points plus route points for better fitting
-      const allPoints = [userLocation, ...routePoints, destination];
-      mapRef.current.fitCameraToCoordinates(allPoints, {
-        edgePadding: { top: 120, right: 50, bottom: 200, left: 50 },
-        animated: true
-      });
-    } else if (mapReady && mapRef.current?.fitCameraToCoordinates) {
-      // Fallback: show both start and end points when route is not ready
-      console.log('Fitting camera to start and end points');
-      mapRef.current.fitCameraToCoordinates([userLocation, destination], {
-        edgePadding: { top: 120, right: 50, bottom: 200, left: 50 },
-        animated: true
+    if (mapReady && routePoints.length > 0 && mapRef.current?.setCameraPosition) {
+      console.log('Setting camera to show route');
+      // Center between start and end points to show the route
+      const centerLat = (userLocation.latitude + destination.latitude) / 2;
+      const centerLng = (userLocation.longitude + destination.longitude) / 2;
+      
+      mapRef.current.setCameraPosition({
+        coordinates: { latitude: centerLat, longitude: centerLng },
+        zoom: 12,
+        duration: 1000,
       });
     }
   }, [mapReady, routePoints]);
@@ -158,6 +154,31 @@ export default function DirectionsScreen() {
     return points;
   };
 
+  const recenterMap = () => {
+    console.log('Recenter button pressed');
+    
+    if (mapRef.current?.setCameraPosition) {
+      if (routePoints.length > 0) {
+        // Center between start and end points to show the route
+        const centerLat = (userLocation.latitude + destination.latitude) / 2;
+        const centerLng = (userLocation.longitude + destination.longitude) / 2;
+        
+        mapRef.current.setCameraPosition({
+          coordinates: userLocation,
+          zoom: 12,
+          duration: 1000,
+        });
+      } else {
+        // Just center on user location
+        mapRef.current.setCameraPosition({
+          coordinates: userLocation,
+          zoom: 15,
+          duration: 1000,
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     fetchRoute();
   }, []);
@@ -189,6 +210,13 @@ export default function DirectionsScreen() {
       <MapViewComponent
         ref={mapRef}
         style={{ flex: 1 }}
+        camera={{
+          centerCoordinate: {
+            latitude: (userLocation.latitude + destination.latitude) / 2,
+            longitude: (userLocation.longitude + destination.longitude) / 2
+          },
+          zoom: 12,
+        }}
         onMapReady={() => {
           console.log('Map is ready');
           console.log('Current routePoints:', routePoints.length);
@@ -235,6 +263,15 @@ export default function DirectionsScreen() {
           </Text>
         </View>
       )}
+
+      {/* Recenter Button */}
+      <TouchableOpacity 
+        style={styles.recenterButton} 
+        onPress={recenterMap}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons name="my-location" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -302,4 +339,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
+  recenterButton: {
+    position: 'absolute',
+    bottom: 120,
+    right: 20,
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    zIndex: 20,
+  },
 });
+
