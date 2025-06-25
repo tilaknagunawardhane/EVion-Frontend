@@ -17,7 +17,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 export default function DirectionsScreen() {
   const params = useLocalSearchParams();
   const navigation = useNavigation();
-  
+
   const [userLocation] = useState({
     latitude: parseFloat(params.userLatitude),
     longitude: parseFloat(params.userLongitude)
@@ -32,103 +32,130 @@ export default function DirectionsScreen() {
   const [distance, setDistance] = useState(null);
   const [duration, setDuration] = useState(null);
   const mapRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
 
- const fetchRoute = async () => {
-  setLoading(true);
-  console.log('API Key:', GOOGLE_MAPS_API_KEY); // Add this at the top of your component
-  try {
-    // Verify coordinates first
-    if (!userLocation.latitude || !userLocation.longitude || 
-        !destination.latitude || !destination.longitude) {
-      throw new Error('Invalid coordinates');
+  useEffect(() => {
+    console.log('RoutePoints updated:', routePoints.length, 'points');
+    if (routePoints.length > 0) {
+      console.log('First point:', routePoints[0]);
+      console.log('Last point:', routePoints[routePoints.length - 1]);
     }
-    console.log('Fetching route from', userLocation, 'to', destination);
+  }, [routePoints]);
 
-    const response = await axios.get(
-      `https://maps.googleapis.com/maps/api/directions/json?` +
-      `origin=${userLocation.latitude},${userLocation.longitude}` +
-      `&destination=${destination.latitude},${destination.longitude}` +
-      `&key=${GOOGLE_MAPS_API_KEY}` +
-      `&mode=driving` // Explicitly set travel mode
-    );
-
-    console.log('Directions API Response:', response.data); // Debug log
-    console.log('Full API response:', JSON.stringify(response.data, null, 2));
-
-    if (response.data.status !== 'OK') {
-      throw new Error(response.data.error_message || 'Directions request failed');
-    }
-
-    if (response.data.routes.length === 0) {
-      Alert.alert('No routes found', 'Could not find a path between these locations');
-      return;
-    }
-
-    const route = response.data.routes[0];
-    const points = decodePolyline(route.overview_polyline.points);
-    setRoutePoints(points);
-    console.log('Decoded points:', points.slice(0, 5), '... total points:', points.length);
-
-    if (route.legs.length > 0) {
-      const leg = route.legs[0];
-      setDistance(leg.distance.text);
-      setDuration(leg.duration.text);
-    }
-
-    // Center map on route
-    if (mapRef.current?.fitCameraToCoordinates) {
-      mapRef.current.fitCameraToCoordinates(points, {
+  useEffect(() => {
+    if (mapReady && routePoints.length > 0 && mapRef.current?.fitCameraToCoordinates) {
+      console.log('Fitting camera to coordinates');
+      mapRef.current.fitCameraToCoordinates(routePoints, {
         edgePadding: { top: 100, right: 50, bottom: 150, left: 50 },
         animated: true
       });
     }
+  }, [mapReady, routePoints]);
 
-  } catch (error) {
-    console.error('Directions error:', error);
-    Alert.alert(
-      'Route Error',
-      error.message || 'Failed to get directions. Please try again.'
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchRoute = async () => {
+    setLoading(true);
+    console.log('API Key:', GOOGLE_MAPS_API_KEY); // Add this at the top of your component
+    try {
+      // Verify coordinates first
+      if (!userLocation.latitude || !userLocation.longitude ||
+        !destination.latitude || !destination.longitude) {
+        throw new Error('Invalid coordinates');
+      }
+      console.log('Fetching route from', userLocation, 'to', destination);
 
- const decodePolyline = (encoded) => {
-  const points = [];
-  let index = 0, len = encoded.length;
-  let lat = 0, lng = 0;
-  
-  while (index < len) {
-    let b, shift = 0, result = 0;
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    
-    const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-    lat += dlat;
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/directions/json?` +
+        `origin=${userLocation.latitude},${userLocation.longitude}` +
+        `&destination=${destination.latitude},${destination.longitude}` +
+        `&key=${GOOGLE_MAPS_API_KEY}` +
+        `&mode=driving` // Explicitly set travel mode
+      );
 
-    shift = 0;
-    result = 0;
-    do {
-      b = encoded.charCodeAt(index++) - 63;
-      result |= (b & 0x1f) << shift;
-      shift += 5;
-    } while (b >= 0x20);
-    
-    const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-    lng += dlng;
+      console.log('Directions API Response:', response.data); // Debug log
+      // console.log('Full API response:', JSON.stringify(response.data, null, 2));
 
-    points.push({ 
-      latitude: lat * 1e-5, 
-      longitude: lng * 1e-5 
-    });
-  }
-  
-  return points;
-};
+      if (response.data.status !== 'OK') {
+        throw new Error(response.data.error_message || 'Directions request failed');
+      }
+
+      if (response.data.routes.length === 0) {
+        Alert.alert('No routes found', 'Could not find a path between these locations');
+        return;
+      }
+
+      const route = response.data.routes[0];
+      const points = decodePolyline(route.overview_polyline.points);
+      setRoutePoints(points);
+      console.log('Decoded points:', points.slice(0, 5), '... total points:', points.length);
+      console.log('Route points set:', points.length > 0 ? 'Yes' : 'No');
+      console.log('Sample point structure:', points[0]);
+      console.log('Polyline structure:', {
+        id: 'route',
+        coordinates: points.slice(0, 3),
+        strokeColor: '#007AFF',
+        strokeWidth: 4
+      });
+
+      if (route.legs.length > 0) {
+        const leg = route.legs[0];
+        setDistance(leg.distance.text);
+        setDuration(leg.duration.text);
+      }
+
+      // Center map on route
+      if (mapRef.current?.fitCameraToCoordinates) {
+        mapRef.current.fitCameraToCoordinates(points, {
+          edgePadding: { top: 100, right: 50, bottom: 150, left: 50 },
+          animated: true
+        });
+      }
+
+    } catch (error) {
+      console.error('Directions error:', error);
+      Alert.alert(
+        'Route Error',
+        error.message || 'Failed to get directions. Please try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const decodePolyline = (encoded) => {
+    const points = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
+
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push({
+        latitude: lat * 1e-5,
+        longitude: lng * 1e-5
+      });
+    }
+
+    return points;
+  };
 
   useEffect(() => {
     fetchRoute();
@@ -165,6 +192,11 @@ export default function DirectionsScreen() {
           centerCoordinate: userLocation,
           zoom: 15,
         }}
+        onMapReady={() => {
+          console.log('Map is ready');
+          console.log('Current routePoints:', routePoints.length);
+          setMapReady(true);
+        }}
         markers={[
           {
             id: 'start',
@@ -181,16 +213,14 @@ export default function DirectionsScreen() {
             icon: { uri: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png' }
           },
         ]}
-        polylines={[
-          { 
-            id: 'route', 
-            points: routePoints, 
-            color: '#007AFF', 
-            width: 4,
-            geodesic: true,
-            coordinates:userLocation
+        polylines={routePoints.length > 0 ? [
+          {
+            id: 'route',
+            coordinates: routePoints,
+            strokeColor: '#007AFF',
+            strokeWidth: 4
           }
-        ]}
+        ] : []}
       />
 
       {/* Route details at bottom */}

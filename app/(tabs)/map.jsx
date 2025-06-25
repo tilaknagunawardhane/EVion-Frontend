@@ -75,6 +75,18 @@ export default function MapScreen() {
     }
   }, [location]);
 
+  // Show nearby stations when location is available
+  useEffect(() => {
+    if (location) {
+      const nearby = chargingStations.filter((station) => {
+        const distance = getDistanceFromLatLonInKm(location.latitude, location.longitude, station.latitude, station.longitude);
+        return distance <= 10; // Show stations within 10km
+      });
+      setNearbyStations(nearby);
+      setShowDropdown(nearby.length > 0);
+    }
+  }, [location]);
+
   const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -173,6 +185,11 @@ export default function MapScreen() {
     setSuggestions([]);
   };
 
+  const showAllStations = () => {
+    setNearbyStations(chargingStations);
+    setShowDropdown(true);
+  };
+
   const navigateToDirections = (destinationLat, destinationLng, destinationTitle) => {
     if (!location) return;
     
@@ -228,8 +245,7 @@ export default function MapScreen() {
             title: station.title,
             snippet: station.description,
             description: station.description,
-            icon: { uri: Image.resolveAssetSource(stationIcon).uri, width: 40, height: 40 },
-            onPress: () => navigateToDirections(station.latitude, station.longitude, station.title)
+            icon: { uri: Image.resolveAssetSource(stationIcon).uri, width: 40, height: 40 }
           })),
         ]}
       />
@@ -305,6 +321,11 @@ export default function MapScreen() {
       <TouchableOpacity style={styles.fab} onPress={reCenter}>
         <MaterialIcons name="my-location" size={24} color="#fff" />
       </TouchableOpacity>
+
+      {/* Show All Stations Button */}
+      <TouchableOpacity style={[styles.fab, styles.stationsFab]} onPress={showAllStations}>
+        <MaterialIcons name="local-gas-station" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 }
@@ -376,6 +397,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+  },
+  stationsFab: {
+    bottom: 90,
+    right: 20,
   },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
