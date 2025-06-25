@@ -16,9 +16,11 @@ import * as Location from 'expo-location';
 import * as ExpoMaps from 'expo-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import stationIcon from '../../assets/map/station-icon.png';
-import {GOOGLE_MAPS_API_KEY} from '@env'; // Ensure you have the correct path to your .env file
+import { GOOGLE_MAPS_API_KEY } from '@env';
+import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
-const GOOGLE_API_KEY = {GOOGLE_MAPS_API_KEY}; // 🔑 Replace with your key
+const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY; // Fixed this line (removed curly braces)
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
@@ -28,6 +30,7 @@ export default function MapScreen() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const mapRef = useRef(null);
+  const navigation = useNavigation();
 
   const chargingStations = [
     { id: 'station1', latitude: 6.9271, longitude: 79.8612, title: 'Station 1', description: 'Charging Station 1' },
@@ -79,9 +82,9 @@ export default function MapScreen() {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos((lat1 * Math.PI) / 180) *
-        Math.cos((lat2 * Math.PI) / 180) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const d = R * c;
     return d;
@@ -146,14 +149,8 @@ export default function MapScreen() {
         return distance <= 3;
       });
 
-      if (nearby.length === 0) {
-        Alert.alert('No nearby stations found within 3 km.');
-        setShowDropdown(false);
-        return;
-      }
-
       setNearbyStations(nearby);
-      setShowDropdown(true);
+      setShowDropdown(nearby.length > 0);
       setSuggestions([]);
     } catch (error) {
       console.error('Search error:', error);
@@ -174,6 +171,21 @@ export default function MapScreen() {
     setSearchQuery('');
     setShowDropdown(false);
     setSuggestions([]);
+  };
+
+  const navigateToDirections = (destinationLat, destinationLng, destinationTitle) => {
+    if (!location) return;
+    
+    router.push({
+      pathname: '/pages/maps/DirectionsScreen',
+      params: {
+        userLatitude: location.latitude,
+        userLongitude: location.longitude,
+        destinationLatitude: destinationLat,
+        destinationLongitude: destinationLng,
+        destinationTitle: destinationTitle || 'Destination'
+      }
+    });
   };
 
   if (errorMsg) {
@@ -217,6 +229,7 @@ export default function MapScreen() {
             snippet: station.description,
             description: station.description,
             icon: { uri: Image.resolveAssetSource(stationIcon).uri, width: 40, height: 40 },
+            onPress: () => navigateToDirections(station.latitude, station.longitude, station.title)
           })),
         ]}
       />
@@ -246,7 +259,19 @@ export default function MapScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => handleSearch(item.place_id, item.description)}
+                onPress={async () => {
+                  try {
+                    const response = await axios.get(
+                      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.place_id}&key=${GOOGLE_API_KEY}`
+                    );
+
+                    const { lat, lng } = response.data.result.geometry.location;
+                    navigateToDirections(lat, lng, item.description);
+                  } catch (error) {
+                    console.error('Error fetching place details:', error);
+                    Alert.alert('Error fetching location details.');
+                  }
+                }}
               >
                 <Text>{item.description}</Text>
               </TouchableOpacity>
@@ -264,17 +289,12 @@ export default function MapScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => {
-                  mapRef.current?.setCameraPosition({
-                    coordinates: { latitude: item.latitude, longitude: item.longitude },
-                    zoom: 17,
-                    duration: 1000,
-                  });
-                  setShowDropdown(false);
-                  setSearchQuery(item.title);
-                }}
+                onPress={() => navigateToDirections(item.latitude, item.longitude, item.title)}
               >
                 <Text>{item.title}</Text>
+                <Text style={styles.distanceText}>
+                  {getDistanceFromLatLonInKm(location.latitude, location.longitude, item.latitude, item.longitude).toFixed(2)} km away
+                </Text>
               </TouchableOpacity>
             )}
           />
@@ -338,6 +358,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderColor: '#ddd',
+  },
+  distanceText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
   },
   fab: {
     position: 'absolute',

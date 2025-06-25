@@ -7,7 +7,9 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -16,7 +18,12 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show maps and nearby stations."
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show maps and nearby stations.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.anonymous.EVionFrontend",
+      "runtimeVersion": {
+        "policy": "appVersion"
       }
     },
     "android": {
@@ -28,13 +35,16 @@
       "package": "com.anonymous.EVionFrontend",
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyAghlt-S0i8b8IJLixLEl5fmTFqGfTqyfM"
         }
-      }
+      },
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -57,6 +67,9 @@
       "eas": {
         "projectId": "bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
     }
   }
 }
