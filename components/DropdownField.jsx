@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
     marginBottom: 8,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   valueText: {
-    fontSize: 14,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
   },
   icon: {
