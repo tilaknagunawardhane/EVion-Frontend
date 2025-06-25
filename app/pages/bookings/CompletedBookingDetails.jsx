@@ -13,13 +13,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import colors from '../../../constants/color.js';
 import fonts from '../../../constants/fonts.js';
-import { useRouter } from 'expo-router';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const CompletedBookingDetailsScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
@@ -43,13 +41,13 @@ const CompletedBookingDetailsScreen = () => {
     rate = 'LKR 55.00 /kW',
     estEnergy = '75kWh',
     estBattery = '+40%',
-  } = route?.params || {};
+  } = params || {};
 
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Icon name="arrow-back" size={24} color={colors.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Booking Details</Text>
@@ -85,9 +83,9 @@ const CompletedBookingDetailsScreen = () => {
             <Text style={styles.infoTitle}>Need to know..</Text>
             <Text style={styles.infoItem}>• You can cancel your booking anytime — but only <Text style={styles.bold}>up to 30 minutes</Text> before the scheduled start time.</Text>
             <Text style={styles.infoItem}>• You can reschedule your booking (change date or time) <Text style={styles.bold}>up to 30 minutes</Text> before the slot begins.</Text>
-            <Text style={styles.infoItem}>• Cancellations made within 30 minutes of the slot will incur a <Text style={styles.bold}>late cancellation fee</Text> to compensate the station’s lost opportunity.</Text>
+            <Text style={styles.infoItem}>• Cancellations made within 30 minutes of the slot will incur a <Text style={styles.bold}>late cancellation fee</Text> to compensate the station's lost opportunity.</Text>
             <Text style={styles.infoItem}>• If you arrive late <Text style={styles.bold}>(after the 15–minute buffer)</Text>, an extra fee will be charged for each minute delayed.</Text>
-            <Text style={styles.infoItem}>• If you miss your booking and don’t show up, the <Text style={styles.bold}>full estimated charging cost will be charged.</Text></Text>
+            <Text style={styles.infoItem}>• If you miss your booking and don't show up, the <Text style={styles.bold}>full estimated charging cost will be charged.</Text></Text>
             <Text style={styles.infoItem}>• Note: A <Text style={styles.bold}>3% service fee</Text> will be added to your charging cost as a booking fee.</Text>
             <Text style={[styles.infoItem, { marginTop: 10 }]}>Please plan ahead and manage your bookings responsibly to avoid unnecessary charges. Thank you for supporting a smooth EV charging experience!</Text>
           </View>
@@ -162,10 +160,10 @@ const CompletedBookingDetailsScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
-  padding: 20,
-  paddingTop: 60,// 👈 Adds gap from the top
-  backgroundColor: colors.white,
-},
+    padding: 20,
+    paddingTop: 60,// 👈 Adds gap from the top
+    backgroundColor: colors.white,
+  },
 
   header: {
     flexDirection: 'row',

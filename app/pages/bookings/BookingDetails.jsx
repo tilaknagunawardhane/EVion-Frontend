@@ -11,14 +11,14 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '../../../constants/color.js';
 import fonts from '../../../constants/fonts.js';
 
 const BookingDetailsScreen = () => {
-  const navigation = useNavigation();
   const router = useRouter();
+  const params = useLocalSearchParams();
+
   const [menuVisible, setMenuVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
   const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
@@ -31,13 +31,13 @@ const BookingDetailsScreen = () => {
     address,
     carName,
     connectorType,
-  } = useLocalSearchParams();
+  } = params || {};
 
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Icon name="arrow-back" size={24} color={colors.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Booking Details</Text>

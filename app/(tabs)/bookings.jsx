@@ -96,21 +96,20 @@ const BookingsScreen = () => {
     return bookings.map((booking, index) => {
       if (activeTab === 'Completed') {
         return (
-            <TouchableOpacity
-              key={index}
-              onPress={() =>
-                router.push({
-                  pathname: '/pages/bookings/CompletedBookingDetails',
-                  params: booking,
-                })
-              }
-            >
-    <CompletedBookingCard {...booking} />
-  </TouchableOpacity>
-);
-
+          <TouchableOpacity
+            key={index}
+            onPress={() =>
+              router.push({
+                pathname: '/pages/bookings/CompletedBookingDetails',
+                params: booking,
+              })
+            }
+          >
+            <CompletedBookingCard {...booking} />
+          </TouchableOpacity>
+        );
       }
-
+      // For Upcoming and Cancelled, use pathname as well
       return (
         <TouchableOpacity
           key={index}
@@ -164,36 +163,36 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.PlusJakartaSansBold,
     marginHorizontal: 16,
     marginBottom: 10,
-    color: colors.heading,
+    color: colors.mainTextColor,
   },
   tabs: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     borderBottomWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.stroke,
     paddingBottom: 8,
     marginHorizontal: 16,
   },
   tab: {
     fontSize: 16,
-    fontFamily: fonts.regular,
-    color: colors.text,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   activeTab: {
     color: colors.primary,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.PlusJakartaSansMedium,
     borderBottomWidth: 2,
     borderBottomColor: colors.primary,
   },
   noBookingsText: {
     fontSize: 16,
-    fontFamily: fonts.regular,
-    color: colors.text,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
     textAlign: 'center',
     marginTop: 20,
   },

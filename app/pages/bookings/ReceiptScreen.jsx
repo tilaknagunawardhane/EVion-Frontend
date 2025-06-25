@@ -95,7 +95,7 @@ export default ReceiptScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   greenOval: {
     backgroundColor: colors.primary,
@@ -115,11 +115,11 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: colors.white,
     fontSize: 16,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.PlusJakartaSansMedium,
   },
   amount: {
     fontSize: 28,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.PlusJakartaSansBold,
     color: colors.white,
     marginTop: 15,
   },
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 20,
     flex: 1,
+    marginBottom: 40,
     elevation: 3,
   },
   item: {
@@ -143,14 +144,14 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 13,
-    fontFamily: fonts.medium,
-    color: colors.grayText,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.secondaryText,
     flex: 1,
   },
   value: {
     fontSize: 14,
-    fontFamily: fonts.bold,
-    color: colors.text,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
     textAlign: 'right',
     flex: 1,
   },
@@ -161,11 +162,11 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 14,
-    fontFamily: fonts.medium,
+    fontFamily: fonts.PlusJakartaSansMedium,
   },
   totalValue: {
     fontSize: 14,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.PlusJakartaSansBold,
   },
   downloadButton: {
     backgroundColor: colors.primary,
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
   },
   downloadText: {
     color: colors.white,
-    fontFamily: fonts.bold,
+    fontFamily: fonts.PlusJakartaSansBold,
     fontSize: 16,
   },
 });

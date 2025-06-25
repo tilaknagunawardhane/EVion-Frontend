@@ -3,6 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-nativ
 import { Ionicons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { useRouter } from 'expo-router';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
+import InputField from "../../../components/InputField";
 
 export default function ReportIssue() {
   const router = useRouter();
@@ -61,7 +64,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     paddingTop: 50,
   },
   header: {
