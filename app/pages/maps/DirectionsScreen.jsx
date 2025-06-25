@@ -45,8 +45,17 @@ export default function DirectionsScreen() {
   useEffect(() => {
     if (mapReady && routePoints.length > 0 && mapRef.current?.fitCameraToCoordinates) {
       console.log('Fitting camera to coordinates');
-      mapRef.current.fitCameraToCoordinates(routePoints, {
-        edgePadding: { top: 100, right: 50, bottom: 150, left: 50 },
+      // Include both start and end points plus route points for better fitting
+      const allPoints = [userLocation, ...routePoints, destination];
+      mapRef.current.fitCameraToCoordinates(allPoints, {
+        edgePadding: { top: 120, right: 50, bottom: 200, left: 50 },
+        animated: true
+      });
+    } else if (mapReady && mapRef.current?.fitCameraToCoordinates) {
+      // Fallback: show both start and end points when route is not ready
+      console.log('Fitting camera to start and end points');
+      mapRef.current.fitCameraToCoordinates([userLocation, destination], {
+        edgePadding: { top: 120, right: 50, bottom: 200, left: 50 },
         animated: true
       });
     }
@@ -100,14 +109,6 @@ export default function DirectionsScreen() {
         const leg = route.legs[0];
         setDistance(leg.distance.text);
         setDuration(leg.duration.text);
-      }
-
-      // Center map on route
-      if (mapRef.current?.fitCameraToCoordinates) {
-        mapRef.current.fitCameraToCoordinates(points, {
-          edgePadding: { top: 100, right: 50, bottom: 150, left: 50 },
-          animated: true
-        });
       }
 
     } catch (error) {
@@ -188,14 +189,13 @@ export default function DirectionsScreen() {
       <MapViewComponent
         ref={mapRef}
         style={{ flex: 1 }}
-        initialCamera={{
-          centerCoordinate: userLocation,
-          zoom: 15,
-        }}
         onMapReady={() => {
           console.log('Map is ready');
           console.log('Current routePoints:', routePoints.length);
-          setMapReady(true);
+          // Add a small delay to ensure map is fully ready
+          setTimeout(() => {
+            setMapReady(true);
+          }, 100);
         }}
         markers={[
           {
