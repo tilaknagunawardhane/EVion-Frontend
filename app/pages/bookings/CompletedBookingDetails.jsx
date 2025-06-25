@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import colors from '../../constants/color.js';
-import fonts from '../../constants/fonts.js';
+import colors from '../../../constants/color.js';
+import fonts from '../../../constants/fonts.js';
 import { useRouter } from 'expo-router';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
-const BookingDetailsScreen = () => {
+const CompletedBookingDetailsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const router = useRouter();
@@ -25,13 +25,17 @@ const BookingDetailsScreen = () => {
   const [infoVisible, setInfoVisible] = useState(false);
   const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
 
+  // Updated destructuring from params
   const {
     stationName = 'Genso Charging Station',
-    stationLocation = 'Southern Highway, Welipenna, Matugama',
-    date = 'Jun 11, 2025',
+    address = 'Southern Highway, Welipenna, Matugama',
+    dateLabel = 'Jun 11, 2025',
     duration = '1 Hr 30 Mins',
     timeRange = '9:30 AM - 11:00 AM',
-    chargerType = 'CCS 2',
+    connectorType = 'CCS 2',
+    carName = 'Nissan Leaf 2020',
+    carImage = null,
+    cost = 'LKR 4125',
     chargerId = '#E0299',
     batteryGain = '~35% in 30 mins',
     estTimeTo80 = '~45 mins',
@@ -39,7 +43,6 @@ const BookingDetailsScreen = () => {
     rate = 'LKR 55.00 /kW',
     estEnergy = '75kWh',
     estBattery = '+40%',
-    estCost = 'LKR 4125',
   } = route?.params || {};
 
   return (
@@ -91,57 +94,12 @@ const BookingDetailsScreen = () => {
         </View>
       </Modal>
 
-      {/* Cancel Booking Confirmation Modal */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={cancelConfirmVisible}
-        onRequestClose={() => setCancelConfirmVisible(false)}
-      >
-        <View style={styles.cancelOverlay}>
-          <View style={styles.cancelModal}>
-            <TouchableOpacity
-              style={{ position: 'absolute', top: 10, right: 10 }}
-              onPress={() => setCancelConfirmVisible(false)}
-            >
-              <Icon name="close" size={20} color={colors.black} />
-            </TouchableOpacity>
-            <Text style={styles.cancelTitle}>Cancel Booking</Text>
-            <Text style={styles.cancelMsg}>
-              Cancelling now will result in a{' '}
-              <Text style={{ color: colors.secondary, fontFamily: fonts.PlusJakartaSansBold }}>
-                late cancellation fee
-              </Text>, as it's past the allowed cancellation window.
-            </Text>
-            <Text style={styles.cancelMsg}>Do you still want to proceed?</Text>
-
-            <View style={styles.cancelActions}>
-              <TouchableOpacity
-                style={styles.cancelCloseBtn}
-                onPress={() => setCancelConfirmVisible(false)}
-              >
-                <Text style={styles.cancelCloseText}>Close</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelConfirmBtn}
-                onPress={() => {
-                  setCancelConfirmVisible(false);
-                  console.log("Booking cancelled"); // Add logic here
-                }}
-              >
-                <Text style={styles.cancelConfirmText}>Cancel Booking</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* Station Info */}
       <View style={styles.stationBox}>
         <Image source={{ uri: 'https://i.ibb.co/SKQ5ZBk/station.png' }} style={styles.stationImage} />
         <View style={styles.stationText}>
           <Text style={styles.stationName}>{stationName}</Text>
-          <Text style={styles.stationLocation}>{stationLocation}</Text>
+          <Text style={styles.stationLocation}>{address}</Text>
         </View>
         <TouchableOpacity>
           <Icon name="arrow-forward-circle" size={28} color={colors.primary} />
@@ -150,7 +108,7 @@ const BookingDetailsScreen = () => {
 
       {/* Date & Time */}
       <View style={styles.dateTimeBox}>
-        <Text style={styles.dateText}>{date}</Text>
+        <Text style={styles.dateText}>{dateLabel}</Text>
         <View style={styles.timeTag}>
           <Text style={styles.timeTagText}>{duration}</Text>
         </View>
@@ -161,7 +119,7 @@ const BookingDetailsScreen = () => {
       <View style={styles.chargerCard}>
         <View style={styles.row}>
           <MaterialCommunityIcons name="ev-station" size={24} color={colors.primary} />
-          <Text style={styles.chargerType}>{chargerType}</Text>
+          <Text style={styles.chargerType}>{connectorType}</Text>
           <Text style={styles.chargerId}>ID: {chargerId}</Text>
         </View>
         <Text style={styles.label}>Battery Gain:</Text>
@@ -186,28 +144,29 @@ const BookingDetailsScreen = () => {
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Cost:</Text>
-          <Text style={styles.estimateValue}>{estCost}</Text>
+          <Text style={styles.estimateValue}>{cost}</Text>
         </View>
       </View>
 
       {/* Action Buttons */}
-      <TouchableOpacity style={styles.startButton}>
-        <Text style={styles.startText}>Start Charging</Text>
+      <TouchableOpacity style={styles.startButton} onPress={() => console.log("Book again pressed")}>
+        <Text style={styles.startText}>Book Again</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.rescheduleButton}>
-        <Text style={styles.rescheduleText}>Reschedule</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => setCancelConfirmVisible(true)}>
-        <Text style={styles.cancelText}>Cancel Booking</Text>
+      <TouchableOpacity style={styles.rescheduleButton} onPress={() => router.push('/pages/bookings/ReceiptScreen')}>
+        <Text style={styles.rescheduleText}>View Receipt</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: colors.white },
+  container: {
+  padding: 20,
+  paddingTop: 60,// 👈 Adds gap from the top
+  backgroundColor: colors.white,
+},
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -430,4 +389,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default BookingDetailsScreen;
+export default CompletedBookingDetailsScreen;

@@ -156,7 +156,7 @@ const styles = StyleSheet.create({
   alignItems: 'center',
 },
 costText: {
-  color: '#D68C00', // Updated to match image color
+  color: colors.secondary, // Updated to match image color
   fontSize: 14,
   fontFamily: fonts.PlusJakartaSansBold,
 },

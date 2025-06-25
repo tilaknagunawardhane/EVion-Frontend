@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
-import BookingCard from '../../../components/BookingCard';
-import CompletedBookingCard from '../../../components/CompletedBookingCard'; // Adjust the import path
+import {
+  ScrollView,
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import BookingCard from '../../components/BookingCard';
+import CompletedBookingCard from '../../components/CompletedBookingCard';
+import colors from '../../constants/color';
+import fonts from '../../constants/fonts';
+import { useRouter } from 'expo-router';
 
 const BookingsScreen = () => {
   const [activeTab, setActiveTab] = useState('Upcoming');
+  const router = useRouter();
 
-  // Sample data for each tab (replace with your actual data source)
   const bookingsData = {
     Upcoming: [
       {
-        dateLabel: 'Jun 12, 2025', // Updated to current date
+        dateLabel: 'Jun 12, 2025',
         duration: '1 Hr 30 Mins',
         time: '9:30 AM',
         stationName: 'Genso Charging Station',
         address: 'Southern Highway, Welipenna, Matugama',
-        carImage: require('../../../assets/vehicles/atto3.png'),
+        carImage: require('../../assets/vehicles/atto3.png'),
         carName: 'BYD Atto 3 (SUV)',
         connectorType: 'CCS Combo Type 2',
       },
@@ -25,8 +34,8 @@ const BookingsScreen = () => {
         time: '11:30 PM',
         stationName: 'Fonseka Charging Station',
         address: 'No: 2/82, Maha Payagala, Payagala',
-        carImage: require('../../../assets/vehicles/dolphin.png'),
-        carName: 'BYD ADolphin (Hatchback)',
+        carImage: require('../../assets/vehicles/dolphin.png'),
+        carName: 'BYD Dolphin (Hatchback)',
         connectorType: 'Type 2 (Mennekes)',
       },
       {
@@ -35,7 +44,7 @@ const BookingsScreen = () => {
         time: '11:30 PM',
         stationName: 'Chargenet Charging Station',
         address: 'No: 2/82, Maha Payagala, Payagala',
-        carImage: require('../../../assets/vehicles/atto3.png'),
+        carImage: require('../../assets/vehicles/atto3.png'),
         carName: 'BYD Atto3 (Hatchback)',
         connectorType: 'Type 2 (Mennekes)',
       },
@@ -46,7 +55,7 @@ const BookingsScreen = () => {
         cost: '3,804.35',
         stationName: 'Genso Charging Station',
         address: 'Southern Highway, Welipenna, Matugama',
-        carImage: require('../../../assets/vehicles/dolphin.png'), // Hyundai Kona image
+        carImage: require('../../assets/vehicles/dolphin.png'),
         carName: 'Hyundai Kona',
         connectorType: 'CCS Combo Type 2',
       },
@@ -55,7 +64,7 @@ const BookingsScreen = () => {
         cost: '2,500.00',
         stationName: 'Eco Charge Point',
         address: '123 Green Road, Colombo',
-        carImage: require('../../../assets/vehicles/atto3.png'),
+        carImage: require('../../assets/vehicles/atto3.png'),
         carName: 'BYD Atto 3 (SUV)',
         connectorType: 'CCS Combo Type 2',
       },
@@ -67,14 +76,13 @@ const BookingsScreen = () => {
         time: '10:00 AM',
         stationName: 'City Charge Hub',
         address: '456 Urban Street, Negombo',
-        carImage: require('../../../assets/vehicles/dolphin.png'),
-        carName: 'BYD ADolphin (Hatchback)',
+        carImage: require('../../assets/vehicles/dolphin.png'),
+        carName: 'BYD Dolphin (Hatchback)',
         connectorType: 'Type 2 (Mennekes)',
       },
     ],
   };
 
-  // Render bookings based on the active tab
   const renderBookings = () => {
     const bookings = bookingsData[activeTab];
     if (bookings.length === 0) {
@@ -84,33 +92,37 @@ const BookingsScreen = () => {
         </Text>
       );
     }
+
     return bookings.map((booking, index) => {
       if (activeTab === 'Completed') {
         return (
-          <CompletedBookingCard
-            key={index}
-            dateLabel={booking.dateLabel}
-            cost={booking.cost}
-            stationName={booking.stationName}
-            address={booking.address}
-            carImage={booking.carImage}
-            carName={booking.carName}
-            connectorType={booking.connectorType}
-          />
-        );
+            <TouchableOpacity
+              key={index}
+              onPress={() =>
+                router.push({
+                  pathname: '/pages/bookings/CompletedBookingDetails',
+                  params: booking,
+                })
+              }
+            >
+    <CompletedBookingCard {...booking} />
+  </TouchableOpacity>
+);
+
       }
+
       return (
-        <BookingCard
+        <TouchableOpacity
           key={index}
-          dateLabel={booking.dateLabel}
-          duration={booking.duration}
-          time={booking.time}
-          stationName={booking.stationName}
-          address={booking.address}
-          carImage={booking.carImage}
-          carName={booking.carName}
-          connectorType={booking.connectorType}
-        />
+          onPress={() =>
+            router.push({
+              pathname: '/pages/bookings/BookingDetails',
+              params: booking,
+            })
+          }
+        >
+          <BookingCard {...booking} />
+        </TouchableOpacity>
       );
     });
   };
@@ -121,21 +133,18 @@ const BookingsScreen = () => {
 
       {/* Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity onPress={() => setActiveTab('Upcoming')}>
-          <Text style={[styles.tab, activeTab === 'Upcoming' && styles.activeTab]}>
-            Upcoming
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab('Completed')}>
-          <Text style={[styles.tab, activeTab === 'Completed' && styles.activeTab]}>
-            Completed
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => setActiveTab('Cancelled')}>
-          <Text style={[styles.tab, activeTab === 'Cancelled' && styles.activeTab]}>
-            Cancelled
-          </Text>
-        </TouchableOpacity>
+        {['Upcoming', 'Completed', 'Cancelled'].map((tab) => (
+          <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)}>
+            <Text
+              style={[
+                styles.tab,
+                activeTab === tab && styles.activeTab,
+              ]}
+            >
+              {tab}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -148,36 +157,43 @@ const BookingsScreen = () => {
 export default BookingsScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f8f8', paddingTop: 50 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: 50,
+  },
   title: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     marginHorizontal: 16,
     marginBottom: 10,
+    color: colors.heading,
   },
   tabs: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     borderBottomWidth: 1,
-    borderColor: '#ddd',
+    borderColor: colors.border,
     paddingBottom: 8,
     marginHorizontal: 16,
   },
   tab: {
     fontSize: 16,
-    color: '#888',
+    fontFamily: fonts.regular,
+    color: colors.text,
     paddingVertical: 8,
     paddingHorizontal: 16,
   },
   activeTab: {
-    color: '#00B894',
-    fontWeight: '600',
+    color: colors.primary,
+    fontFamily: fonts.medium,
     borderBottomWidth: 2,
-    borderBottomColor: '#00B894',
+    borderBottomColor: colors.primary,
   },
   noBookingsText: {
     fontSize: 16,
-    color: '#888',
+    fontFamily: fonts.regular,
+    color: colors.text,
     textAlign: 'center',
     marginTop: 20,
   },

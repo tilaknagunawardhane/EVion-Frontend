@@ -1,10 +1,19 @@
 const colors = {
-    primary: '#00b894', //green
-    mainTextColor: '#2d3436', //black
-    background: '#f9f9f9', //white
-    secondaryText: '#959595', //light gray
-    stroke: '#dedede',
-    
+  primary: '#00b894',           // green
+  mainTextColor: '#2d3436',     // dark text
+  background: '#f9f9f9',        // light background
+  secondaryText: '#959595',     // gray
+  stroke: '#dedede',            // light stroke
+  secondary: '#D68C00',         // orange-yellow
+  white: '#ffffff',
+  black: '#000000',
+  lightGray: '#888888',
+  lightestGray: '#eeeeee',
+  tagBackground: '#ffe6b3',
+  tagText: '#d18800',
+  cardBackground: '#f2fdfb',
+  danger: '#ff3b30',
+  rescheduleBg: '#e6faf7',
 };
 
 export default colors;
