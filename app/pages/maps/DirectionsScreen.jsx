@@ -6,7 +6,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
-  TouchableOpacity
+  TouchableOpacity,
+  TextInput,
+  Keyboard
 } from 'react-native';
 import axios from 'axios';
 import * as ExpoMaps from 'expo-maps';
@@ -33,6 +35,16 @@ export default function DirectionsScreen() {
   const [duration, setDuration] = useState(null);
   const mapRef = useRef(null);
   const [mapReady, setMapReady] = useState(false);
+  const [fromText, setFromText] = useState('');
+  const [toText, setToText] = useState('');
+  const [fromCoords, setFromCoords] = useState({
+    latitude: parseFloat(params.userLatitude),
+    longitude: parseFloat(params.userLongitude)
+  });
+  const [toCoords, setToCoords] = useState({
+    latitude: parseFloat(params.destinationLatitude),
+    longitude: parseFloat(params.destinationLongitude)
+  });
 
   useEffect(() => {
     console.log('RoutePoints updated:', routePoints.length, 'points');
@@ -57,56 +69,45 @@ export default function DirectionsScreen() {
     }
   }, [mapReady, routePoints]);
 
-  const fetchRoute = async () => {
+  useEffect(() => {
+    setFromText('Your Location');
+    setToText(params.destinationTitle || 'Destination');
+  }, []);
+
+  useEffect(() => {
+    if (fromCoords && toCoords) {
+      fetchRoute(fromCoords, toCoords);
+    }
+  }, [fromCoords, toCoords]);
+
+  const fetchRoute = async (start = fromCoords, end = toCoords) => {
     setLoading(true);
-    console.log('API Key:', GOOGLE_MAPS_API_KEY); // Add this at the top of your component
     try {
-      // Verify coordinates first
-      if (!userLocation.latitude || !userLocation.longitude ||
-        !destination.latitude || !destination.longitude) {
+      if (!start.latitude || !start.longitude || !end.latitude || !end.longitude) {
         throw new Error('Invalid coordinates');
       }
-      console.log('Fetching route from', userLocation, 'to', destination);
-
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/directions/json?` +
-        `origin=${userLocation.latitude},${userLocation.longitude}` +
-        `&destination=${destination.latitude},${destination.longitude}` +
+        `origin=${start.latitude},${start.longitude}` +
+        `&destination=${end.latitude},${end.longitude}` +
         `&key=${GOOGLE_MAPS_API_KEY}` +
-        `&mode=driving` // Explicitly set travel mode
+        `&mode=driving`
       );
-
-      console.log('Directions API Response:', response.data); // Debug log
-      // console.log('Full API response:', JSON.stringify(response.data, null, 2));
-
       if (response.data.status !== 'OK') {
         throw new Error(response.data.error_message || 'Directions request failed');
       }
-
       if (response.data.routes.length === 0) {
         Alert.alert('No routes found', 'Could not find a path between these locations');
         return;
       }
-
       const route = response.data.routes[0];
       const points = decodePolyline(route.overview_polyline.points);
       setRoutePoints(points);
-      console.log('Decoded points:', points.slice(0, 5), '... total points:', points.length);
-      console.log('Route points set:', points.length > 0 ? 'Yes' : 'No');
-      console.log('Sample point structure:', points[0]);
-      console.log('Polyline structure:', {
-        id: 'route',
-        coordinates: points.slice(0, 3),
-        strokeColor: '#007AFF',
-        strokeWidth: 4
-      });
-
       if (route.legs.length > 0) {
         const leg = route.legs[0];
         setDistance(leg.distance.text);
         setDuration(leg.duration.text);
       }
-
     } catch (error) {
       console.error('Directions error:', error);
       Alert.alert(
@@ -179,17 +180,55 @@ export default function DirectionsScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchRoute();
-  }, []);
+  const geocodeAddress = async (address, setCoords, setText) => {
+    try {
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      if (response.data.status === 'OK') {
+        const loc = response.data.results[0].geometry.location;
+        setCoords({ latitude: loc.lat, longitude: loc.lng });
+        setText(response.data.results[0].formatted_address);
+      } else {
+        Alert.alert('Location not found', 'Please enter a valid location.');
+      }
+    } catch (e) {
+      Alert.alert('Error', 'Failed to search location.');
+    }
+  };
 
   const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
   const MapViewComponent = MapNamespace.View;
 
   return (
     <View style={{ flex: 1 }}>
+      {/* Input fields for From and To */}
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          value={fromText}
+          onChangeText={setFromText}
+          placeholder="From"
+          onSubmitEditing={() => {
+            Keyboard.dismiss();
+            geocodeAddress(fromText, setFromCoords, setFromText);
+          }}
+          returnKeyType="search"
+        />
+        <TextInput
+          style={styles.input}
+          value={toText}
+          onChangeText={setToText}
+          placeholder="To"
+          onSubmitEditing={() => {
+            Keyboard.dismiss();
+            geocodeAddress(toText, setToCoords, setToText);
+          }}
+          returnKeyType="search"
+        />
+      </View>
       {/* Header with back button and destination info */}
-      <View style={styles.header}>
+      {/* <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <MaterialIcons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
@@ -203,7 +242,7 @@ export default function DirectionsScreen() {
             </Text>
           )}
         </View>
-      </View>
+      </View> */}
 
       {loading && <ActivityIndicator size="large" style={styles.loader} />}
 
@@ -352,6 +391,21 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     zIndex: 20,
+  },
+  inputContainer: {
+    position: 'absolute',
+    marginTop: 50,
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    padding: 10,
+  },
+  input: {
+    backgroundColor: '#fff',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
   },
 });
 
