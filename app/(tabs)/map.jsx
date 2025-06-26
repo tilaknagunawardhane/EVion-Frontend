@@ -83,7 +83,7 @@ export default function MapScreen() {
         return distance <= 10; // Show stations within 10km
       });
       setNearbyStations(nearby);
-      setShowDropdown(nearby.length > 0);
+      // setShowDropdown(nearby.length > 0);
     }
   }, [location]);
 

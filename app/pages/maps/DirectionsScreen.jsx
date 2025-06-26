@@ -15,6 +15,7 @@ import * as ExpoMaps from 'expo-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import { GOOGLE_MAPS_API_KEY } from '@env';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
+import AppBar from '../../../components/AppBar';
 
 export default function DirectionsScreen() {
   const params = useLocalSearchParams();
@@ -202,30 +203,54 @@ export default function DirectionsScreen() {
 
   return (
     <View style={{ flex: 1 }}>
+      <AppBar />
+
       {/* Input fields for From and To */}
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          value={fromText}
-          onChangeText={setFromText}
-          placeholder="From"
-          onSubmitEditing={() => {
-            Keyboard.dismiss();
-            geocodeAddress(fromText, setFromCoords, setFromText);
-          }}
-          returnKeyType="search"
-        />
-        <TextInput
-          style={styles.input}
-          value={toText}
-          onChangeText={setToText}
-          placeholder="To"
-          onSubmitEditing={() => {
-            Keyboard.dismiss();
-            geocodeAddress(toText, setToCoords, setToText);
-          }}
-          returnKeyType="search"
-        />
+        <View style={{ position: 'relative' }}>
+          <TextInput
+            style={styles.input}
+            value={fromText}
+            onChangeText={setFromText}
+            placeholder="From"
+            onSubmitEditing={() => {
+              Keyboard.dismiss();
+              geocodeAddress(fromText, setFromCoords, setFromText);
+            }}
+            returnKeyType="search"
+          />
+          {fromText.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearIcon}
+              onPress={() => setFromText('')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="close" size={20} color="#888" />
+            </TouchableOpacity>
+          )}
+        </View>
+        <View style={{ position: 'relative' }}>
+          <TextInput
+            style={styles.input}
+            value={toText}
+            onChangeText={setToText}
+            placeholder="To"
+            onSubmitEditing={() => {
+              Keyboard.dismiss();
+              geocodeAddress(toText, setToCoords, setToText);
+            }}
+            returnKeyType="search"
+          />
+          {toText.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearIcon}
+              onPress={() => setToText('')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MaterialIcons name="close" size={20} color="#888" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
       {/* Header with back button and destination info */}
       {/* <View style={styles.header}>
@@ -394,7 +419,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     position: 'absolute',
-    marginTop: 50,
+    marginTop: 100,
     top: 0,
     left: 0,
     right: 0,
@@ -406,6 +431,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
+    paddingRight: 35, // space for clear icon
+  },
+  clearIcon: {
+    position: 'absolute',
+    right: 10,
+    top: '50%',
+    marginTop: -16,
+    zIndex: 2,
   },
 });
 
