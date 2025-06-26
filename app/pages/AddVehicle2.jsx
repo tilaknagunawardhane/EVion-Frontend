@@ -98,7 +98,6 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
   },
   title: {
     fontSize: 32,
@@ -146,7 +145,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
 });
 
