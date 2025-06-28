@@ -36,7 +36,7 @@ EVION is a mobile application designed for electric vehicle (EV) owners and powe
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/your-username/EVION-Frontend.git
+   git clone https://github.com/tilaknagunawardhane/EVION-Frontend.git
    ```
 
 2. Navigate to the project folder:
