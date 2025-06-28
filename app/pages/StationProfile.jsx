@@ -239,7 +239,7 @@ return (
       <CustomButton title="Book Now" onPress={handleBookNow} type="primary" style={styles.bookButton} />
       <CustomButton
         title="Check Availability"
-        onPress={handleCheckAvailability}
+        onPress={() => router.push('/pages/CheckAvailability')}
         type="primary"
         style={styles.checkButton}
         textStyle={{ color: colors.primary }} // Ensure this prop is supported by CustomButton
