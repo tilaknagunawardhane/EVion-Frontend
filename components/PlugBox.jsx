@@ -20,8 +20,9 @@ const PlugBox = ({ plug, isSelected, onPress }) => {
 
 const styles = StyleSheet.create({
   plugBox: {
-    width: '45%',
-    borderWidth: 1,
+    width: 106,         // Fixed width
+    height: 100,   
+    borderWidth: 1,   
     borderColor: colors.stroke,
     borderRadius: 12,
     paddingVertical: 12,
@@ -29,6 +30,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 12,
   },
+
+  
   selectedPlugBox: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryLight,
@@ -41,7 +44,7 @@ const styles = StyleSheet.create({
   },
   plugLabel: {
     textAlign: 'center',
-    fontSize: 13,
+    fontSize: 14,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },
