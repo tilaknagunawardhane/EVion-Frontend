@@ -20,6 +20,7 @@ const router = useRouter();
 
 
 
+
 const fullMonthDates = [
   { day: 'Sun', date: '01' }, { day: 'Mon', date: '02' }, { day: 'Tue', date: '03' },
   { day: 'Wed', date: '04' }, { day: 'Thu', date: '05' }, { day: 'Fri', date: '06' },
@@ -53,6 +54,16 @@ const timeSlotPages = [
     ['01:00pm - 01:30pm', '01:30pm - 02:00pm'],
     ['02:00pm - 02:30pm', '02:30pm - 03:00pm'],
     ['03:00pm - 03:30pm', '03:30pm - 04:00pm'],
+  ],
+  [ // Page 3
+    ['04:00pm - 04:30pm', '04:30pm - 05:00pm'],
+    ['05:00pm - 05:30pm', '05:30pm - 06:00pm'],
+    ['06:00pm - 06:30pm', '06:30pm - 07:00pm'],
+    ['07:00pm - 07:30pm', '07:30pm - 08:00pm'],
+    ['08:00pm - 08:30pm', '08:30pm - 09:00pm'],
+    ['09:00pm - 09:30pm', '09:30pm - 10:00pm'],
+    ['10:00pm - 10:30pm', '10:30pm - 11:00pm'],
+    ['11:00pm - 11:30pm', '11:30pm - 12:00am'],
   ]
 ];
 
@@ -77,7 +88,7 @@ const SelectDateTimeScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/pages/StationProfile')}>
+        <TouchableOpacity onPress={() => navigation.navigate('StationProfile')}>
           <Ionicons name="chevron-back-outline" size={22} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Select Date & Time</Text>
@@ -133,7 +144,7 @@ const SelectDateTimeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Time Slots with Paging */}
+      {/* Time Slots */}
       <ScrollView
         horizontal
         pagingEnabled
@@ -193,25 +204,24 @@ const SelectDateTimeScreen = () => {
         ))}
       </ScrollView>
 
-      {/* Dot Indicators */}
-      <View style={styles.dots}>
-        {timeSlotPages.map((_, index) => (
-          <View
-            key={index}
-            style={[
-              styles.dot,
-              index === currentTimeSlotPage && styles.activeDot,
-            ]}
-          />
-        ))}
-      </View>
-
-      {/* Book Button */}
-      <View style={styles.bookButtonContainer}>
+     {/* Bottom Section with Dots and Book Button */}
+      <View style={styles.bottomContainer}>
+        <View style={styles.dots}>
+          {timeSlotPages.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                index === currentTimeSlotPage && styles.activeDot,
+              ]}
+            />
+          ))}
+        </View>
         <CustomButton
           title="Book Now"
           onPress={() => console.log('Selected Slots:', selectedSlots)}
           type="primary"
+          style={{ width: '100%' }} // Increased width to 100%
         />
       </View>
     </View>
@@ -251,7 +261,7 @@ const styles = StyleSheet.create({
   },
   selectedDateItem: {
     backgroundColor: '#DFF7F3',
-    borderColor: '#00C897',
+    borderColor: colors.stroke,
   },
   dayText: {
     fontSize: 12,
@@ -263,8 +273,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
-  selectedDayText: { color: '#00C897' },
-  selectedDateText: { color: '#00C897' },
+  selectedDayText: { color:colors.secondaryText },
+  selectedDateText: { color: colors.mainTextColor },
   slotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -297,7 +307,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    width: 18,
+    width: 30,
     height: 6,
     borderRadius: 3,
     backgroundColor: colors.primary,
@@ -309,6 +319,20 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
   },
+bottomContainer: {
+  position: 'absolute',
+  bottom: 16,
+  left: 16,
+  right: 16,
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 10, // space between dots and button
+},
+
+
 });
 
 export default SelectDateTimeScreen;
+
+
+
