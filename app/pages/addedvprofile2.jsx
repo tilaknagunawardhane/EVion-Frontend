@@ -7,13 +7,15 @@ import VehicleProfile from '../../components/VehicleProfile';
 import VehicleCard from '../../components/VehicleCard';
 import { useNavigation } from '@react-navigation/native';
 import InputField from '../../components/InputField';
+import { router } from 'expo-router'; // Ensure you have this import for navigation
+
 
 const VehicleAddedScreen = ({ navigation, route }) => {
   // Get vehicle parameters from route params
   const vehicleParams = route?.params?.vehicle || {};
 
   const handleAddVehicle = () => {
-    navigation.navigate('AddVehicle');
+    navigation.navigate('AddedVprofile2');
   };
 
   const handleAddAnotherVehicle = () => {
@@ -21,7 +23,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
   };
 
   const handleContinue = () => {
-    navigation.navigate('Home'); // or your next screen
+    navigation.navigate('Addcard'); // or your next screen
   };
 
 
@@ -67,11 +69,14 @@ const VehicleAddedScreen = ({ navigation, route }) => {
         <View style={{ marginBottom: -40 }} />
         <Text
           style={styles.addAnotherLink}
-          onPress={handleAddAnotherVehicle}
+         onPress={() => router.push('/pages/addedvprofile')}
         >
+          
           Add Another Vehicle
         </Text>
-        <CustomButton title="Continue" onPress={handleContinue} />
+        
+        <CustomButton title="Continue" onPress={() => router.push('/pages/Addcard')}/>
+       
       </View>
 
     </View>
