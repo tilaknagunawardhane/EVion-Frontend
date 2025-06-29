@@ -5,6 +5,8 @@ import AppBar from '../../components/AppBar';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router'; // Ensure you have this import for navigation
+
 
 const AddYourEVScreen = () => {
   const navigation = useNavigation();
@@ -21,8 +23,10 @@ const AddYourEVScreen = () => {
 
   const handleAddVehicle = () => {
     console.log('Add vehicle tapped');
-    navigation.navigate('NextScreen'); // Replace with actual screen
+    navigation.navigate('addedvprofile2'); // Replace with actual screen
   };
+
+
 
   return (
     <View style={styles.container}>
@@ -65,10 +69,12 @@ const AddYourEVScreen = () => {
       </TouchableOpacity>
       <CustomButton
         title="Add Vehicle"
-        onPress={handleAddVehicle}
+        onPress={() => router.push('/pages/addedvprofile2')}
         type="primary"
         style={styles.addButton}
       />
+
+       
     </View>
       
     </View>
