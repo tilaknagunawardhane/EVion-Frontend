@@ -47,22 +47,22 @@ const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, bat
 
 const styles = StyleSheet.create({
   connectorCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
     marginHorizontal: 24,
     borderWidth: 1,
     borderColor: colors.stroke,
-    shadowColor: '#000',
+    shadowColor: colors.stroke,
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 2
   },
   connectorHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  availableText: { color: '#00A86B', fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
-  busyText: { color: '#FF5A5F', fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
+  availableText: { color: colors.primary, fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
+  busyText: { color: colors.danger, fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
   connectorID: { fontSize: 12, fontFamily: fonts.PlusJakartaSans, color: colors.secondaryText },
   connectorType: { fontSize: 14, fontFamily: fonts.PlusJakartaSansBold, color: colors.mainTextColor, marginBottom: 12 },
   batteryInfo: { marginBottom: 12 },

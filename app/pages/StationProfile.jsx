@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   scrollContainer: { paddingBottom: 40 },
   imageContainer: { position: 'relative' },
   stationImage: { width: '100%', height: 220 },
-  backButton: { position: 'absolute', top: 40, left: 16, backgroundColor: '#FFFFFFB3', padding: 8, borderRadius: 20 },
+  backButton: { position: 'absolute', top: 40, left: 16, backgroundColor: `${colors.background}8D`, padding: 8, borderRadius: 20 },
   backIcon: { width: 18, height: 18, tintColor: colors.mainTextColor },
   title: { fontSize: 24, fontFamily: fonts.PlusJakartaSansBold, color: colors.mainTextColor, marginTop: 16, marginHorizontal: 24 },
   subtitle: { fontSize: 14, fontFamily: fonts.PlusJakartaSans, color: colors.secondaryText, marginBottom: 16, marginHorizontal: 24 },
@@ -131,12 +131,12 @@ const styles = StyleSheet.create({
   openBadge: { backgroundColor: colors.primary, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 },
   openText: { color: colors.background, fontFamily: fonts.PlusJakartaSansBold, fontSize: 12 },
   ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  starIcon: { width: 14, height: 14, tintColor: '#FFD700' },
+  starIcon: { width: 14, height: 14, tintColor: colors.star },
   ratingText: { fontSize: 12, fontFamily: fonts.PlusJakartaSans, color: colors.mainTextColor },
   sectionTitle: { fontSize: 16, fontFamily: fonts.PlusJakartaSansBold, color: colors.mainTextColor, marginBottom: 12, marginHorizontal: 24 },
   bookButton: { marginHorizontal: 24, marginBottom: 12 },
   checkButton: { marginHorizontal: 24, marginBottom: 12, borderColor: colors.primary, borderWidth: 1, backgroundColor: colors.background },
-  reportText: { fontSize: 14, fontFamily: fonts.PlusJakartaSans, color: '#FF5A5F', textAlign: 'center', textDecorationLine: 'underline' },
+  reportText: { fontSize: 14, fontFamily: fonts.PlusJakartaSans, color: colors.danger, textAlign: 'center', textDecorationLine: 'underline' },
 });
 
 export default ChargingStationScreen;
