@@ -43,8 +43,8 @@ const AppBar = ({ title = 'Plan Your Route' }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
-    paddingBottom: 36,
+    paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight || 34) + 10 : 40,
+    paddingBottom: 8, // Reduced from 36
     paddingHorizontal: 16,
     backgroundColor: colors.primary,
   },
@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: 7, // Optional slight spacing
   },
   title: {
     fontSize: 20,
