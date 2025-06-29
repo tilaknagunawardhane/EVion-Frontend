@@ -21,6 +21,46 @@ export default function Tab() {
       />
 
       <ClearUserButton/>
+      <CustomButton
+        title={strings.sample1ButtonText}
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/SignInScreen.jsx')}
+        />
+
+      <CustomButton
+        title="Filters"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/Filters')}
+        />
+      <CustomButton
+        title="Planning a Route"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/TripPlanner1')}
+        />
+      <CustomButton
+        title="Route History"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/SavedTripsScreen')}
+        />
+      <CustomButton
+        title="Battery Status"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/BatteryStatusModal')}
+        />
+
+      <CustomButton
+        title="QuickCheck"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/QuickCheckModal')}
+        />
+
+
     </View>
   );
 }
