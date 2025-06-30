@@ -17,7 +17,12 @@ import { useRouter } from 'expo-router';
 
 const router = useRouter();
 
+const generateCurrentMonthDates = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0-based index for months
 
+<<<<<<< HEAD
 const generateCurrentMonthDates = () => {
   const today = new Date();
   const year = today.getFullYear();
@@ -26,6 +31,11 @@ const generateCurrentMonthDates = () => {
   const numberOfDays = new Date(year, month + 1, 0).getDate(); // get total days in the month
   const datesArray = [];
 
+=======
+  const numberOfDays = new Date(year, month + 1, 0).getDate(); // get total days in the month
+  const datesArray = [];
+
+>>>>>>> 87162407e6273e7e04755419c0b2c3dfed4eb3b2
   for (let day = 1; day <= numberOfDays; day++) {
     const dateObj = new Date(year, month, day);
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' }); // e.g. Sun, Mon
@@ -267,8 +277,13 @@ const styles = StyleSheet.create({
     width: 55,
   },
   selectedDateItem: {
+<<<<<<< HEAD
     backgroundColor: '#DFF7F3',
     borderColor: colors.stroke,
+=======
+    backgroundColor: colors.bgGreen,
+    borderColor: colors.primary,
+>>>>>>> 87162407e6273e7e04755419c0b2c3dfed4eb3b2
   },
   dayText: {
     fontSize: 12,
@@ -280,8 +295,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
-  selectedDayText: { color: '#00C897' },
-  selectedDateText: { color: '#00C897' },
+  selectedDayText: { color: colors.primary },
+  selectedDateText: { color: colors.primary },
   slotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
