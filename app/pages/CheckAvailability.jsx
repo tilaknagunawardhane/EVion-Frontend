@@ -94,7 +94,7 @@ const SelectDateTimeScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('StationProfile')}>
+        <TouchableOpacity onPress={() => router.replace('/StationProfile')}>
           <Ionicons name="chevron-back-outline" size={22} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Select Date & Time</Text>
