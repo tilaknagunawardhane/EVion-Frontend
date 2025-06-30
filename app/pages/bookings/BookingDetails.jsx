@@ -11,42 +11,33 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import colors from '../../constants/color.js';
-import fonts from '../../constants/fonts.js';
-import { useRouter } from 'expo-router';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import colors from '../../../constants/color.js';
+import fonts from '../../../constants/fonts.js';
 
 const BookingDetailsScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
   const router = useRouter();
+  const params = useLocalSearchParams();
 
   const [menuVisible, setMenuVisible] = useState(false);
   const [infoVisible, setInfoVisible] = useState(false);
   const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
 
   const {
-    stationName = 'Genso Charging Station',
-    stationLocation = 'Southern Highway, Welipenna, Matugama',
-    date = 'Jun 11, 2025',
-    duration = '1 Hr 30 Mins',
-    timeRange = '9:30 AM - 11:00 AM',
-    chargerType = 'CCS 2',
-    chargerId = '#E0299',
-    batteryGain = '~35% in 30 mins',
-    estTimeTo80 = '~45 mins',
-    power = '50kW (DC)',
-    rate = 'LKR 55.00 /kW',
-    estEnergy = '75kWh',
-    estBattery = '+40%',
-    estCost = 'LKR 4125',
-  } = route?.params || {};
+    dateLabel,
+    duration,
+    time,
+    stationName,
+    address,
+    carName,
+    connectorType,
+  } = params || {};
 
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => router.back()}>
           <Icon name="arrow-back" size={24} color={colors.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Booking Details</Text>
@@ -80,18 +71,18 @@ const BookingDetailsScreen = () => {
               <Icon name="close" size={24} color={colors.black} />
             </TouchableOpacity>
             <Text style={styles.infoTitle}>Need to know..</Text>
-            <Text style={styles.infoItem}>• You can cancel your booking anytime — but only <Text style={styles.bold}>up to 30 minutes</Text> before the scheduled start time.</Text>
-            <Text style={styles.infoItem}>• You can reschedule your booking (change date or time) <Text style={styles.bold}>up to 30 minutes</Text> before the slot begins.</Text>
-            <Text style={styles.infoItem}>• Cancellations made within 30 minutes of the slot will incur a <Text style={styles.bold}>late cancellation fee</Text> to compensate the station’s lost opportunity.</Text>
-            <Text style={styles.infoItem}>• If you arrive late <Text style={styles.bold}>(after the 15–minute buffer)</Text>, an extra fee will be charged for each minute delayed.</Text>
-            <Text style={styles.infoItem}>• If you miss your booking and don’t show up, the <Text style={styles.bold}>full estimated charging cost will be charged.</Text></Text>
-            <Text style={styles.infoItem}>• Note: A <Text style={styles.bold}>3% service fee</Text> will be added to your charging cost as a booking fee.</Text>
-            <Text style={[styles.infoItem, { marginTop: 10 }]}>Please plan ahead and manage your bookings responsibly to avoid unnecessary charges. Thank you for supporting a smooth EV charging experience!</Text>
+            <Text style={styles.infoItem}>• Cancel or reschedule up to <Text style={styles.bold}>30 minutes</Text> before the session.</Text>
+            <Text style={styles.infoItem}>• Late cancellations incur fees. Arriving late beyond a 15-minute buffer also adds charges.</Text>
+            <Text style={styles.infoItem}>• Missed bookings are fully charged.</Text>
+            <Text style={styles.infoItem}>• A <Text style={styles.bold}>3% service fee</Text> is added to each booking.</Text>
+            <Text style={[styles.infoItem, { marginTop: 10 }]}>
+              Plan accordingly to avoid extra charges.
+            </Text>
           </View>
         </View>
       </Modal>
 
-      {/* Cancel Booking Confirmation Modal */}
+      {/* Cancel Confirmation Modal */}
       <Modal
         transparent
         animationType="fade"
@@ -111,24 +102,16 @@ const BookingDetailsScreen = () => {
               Cancelling now will result in a{' '}
               <Text style={{ color: colors.secondary, fontFamily: fonts.PlusJakartaSansBold }}>
                 late cancellation fee
-              </Text>, as it's past the allowed cancellation window.
+              </Text>. Proceed?
             </Text>
-            <Text style={styles.cancelMsg}>Do you still want to proceed?</Text>
-
             <View style={styles.cancelActions}>
-              <TouchableOpacity
-                style={styles.cancelCloseBtn}
-                onPress={() => setCancelConfirmVisible(false)}
-              >
+              <TouchableOpacity style={styles.cancelCloseBtn} onPress={() => setCancelConfirmVisible(false)}>
                 <Text style={styles.cancelCloseText}>Close</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelConfirmBtn}
-                onPress={() => {
-                  setCancelConfirmVisible(false);
-                  console.log("Booking cancelled"); // Add logic here
-                }}
-              >
+              <TouchableOpacity style={styles.cancelConfirmBtn} onPress={() => {
+                setCancelConfirmVisible(false);
+                console.log('Booking cancelled');
+              }}>
                 <Text style={styles.cancelConfirmText}>Cancel Booking</Text>
               </TouchableOpacity>
             </View>
@@ -141,7 +124,7 @@ const BookingDetailsScreen = () => {
         <Image source={{ uri: 'https://i.ibb.co/SKQ5ZBk/station.png' }} style={styles.stationImage} />
         <View style={styles.stationText}>
           <Text style={styles.stationName}>{stationName}</Text>
-          <Text style={styles.stationLocation}>{stationLocation}</Text>
+          <Text style={styles.stationLocation}>{address}</Text>
         </View>
         <TouchableOpacity>
           <Icon name="arrow-forward-circle" size={28} color={colors.primary} />
@@ -150,27 +133,27 @@ const BookingDetailsScreen = () => {
 
       {/* Date & Time */}
       <View style={styles.dateTimeBox}>
-        <Text style={styles.dateText}>{date}</Text>
+        <Text style={styles.dateText}>{dateLabel}</Text>
         <View style={styles.timeTag}>
           <Text style={styles.timeTagText}>{duration}</Text>
         </View>
-        <Text style={styles.timeRange}>{timeRange}</Text>
+        <Text style={styles.timeRange}>{time}</Text>
       </View>
 
       {/* Charger Info */}
       <View style={styles.chargerCard}>
         <View style={styles.row}>
           <MaterialCommunityIcons name="ev-station" size={24} color={colors.primary} />
-          <Text style={styles.chargerType}>{chargerType}</Text>
-          <Text style={styles.chargerId}>ID: {chargerId}</Text>
+          <Text style={styles.chargerType}>{connectorType}</Text>
+          <Text style={styles.chargerId}>ID: #E0299</Text>
         </View>
         <Text style={styles.label}>Battery Gain:</Text>
-        <Text style={styles.value}>{batteryGain}</Text>
+        <Text style={styles.value}>~35% in 30 mins</Text>
         <Text style={styles.label}>Est. Time to 80%:</Text>
-        <Text style={styles.value}>{estTimeTo80}</Text>
+        <Text style={styles.value}>~45 mins</Text>
         <View style={styles.infoRow}>
-          <Text style={styles.iconText}><Icon name="flash" size={20} /> {power}</Text>
-          <Text style={styles.iconText}><Icon name="cash" size={20} /> {rate}</Text>
+          <Text style={styles.iconText}><Icon name="flash" size={20} /> 50kW (DC)</Text>
+          <Text style={styles.iconText}><Icon name="cash" size={20} /> LKR 55.00 /kW</Text>
         </View>
       </View>
 
@@ -178,15 +161,15 @@ const BookingDetailsScreen = () => {
       <View style={styles.estimations}>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Energy Delivered:</Text>
-          <Text style={styles.estimateValue}>{estEnergy}</Text>
+          <Text style={styles.estimateValue}>75kWh</Text>
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Battery % Increase:</Text>
-          <Text style={styles.estimateValue}>{estBattery}</Text>
+          <Text style={styles.estimateValue}>+40%</Text>
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Cost:</Text>
-          <Text style={styles.estimateValue}>{estCost}</Text>
+          <Text style={styles.estimateValue}>LKR 4125</Text>
         </View>
       </View>
 
@@ -205,6 +188,7 @@ const BookingDetailsScreen = () => {
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: colors.white },
