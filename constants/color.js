@@ -5,7 +5,10 @@ const colors = {
     secondaryText: '#959595', //light gray
     stroke: '#dedede',
     HighlightText: '#D68400', //orange
+    bgGreen: '#E0F3EF',
     border: '#E9E9E9', //light gray for borders
+    star: '#F5B223',
+    danger: '#ff3b30'
 };
 
 export default colors;

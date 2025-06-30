@@ -19,7 +19,7 @@ const AddVehicleScreen = () => {
 
   const handleNext = () => {
     // Add form validation & submission logic here
-    router.push('/pages/AddVehicle2'); // Update with your next screen path
+    router.push('/pages/AddVehicle2');
   };
 
   return (
@@ -88,7 +88,6 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
   },
   title: {
     fontSize: 32,
@@ -128,8 +127,8 @@ const styles = StyleSheet.create({
   },
   skipText: {
     textAlign: 'center',
-    marginVertical: 16,
-    fontSize: 14,
+    marginVertical: 35,
+    fontSize: 16,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     marginBottom: 5,

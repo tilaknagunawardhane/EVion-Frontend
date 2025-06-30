@@ -14,25 +14,31 @@ import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import InputField from '../../components/InputField';
-import AppBar from '../../components/AppBar';
+
 const router = useRouter();
 
 
+const generateCurrentMonthDates = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0-based index for months
 
+  const numberOfDays = new Date(year, month + 1, 0).getDate(); // get total days in the month
+  const datesArray = [];
 
-const fullMonthDates = [
-  { day: 'Sun', date: '01' }, { day: 'Mon', date: '02' }, { day: 'Tue', date: '03' },
-  { day: 'Wed', date: '04' }, { day: 'Thu', date: '05' }, { day: 'Fri', date: '06' },
-  { day: 'Sat', date: '07' }, { day: 'Sun', date: '08' }, { day: 'Mon', date: '09' },
-  { day: 'Tue', date: '10' }, { day: 'Wed', date: '11' }, { day: 'Thu', date: '12' },
-  { day: 'Fri', date: '13' }, { day: 'Sat', date: '14' }, { day: 'Sun', date: '15' },
-  { day: 'Mon', date: '16' }, { day: 'Tue', date: '17' }, { day: 'Wed', date: '18' },
-  { day: 'Thu', date: '19' }, { day: 'Fri', date: '20' }, { day: 'Sat', date: '21' },
-  { day: 'Sun', date: '22' }, { day: 'Mon', date: '23' }, { day: 'Tue', date: '24' },
-  { day: 'Wed', date: '25' }, { day: 'Thu', date: '26' }, { day: 'Fri', date: '27' },
-  { day: 'Sat', date: '28' }, { day: 'Sun', date: '29' }, { day: 'Mon', date: '30' }
-];
+  for (let day = 1; day <= numberOfDays; day++) {
+    const dateObj = new Date(year, month, day);
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' }); // e.g. Sun, Mon
+    datesArray.push({
+      day: dayName,
+      date: day.toString().padStart(2, '0'), // '01', '02', ...
+    });
+  }
+
+  return datesArray;
+};
+
+const fullMonthDates = generateCurrentMonthDates();
 
 const timeSlotPages = [
   [ // Page 1
@@ -73,6 +79,7 @@ const SelectDateTimeScreen = () => {
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [startIndex, setStartIndex] = useState(0);
   const [currentTimeSlotPage, setCurrentTimeSlotPage] = useState(0);
+
   const visibleDates = fullMonthDates.slice(startIndex, startIndex + 7);
 
   const handleLeft = () => {
@@ -273,8 +280,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
-  selectedDayText: { color:colors.secondaryText },
-  selectedDateText: { color: colors.mainTextColor },
+  selectedDayText: { color: '#00C897' },
+  selectedDateText: { color: '#00C897' },
   slotRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

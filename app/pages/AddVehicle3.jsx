@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import AppBar from '../../components/AppBar';
 import CustomButton from '../../components/CustomButton';
 import DropdownField from '../../components/DropdownField';
@@ -15,13 +15,17 @@ const AddEVScreen = () => {
   const [passengers, setPassengers] = useState('');
 
   const handleNext = () => {
-    router.push('/pages/AddedVehicle1'); 
+    router.push('/pages/addedvprofile');
   };
 
   return (
     <View style={styles.container}>
-      <AppBar/>
-      <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
+      <AppBar />
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }}
+      >
         <View style={styles.mainContent}>
           <Text style={styles.title}>Add Your EV</Text>
           <Text style={styles.subtitle}>Please enter the vehicle details.</Text>
@@ -40,9 +44,7 @@ const AddEVScreen = () => {
             selectedValue={batteryCapacity}
             onValueChange={setBatteryCapacity}
             placeholder="Select the battery capacity"
-            options={[
-              '61.4 kWh', '82.5 kWh'
-            ]}
+            options={['61.4 kWh', '82.5 kWh']}
           />
 
           <InputField
@@ -68,10 +70,12 @@ const AddEVScreen = () => {
             placeholder="4"
             keyboardType="numeric"
           />
-
-          <CustomButton title="Next" onPress={handleNext} type="primary" />
         </View>
       </ScrollView>
+
+      <View style={styles.buttonContainer}>
+        <CustomButton title="Next" onPress={handleNext} type="primary" />
+      </View>
     </View>
   );
 };
@@ -81,9 +85,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  scrollContainer: {
+    paddingBottom: 34,
+  },
   mainContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
   },
   title: {
     fontSize: 32,
@@ -120,6 +126,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     marginBottom: 12,
+  },
+  buttonContainer: {
+    paddingHorizontal: 24,
+    paddingBottom: 24,
+    backgroundColor: colors.background,
   },
 });
 
