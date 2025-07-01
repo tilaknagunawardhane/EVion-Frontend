@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ScrollView,
   Text,
@@ -11,77 +11,73 @@ import CompletedBookingCard from '../../components/CompletedBookingCard';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '@env';
 
 const BookingsScreen = () => {
   const [activeTab, setActiveTab] = useState('Upcoming');
   const router = useRouter();
 
-  const bookingsData = {
-    Upcoming: [
-      {
-        dateLabel: 'Jun 12, 2025',
-        duration: '1 Hr 30 Mins',
-        time: '9:30 AM',
-        stationName: 'Genso Charging Station',
-        address: 'Southern Highway, Welipenna, Matugama',
-        carImage: require('../../assets/vehicles/atto3.png'),
-        carName: 'BYD Atto 3 (SUV)',
-        connectorType: 'CCS Combo Type 2',
-      },
-      {
-        dateLabel: 'Jun 11, 2025',
-        duration: '1 Hr 30 Mins',
-        time: '11:30 PM',
-        stationName: 'Fonseka Charging Station',
-        address: 'No: 2/82, Maha Payagala, Payagala',
-        carImage: require('../../assets/vehicles/dolphin.png'),
-        carName: 'BYD Dolphin (Hatchback)',
-        connectorType: 'Type 2 (Mennekes)',
-      },
-      {
-        dateLabel: 'Jun 14, 2025',
-        duration: '2 Hr 30 Mins',
-        time: '11:30 PM',
-        stationName: 'Chargenet Charging Station',
-        address: 'No: 2/82, Maha Payagala, Payagala',
-        carImage: require('../../assets/vehicles/atto3.png'),
-        carName: 'BYD Atto3 (Hatchback)',
-        connectorType: 'Type 2 (Mennekes)',
-      },
-    ],
-    Completed: [
-      {
-        dateLabel: 'Jun 05, 2025',
-        cost: '3,804.35',
-        stationName: 'Genso Charging Station',
-        address: 'Southern Highway, Welipenna, Matugama',
-        carImage: require('../../assets/vehicles/dolphin.png'),
-        carName: 'Hyundai Kona',
-        connectorType: 'CCS Combo Type 2',
-      },
-      {
-        dateLabel: 'Jun 10, 2025',
-        cost: '2,500.00',
-        stationName: 'Eco Charge Point',
-        address: '123 Green Road, Colombo',
-        carImage: require('../../assets/vehicles/atto3.png'),
-        carName: 'BYD Atto 3 (SUV)',
-        connectorType: 'CCS Combo Type 2',
-      },
-    ],
-    Cancelled: [
-      {
-        dateLabel: 'Jun 9, 2025',
-        duration: '1 Hr',
-        time: '10:00 AM',
-        stationName: 'City Charge Hub',
-        address: '456 Urban Street, Negombo',
-        carImage: require('../../assets/vehicles/dolphin.png'),
-        carName: 'BYD Dolphin (Hatchback)',
-        connectorType: 'Type 2 (Mennekes)',
-      },
-    ],
+  const [bookingsData, setBookingsData] = useState({
+    Upcoming: [],
+    Completed: [],
+    Cancelled: [],
+  });
+
+  console.log('API_BASE_URL:', API_BASE_URL);
+
+  useEffect(() => {
+  const fetchBookings = async () => {
+    try {
+      const endpointMap = {
+        Upcoming: 'getUserUpcomingBookings',
+        Completed: 'getUserCompletedBookings',
+        Cancelled: 'getUserCancelledBookings',
+      };
+      const endpoint = endpointMap[activeTab];
+      const url = `${API_BASE_URL}/api/bookings/${endpoint}?ev_user_id=6849cbc0f3c3b1455d5c128b`;
+      console.log('Fetching from:', url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any required headers, e.g., Authorization if needed
+          // 'Authorization': 'Bearer your-token-here',
+        },
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response:', text);
+      throw new Error(`Server returned non-JSON response (status: ${response.status})`);
+    }
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if (response.ok) {
+        setBookingsData((prev) => ({
+          ...prev,
+          [activeTab]: data || [],
+        }));
+      } else {
+        console.error('Error:', data.message || 'No message provided');
+      }
+    } catch (error) {
+      console.error('Fetch error:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
+    console.log('bookingsData: ', bookingsData);
   };
+
+    fetchBookings();
+  }, [activeTab]);
+
 
   const renderBookings = () => {
     const bookings = bookingsData[activeTab];
@@ -92,6 +88,14 @@ const BookingsScreen = () => {
         </Text>
       );
     }
+
+     if (!Array.isArray(bookings)) {
+    return (
+      <Text style={styles.noBookingsText}>
+        Loading {activeTab.toLowerCase()} bookings...
+      </Text>
+    );
+  }
 
     return bookings.map((booking, index) => {
       if (activeTab === 'Completed') {
