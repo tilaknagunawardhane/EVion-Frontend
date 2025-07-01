@@ -15,7 +15,7 @@ const AddEVScreen = () => {
   const [passengers, setPassengers] = useState('');
 
   const handleNext = () => {
-    router.push('/pages/Filters');
+    router.push('/pages/addedvprofile');
   };
 
   return (
