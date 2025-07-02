@@ -217,7 +217,7 @@ const SelectDateTimeScreen = () => {
       <View style={styles.bookButtonContainer}>
         <CustomButton
           title="Book Now"
-          onPress={() => console.log('Selected Slots:', selectedSlots)}
+          onPress={() => router.push('/pages/StartCharging')}
           type="primary"
         />
       </View>
