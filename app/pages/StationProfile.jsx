@@ -83,7 +83,7 @@ const ChargingStationScreen = () => {
           </TouchableOpacity>
         </View>
 
-        /* Connectors */
+        {/* Connectors  */}
         <Text style={styles.sectionTitle}>Available Connectors</Text>
 
         {connectorArray.length > 0 ? (

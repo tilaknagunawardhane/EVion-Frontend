@@ -1,172 +1,86 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image
-} from 'react-native';
-import { Entypo } from '@expo/vector-icons';
-import { FontAwesome } from '@expo/vector-icons';
+import { View, Text, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const ConnectorCard = ({
-  status,
-  connectorType,
-  connectorID,
-  connectorImage,
-  batteryGain,
-  estimatedTime,
-  powerInfo,
-  price,
-  isSelected,
-  onSelect,
-  onDotsPress,
-}) => {
-  const isAvailable = status.toLowerCase().includes('available');
-  const isBusy = status.toLowerCase().includes('busy');
-
+const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, batteryGain, estimatedTime, powerInfo, price }) => {
   return (
-    <TouchableOpacity
-      onPress={onSelect}
-      activeOpacity={0.9}
-      style={[styles.card, isSelected && styles.selectedCard]}
-    >
-      {/* Top Row */}
-      <View style={styles.rowBetween}>
-        <Text style={[styles.badge, { color: isBusy ? colors.warning : colors.success }]}>
-          {status}
+    <View style={styles.connectorCard}>
+      <View style={styles.connectorHeader}>
+        <Text style={[status === 'Available' ? styles.availableText : styles.busyText]}>
+          {status === 'Available' ? 'Available' : 'Charger Busy'}
         </Text>
-        <TouchableOpacity onPress={onDotsPress}>
-          <Entypo name="dots-three-vertical" size={14} color={colors.secondaryText} />
-        </TouchableOpacity>
+        <Text style={styles.connectorID}>ID: {connectorID}</Text>
       </View>
 
-      {/* Title */}
-      <Text style={styles.connectorType}>{connectorType}</Text>
-      <Text style={styles.connectorID}>ID: {connectorID}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+        {/* ✅ Correct image rendering for local image */}
+        <Image source={connectorImage} style={[styles.chargerIcon, { tintColor: colors.primary, marginRight: 8 }]} />
+        <Text style={styles.connectorType}>{connectorType}</Text>
+      </View>
 
-      {/* Separator Line */}
-      <View style={styles.separator} />
+      <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
 
-      {/* Bottom Content Row */}
-      <View style={styles.bottomRow}>
-        {/* Icon Box */}
-        <View style={styles.iconBox}>
-          <Image source={connectorImage} style={styles.iconImage} />
+      <View style={styles.batteryInfo}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.batteryText}>Battery Gain:</Text>
+          <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{batteryGain}</Text>
         </View>
-
-        {/* Battery Info */}
-        <View style={styles.middleColumn}>
-          <Text style={styles.label}>Battery Gain:</Text>
-          <Text style={styles.value}>~{batteryGain} in 30 mins</Text>
-          <Text style={styles.label}>Est. Time to 80%:</Text>
-          <Text style={styles.value}>{estimatedTime}</Text>
-        </View>
-
-        {/* Power & Price */}
-        <View style={styles.rightColumn}>
-          <View style={styles.powerRow}>
-            <FontAwesome name="bolt" size={14} color={colors.secondaryText} />
-            <Text style={styles.power}>{powerInfo}</Text>
-          </View>
-          <Text style={styles.price}>LKR {price}.00 /kW</Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Text style={styles.batteryText}>Est. Time to 80%:</Text>
+          <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{estimatedTime}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+
+      <View style={[styles.powerRow, { gap: 4 }]}>
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>⚡ {powerInfo}</Text>
+        </View>
+
+        <View style={styles.infoBox}>
+          <Text style={styles.infoText}>LKR {price} /kW</Text>
+        </View>
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor:colors.background,
+  connectorCard: {
+    backgroundColor: colors.background,
     borderRadius: 12,
-    padding: 12,
-    marginHorizontal: 24,
+    padding: 16,
     marginBottom: 16,
-    elevation: 1,
+    marginHorizontal: 24,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    shadowColor: colors.stroke,
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 2
   },
-  selectedCard: {
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  badge: {
-    fontSize: 11,
-    fontFamily: fonts.PlusJakartaSansBold,
-  },
-  connectorType: {
-    fontSize: 13,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.mainTextColor,
-    marginBottom: 2,
-  },
-  connectorID: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    fontFamily: fonts.PlusJakartaSans,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.stroke,
-    marginVertical: 10,
-  },
-  bottomRow: {
-    flexDirection: 'row',
+  connectorHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
+  availableText: { color: colors.primary, fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
+  busyText: { color: colors.danger, fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
+  connectorID: { fontSize: 12, fontFamily: fonts.PlusJakartaSans, color: colors.secondaryText },
+  connectorType: { fontSize: 14, fontFamily: fonts.PlusJakartaSansBold, color: colors.mainTextColor, marginBottom: 12 },
+  batteryInfo: { marginBottom: 12 },
+  batteryText: { fontSize: 12, fontFamily: fonts.PlusJakartaSans, color: colors.secondaryText, marginBottom: 4 },
+  powerRow: { flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' },
+  infoBox: {
+    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    marginHorizontal: 4,
     alignItems: 'center',
-  },
-  iconBox: {
-    backgroundColor: '#E9F7F4',
-    padding: 10,
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  iconImage: {
-    width: 28,
-    height: 28,
-    resizeMode: 'contain',
-  },
-  middleColumn: {
-    flex: 1,
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    minWidth: 32
   },
-  label: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    fontFamily: fonts.PlusJakartaSans,
-  },
-  value: {
-    fontSize: 11,
-    color: colors.mainTextColor,
-    fontFamily: fonts.PlusJakartaSansBold,
-  },
-  rightColumn: {
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-  },
-  powerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  power: {
-    fontSize: 12,
-    marginLeft: 4,
-    color: colors.mainTextColor,
-    fontFamily: fonts.PlusJakartaSans,
-  },
-  price: {
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.mainTextColor,
-  },
+  infoText: { color: colors.mainTextColor, fontSize: 12, fontFamily: fonts.PlusJakartaSansBold, fontWeight: 'bold' },
+  chargerIcon: { width: 24, height: 24 }
 });
 
 export default ConnectorCard;
-
-
