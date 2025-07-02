@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
 },
   title: {
     fontSize: 24,
-    fontFamily: fonts.PlusJakartaSansBold,
+    fontFamily: fonts.PlusJakartaSansMedium,
     marginHorizontal: 16,
     marginBottom: 10,
     color: colors.mainTextColor,
