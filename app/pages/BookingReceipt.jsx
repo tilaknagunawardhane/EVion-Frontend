@@ -183,7 +183,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansMedium,
     fontSize: 14,
     flex: 1,
-    marginBottom: 6,
   },
   value: {
     color: colors.mainTextColor,
