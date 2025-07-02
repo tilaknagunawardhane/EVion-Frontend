@@ -9,7 +9,7 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Added navigation
+import { router } from 'expo-router';    // NEW: import router
 
 import InputField from '../../components/InputField'; 
 import PopupAppBar from '../../components/PopupAppBar'; 
@@ -18,7 +18,18 @@ import fonts from '../../constants/fonts';
 
 const BatteryStatusModal = ({ visible, onClose, onConfirm }) => {
   const [battery, setBattery] = useState('');
-  const navigation = useNavigation(); // Initialize navigation
+
+  /** ---------- handle Confirm ---------- */
+  const handleConfirm = () => {
+    // (1) tell parent if it needs the battery value
+    onConfirm?.(battery);
+
+    // (2) close this modal (so it doesn’t sit behind the next screen)
+    onClose?.();
+
+    // (3) navigate to QuickCheckModal screen
+    router.push('/pages/QuickCheckModal');
+  };
 
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onClose}>
@@ -33,7 +44,7 @@ const BatteryStatusModal = ({ visible, onClose, onConfirm }) => {
             style={styles.closeIcon}
             onPress={() => {
               onClose?.();
-              navigation.goBack(); // Navigate to previous screen
+              navigation.goBack(); 
             }}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
@@ -53,7 +64,7 @@ const BatteryStatusModal = ({ visible, onClose, onConfirm }) => {
             keyboardType="numeric"
           />
 
-          <TouchableOpacity style={styles.confirmBtn} onPress={() => onConfirm?.(battery)}>
+          <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
             <Text style={styles.confirmText}>Confirm</Text>
           </TouchableOpacity>
         </View>
@@ -67,7 +78,7 @@ export default BatteryStatusModal;
 const styles = StyleSheet.create({
   fullOverlay: {
     flex: 1,
-    backgroundColor: '#BDBDBD',
+    backgroundColor: colors.secondaryText,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
   },
   card: {
