@@ -14,7 +14,7 @@ const WaitingConnectionScreen = () => {
   // Optional auto-navigate after timeout
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push('/pages/StartCharging'); // Navigate to StartCharging page
+      router.push('/pages/ChargeConnected'); // Navigate to ChargeConnected page
     }, 4000);
     return () => clearTimeout(timeout);
   }, []);
