@@ -173,12 +173,11 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingBottom: 10,
+    paddingBottom: 20,
   },
   mainContent: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 24,
   },
   title: {
     fontSize: 32,
@@ -199,7 +198,7 @@ const styles = StyleSheet.create({
   orSeparator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 16,
+    marginVertical: 5,
   },
   line: {
     flex: 1,

@@ -17,17 +17,19 @@ const plugTypes = [
 ];
 
 const AddPlugTypeScreen = () => {
-  const [selectedPlug, setSelectedPlug] = useState(null); // Single plug selection
+  const [selectedPlugs, setSelectedPlugs] = useState([]); // Multiple selections
 
   const togglePlugSelection = (id) => {
-    setSelectedPlug((prev) => (prev === id ? null : id)); // Select or unselect
+    setSelectedPlugs((prev) =>
+      prev.includes(id) ? prev.filter((plugId) => plugId !== id) : [...prev, id]
+    );
   };
 
   const handleNext = () => {
-    if (selectedPlug) {
-      router.push('/pages/AddVehicle3'); // Next screen
+    if (selectedPlugs.length > 0) {
+      router.push('/pages/AddVehicle3'); // You can also pass the selected plugs via query or context
     } else {
-      Alert.alert('Select Plug Type', 'Please select a plug type before proceeding.');
+      Alert.alert('Select Plug Type', 'Please select at least one plug type before proceeding.');
     }
   };
 
@@ -54,7 +56,7 @@ const AddPlugTypeScreen = () => {
               <PlugBox
                 key={plug.id}
                 plug={plug}
-                isSelected={selectedPlug === plug.id}
+                isSelected={selectedPlugs.includes(plug.id)}
                 onPress={() => togglePlugSelection(plug.id)}
               />
             ))}
@@ -66,7 +68,7 @@ const AddPlugTypeScreen = () => {
               <PlugBox
                 key={plug.id}
                 plug={plug}
-                isSelected={selectedPlug === plug.id}
+                isSelected={selectedPlugs.includes(plug.id)}
                 onPress={() => togglePlugSelection(plug.id)}
               />
             ))}
@@ -76,7 +78,7 @@ const AddPlugTypeScreen = () => {
           <View style={styles.grid}>
             <PlugBox
               plug={plugTypes[5]}
-              isSelected={selectedPlug === plugTypes[5].id}
+              isSelected={selectedPlugs.includes(plugTypes[5].id)}
               onPress={() => togglePlugSelection(plugTypes[5].id)}
             />
           </View>
@@ -98,7 +100,6 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     paddingHorizontal: 24,
-    paddingTop: 24,
   },
   title: {
     fontSize: 32,
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 8,
   },
 });
 
