@@ -300,6 +300,12 @@ export default function MapScreen() {
         setSearchQuery={setSearchQuery}
         fetchSuggestions={fetchSuggestions}
         handleSearch={handleSearch}
+        onFilterPress={() => {
+    // Add your filter logic here
+    console.log('Filter button pressed');
+    // For example:
+    // setShowFilterModal(true);
+  }}
       />
 
       {/* Suggestions Dropdown */}
