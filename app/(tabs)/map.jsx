@@ -37,9 +37,30 @@ export default function MapScreen() {
   const navigation = useNavigation();
 
   const chargingStations = [
-    { id: 'station1', latitude: 6.9271, longitude: 79.8612, title: 'Station 1', description: 'Charging Station 1' },
-    { id: 'station2', latitude: 6.9150, longitude: 79.8630, title: 'Station 2', description: 'Charging Station 2' },
-    { id: 'station3', latitude: 6.9300, longitude: 79.8700, title: 'Station 3', description: 'Charging Station 3' },
+    {
+      id: 'station1',
+      latitude: 6.9271,
+      longitude: 79.8612,
+      title: 'Colombo Saved Station',
+      description: 'Charging Station 1',
+      address: '123 Galle Road, Colombo, Sri Lanka',
+    },
+    {
+      id: 'station2',
+      latitude: 6.9150,
+      longitude: 79.8630,
+      title: 'Station 2',
+      description: 'Charging Station 2',
+      address: '456 Marine Drive, Colombo, Sri Lanka',
+    },
+    {
+      id: 'station3',
+      latitude: 6.9300,
+      longitude: 79.8700,
+      title: 'Station 3',
+      description: 'Charging Station 3',
+      address: '789 Lotus Road, Colombo, Sri Lanka',
+    },
   ];
 
   useEffect(() => {
@@ -242,6 +263,7 @@ export default function MapScreen() {
         isLocal: true,
         latitude: station.latitude,
         longitude: station.longitude,
+        address: station.address,
       })),
     // Google API suggestions
     ...suggestions

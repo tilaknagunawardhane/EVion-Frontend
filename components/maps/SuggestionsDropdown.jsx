@@ -35,10 +35,22 @@ const SuggestionsDropdown = ({
               }
             }}
           >
-            <Text style={{ fontFamily: fonts.PlusJakartaSans }}>
-              {item.description}
-              {item.isLocal ? ' (Station)' : ''}
-            </Text>
+            <View>
+              <Text style={{ fontFamily: fonts.PlusJakartaSans }}>
+                {item.description}
+                {item.isLocal ? ' (Station)' : ''}
+              </Text>
+              {item.isLocal && item.address && (
+                <Text style={{
+                  fontFamily: fonts.PlusJakartaSans,
+                  color: colors.secondaryText,
+                  fontSize: 12,
+                  marginTop: 2,
+                }}>
+                  {item.address}
+                </Text>
+              )}
+            </View>
           </TouchableOpacity>
         )}
       />
