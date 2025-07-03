@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
@@ -8,7 +8,6 @@ const SearchContainer = ({
   searchQuery,
   setSearchQuery,
   fetchSuggestions,
-  handleSearch
 }) => {
   return (
     <View style={styles.searchContainer}>
@@ -22,9 +21,9 @@ const SearchContainer = ({
         }}
         placeholderTextColor={colors.secondaryText}
       />
-      <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-        <MaterialIcons name="search" size={24} color="#fff" />
-      </TouchableOpacity>
+      <View style={styles.iconContainer}>
+        <MaterialIcons name="search" size={24} color={colors.secondaryText} />
+      </View>
     </View>
   );
 };
@@ -50,14 +49,11 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
   },
   searchInput: { flex: 1, paddingVertical: 8, fontFamily: fonts.PlusJakartaSans, color: colors.mainTextColor },
-  searchButton: {
-    position: 'absolute',
-    right: -50,
-    top: 5,
-    backgroundColor: '#007AFF',
-    padding: 10,
-    borderRadius: 20,
-    elevation: 3,
+  iconContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100%',
+    width: 40,
   },
 });
 

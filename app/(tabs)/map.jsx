@@ -114,7 +114,7 @@ export default function MapScreen() {
 
     try {
       const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_API_KEY}&components=country:lk`
       );
 
       if (response.data.status === 'OK') {
@@ -229,6 +229,24 @@ export default function MapScreen() {
   const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
   const MapViewComponent = MapNamespace.View;
 
+  // Combine Google suggestions and local charging stations for suggestions dropdown
+  const combinedSuggestions = [
+    // Local stations as suggestions
+    ...chargingStations
+      .filter(station =>
+        station.title.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== ''
+      )
+      .map(station => ({
+        id: station.id,
+        description: station.title,
+        isLocal: true,
+        latitude: station.latitude,
+        longitude: station.longitude,
+      })),
+    // Google API suggestions
+    ...suggestions
+  ];
+
   return (
     <View style={styles.container}>
       <MapViewComponent
@@ -264,16 +282,21 @@ export default function MapScreen() {
 
       {/* Suggestions Dropdown */}
       <SuggestionsDropdown
-        suggestions={suggestions}
-        getDetails={async (placeId) => {
+        suggestions={combinedSuggestions}
+        getDetails={async (placeId, isLocal, lat, lng) => {
+          if (isLocal) {
+            // For local station, return lat/lng directly
+            return { lat, lng };
+          }
+          // For Google API suggestion
           const response = await axios.get(
             `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
           );
-          const { lat, lng } = response.data.result.geometry.location;
-          return { lat, lng };
+          const { lat: gLat, lng: gLng } = response.data.result.geometry.location;
+          return { lat: gLat, lng: gLng };
         }}
-        onSelect={({ lat, lng }, description) => {
-          navigateToDirections(lat, lng, description);
+        onSelect={(details, description, isLocal) => {
+          navigateToDirections(details.lat, details.lng, description);
         }}
       />
 
