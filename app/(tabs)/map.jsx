@@ -22,6 +22,7 @@ import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import SearchContainer from '../../components/maps/SearchContainer';
+import SuggestionsDropdown from '../../components/maps/SuggestionsDropdown';
 
 const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY; // Fixed this line (removed curly braces)
 
@@ -262,34 +263,19 @@ export default function MapScreen() {
       />
 
       {/* Suggestions Dropdown */}
-      {suggestions.length > 0 && (
-        <View style={styles.resultsContainer}>
-          <FlatList
-            data={suggestions}
-            keyExtractor={(item) => item.place_id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultItem}
-                onPress={async () => {
-                  try {
-                    const response = await axios.get(
-                      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.place_id}&key=${GOOGLE_API_KEY}`
-                    );
-
-                    const { lat, lng } = response.data.result.geometry.location;
-                    navigateToDirections(lat, lng, item.description);
-                  } catch (error) {
-                    console.error('Error fetching place details:', error);
-                    Alert.alert('Error fetching location details.');
-                  }
-                }}
-              >
-                <Text>{item.description}</Text>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
+      <SuggestionsDropdown
+        suggestions={suggestions}
+        getDetails={async (placeId) => {
+          const response = await axios.get(
+            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
+          );
+          const { lat, lng } = response.data.result.geometry.location;
+          return { lat, lng };
+        }}
+        onSelect={({ lat, lng }, description) => {
+          navigateToDirections(lat, lng, description);
+        }}
+      />
 
       {/* Show Nearby Stations Dropdown */}
       {showDropdown && nearbyStations.length > 0 && (
