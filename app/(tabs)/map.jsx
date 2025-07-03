@@ -19,6 +19,9 @@ import stationIcon from '../../assets/map/station-icon.png';
 import { GOOGLE_MAPS_API_KEY } from '@env';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
+import colors from '../../constants/color';
+import fonts from '../../constants/fonts';
+import SearchContainer from '../../components/maps/SearchContainer';
 
 const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY; // Fixed this line (removed curly braces)
 
@@ -69,7 +72,7 @@ export default function MapScreen() {
     if (location && mapRef.current?.setCameraPosition) {
       mapRef.current.setCameraPosition({
         coordinates: { latitude: location.latitude, longitude: location.longitude },
-        zoom: 15,
+        zoom: 13,
         duration: 1000,
       });
     }
@@ -251,20 +254,12 @@ export default function MapScreen() {
       />
 
       {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search an area..."
-          value={searchQuery}
-          onChangeText={(text) => {
-            setSearchQuery(text);
-            fetchSuggestions(text);
-          }}
-        />
-        <TouchableOpacity style={styles.searchButton} onPress={() => handleSearch()}>
-          <MaterialIcons name="search" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      <SearchContainer
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        fetchSuggestions={fetchSuggestions}
+        handleSearch={handleSearch}
+      />
 
       {/* Suggestions Dropdown */}
       {suggestions.length > 0 && (
@@ -333,33 +328,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  searchContainer: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    right: 80,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  searchInput: { flex: 1, paddingVertical: 8 },
-  searchButton: {
-    position: 'absolute',
-    right: -50,
-    top: 5,
-    backgroundColor: '#007AFF',
-    padding: 10,
-    borderRadius: 20,
-    elevation: 3,
-  },
   resultsContainer: {
     position: 'absolute',
     top: 110,
