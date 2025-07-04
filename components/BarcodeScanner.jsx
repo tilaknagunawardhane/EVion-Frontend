@@ -1,37 +1,44 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import colors from '../constants/color'; // Adjust the path as necessary
-import InputField from './InputField';
+import colors from '../constants/color';
+
 const BarcodeScanner = ({ onScanned, style }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
 
   useEffect(() => {
-    if (permission && !permission.granted) {
-      requestPermission();
-    }
-  }, [permission, requestPermission]);
+    const getPermission = async () => {
+      const { status } = await requestPermission();
+      if (status !== 'granted') {
+        console.warn('Camera permission denied');
+      }
+    };
+    
+    getPermission();
+  }, []);
 
   const handleBarCodeScanned = ({ data }) => {
     if (!scanned) {
       setScanned(true);
-      if (onScanned) onScanned(data);
-      // Optionally reset scanned after a delay if you want to scan again
+      onScanned?.(data);
+      // Auto-reset after 2 seconds if you want continuous scanning
       setTimeout(() => setScanned(false), 2000);
     }
   };
-  if (permission === null) {
+
+  if (!permission) {
     return (
-      <View style={[styles.scannerContainer, styles.center]}>
-        <ActivityIndicator size="large" color="#00C897" />
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
+
   if (!permission.granted) {
     return (
-      <View style={[styles.scannerContainer, styles.center]}>
-        <Text style={styles.permissionText}>No access to camera</Text>
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.text}>Please grant camera permissions in settings</Text>
       </View>
     );
   }
@@ -40,42 +47,27 @@ const BarcodeScanner = ({ onScanned, style }) => {
     <CameraView
       onBarcodeScanned={handleBarCodeScanned}
       barcodeScannerSettings={{
-        barcodeTypes: [
-          'qr',
-          'ean13',
-          'code128',
-          'code39',
-          'code93',
-          'pdf417',
-          'upc_a',
-          'upc_e',
-          'aztec',
-          'datamatrix',
-          'itf14',
-        ],
+        barcodeTypes: ['qr', 'pdf417', 'ean13', 'ean8', 'upc_a', 'upc_e'],
       }}
-      style={[styles.scannerContainer, style]}
+      style={[styles.container, style]}
     />
   );
 };
 
-
 const styles = StyleSheet.create({
-  scannerContainer: {
-    width: 220,
-    height: 220,
-    overflow: 'hidden',
-    borderRadius: 16,
-  },
-  permissionText: {
-    color:colors.MainTextColor,
-    fontSize: 14,
-    textAlign: 'center',
+  container: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   center: {
     justifyContent: 'center',
     alignItems: 'center',
-    flex: 1,
+  },
+  text: {
+    color: colors.mainTextColor,
+    textAlign: 'center',
+    padding: 20,
   },
 });
 

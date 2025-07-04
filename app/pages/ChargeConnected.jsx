@@ -1,97 +1,117 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
+import { useEffect } from 'react';
 import fonts from '../../constants/fonts';
-import InputField from '../../components/InputField';
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ChargeConnectedScreen = () => {
   const router = useRouter();
 
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      router.push('/pages/StartChargeWalk-In');
+    }, 3000);
+    return () => clearTimeout(timeout);
+  }, []);
+
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.push('/pages/WaitingConnection')}>
-          <Ionicons name="chevron-back" size={24} color={colors.mainTextColor} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Set!</Text>
-        <View style={{ width: 24 }} /> {/* For spacing balance */}
+      {/* Header Group */}
+      <View style={styles.headerGroup}>
+        <View style={styles.header}>
+          <View style={{ width: SCREEN_WIDTH * 0.08 }} />
+          <Text style={styles.headerTitle}>All Set!</Text>
+          <View style={{ width: SCREEN_WIDTH * 0.08 }} />
+        </View>
+
+        <Text style={styles.subText}>
+          Vehicle successfully linked{'\n'}to the charger
+        </Text>
       </View>
 
-      {/* Subtitle */}
-      <Text style={styles.subText}>Vehicle successfully linked{'\n'}to the charger</Text>
-
-      {/* Main content area with centered EV Image */}
-      <View style={styles.mainContent}>
+      {/* Centered Content */}
+      <View style={styles.centerContent}>
         <View style={styles.imageContainer}>
           <Image
-            source={require('../../assets/EVconnectedcharge.png')} // Use the connected charging image
+            source={require('../../assets/EVconnectedcharge.png')}
             style={styles.evImage}
           />
         </View>
       </View>
 
-      {/* Connected Status at bottom */}
-      <View style={styles.statusContainer}>
+      {/* Footer */}
+      <View style={styles.footer}>
         <Text style={styles.statusText}>Connected</Text>
       </View>
     </View>
   );
 };
 
+// Responsive sizing calculations
+const HEADER_HEIGHT = SCREEN_HEIGHT * 0.08;
+const IMAGE_CONTAINER_SIZE = SCREEN_WIDTH * 0.7;
+const IMAGE_SIZE = SCREEN_WIDTH * 0.4;
+const FOOTER_MARGIN = SCREEN_HEIGHT * 0.05;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: 60,
+    paddingHorizontal: SCREEN_WIDTH * 0.06,
+  },
+  headerGroup: {
+    paddingTop: HEADER_HEIGHT,
   },
   header: {
     width: '100%',
-    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: SCREEN_HEIGHT * 0.03,
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
+    textAlign: 'center',
+    flex: 1,
   },
   subText: {
-    fontSize: 14,
+    fontSize: SCREEN_WIDTH * 0.035,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     textAlign: 'center',
-    marginTop: 16,
-    paddingHorizontal: 24,
+    // marginBottom: SCREEN_HEIGHT * 0.04,
+    lineHeight: SCREEN_HEIGHT * 0.025,
   },
-  mainContent: {
+  centerContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   imageContainer: {
-    width: 280,
-    height: 280,
-    borderRadius: 140,
-    backgroundColor: '#E9F7F4', // Light green background circle
+    width: IMAGE_CONTAINER_SIZE,
+    height: IMAGE_CONTAINER_SIZE,
+    borderRadius: IMAGE_CONTAINER_SIZE / 2,
+    backgroundColor: '#E9F7F4',
     justifyContent: 'center',
     alignItems: 'center',
   },
   evImage: {
-    width: 160,
-    height: 160,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
     resizeMode: 'contain',
   },
-  statusContainer: {
+  footer: {
     alignItems: 'center',
-    paddingBottom: 80,
+    marginBottom: FOOTER_MARGIN,
   },
   statusText: {
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.04,
     color: colors.primary,
     fontFamily: fonts.PlusJakartaSansMedium,
   },

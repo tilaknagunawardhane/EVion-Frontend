@@ -1,98 +1,110 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ActivityIndicator, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { Ionicons } from '@expo/vector-icons';
-import inputfields from '../../components/InputField'; // Adjust the path as necessary
-import BarcodeScanner from '../../components/BarcodeScanner'; // Assuming you want to use this component
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const WaitingConnectionScreen = () => {
   const router = useRouter();
 
-  // Optional auto-navigate after timeout
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push('/pages/ChargeConnected'); // Navigate to ChargeConnected page
+      router.push('/pages/ChargeConnected');
     }, 4000);
     return () => clearTimeout(timeout);
   }, []);
 
-return (
+  return (
     <View style={styles.container}>
-        {/* Header */}
+      {/* Header Group */}
+      <View style={styles.headerGroup}>
         <View style={styles.header}>
-            <TouchableOpacity onPress={() => router.push('/pages/StartCharging')}>
-                <Ionicons name="chevron-back" size={24} color={colors.mainTextColor} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Waiting for Connection</Text>
-            <View style={{ width: 24 }} /> {/* For spacing balance */}
+          <TouchableOpacity onPress={() => router.push('/pages/StartCharging')}>
+            <Ionicons name="chevron-back" size={SCREEN_WIDTH * 0.06} color={colors.mainTextColor} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Waiting for Connection</Text>
+          <View style={{ width: SCREEN_WIDTH * 0.06 }} />
         </View>
 
-        {/* Subtitle */}
-        <Text style={styles.subText}>Please connect your vehicle to{'\n'}the charger</Text>
+        <Text style={styles.subText}>
+          Please connect your vehicle to{'\n'}the charger
+        </Text>
+      </View>
 
-        {/* Main content area with centered EV Image */}
-        <View style={styles.mainContent}>
-            <Image
-                source={require('../../assets/EVChargingV.png')} // Replace with your actual image path
-                style={styles.evImage}
-            />
-        </View>
+      {/* Centered Content */}
+      <View style={styles.centerContent}>
+        <Image
+          source={require('../../assets/EVChargingV.png')}
+          style={styles.evImage}
+        />
+      </View>
 
-        {/* Spinner + Label at bottom */}
-        <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#FF4444" />
-            <Text style={styles.loadingText}>Standing by..</Text>
-        </View>
+      {/* Footer */}
+      <View style={styles.footer}>
+        <ActivityIndicator size={SCREEN_WIDTH * 0.1} color={colors.danger} />
+        <Text style={styles.loadingText}>Standing by..</Text>
+      </View>
     </View>
-);
+  );
 };
+
+// Responsive sizing calculations
+const HEADER_PADDING_TOP = SCREEN_HEIGHT * 0.08;
+const HEADER_HEIGHT = SCREEN_HEIGHT * 0.08;
+const IMAGE_SIZE = SCREEN_WIDTH * 0.5;
+const FOOTER_MARGIN = SCREEN_HEIGHT * 0.05;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    paddingTop: 60,
+    paddingHorizontal: SCREEN_WIDTH * 0.06, // 6% of screen width
+  },
+  headerGroup: {
+    paddingTop: HEADER_PADDING_TOP,
   },
   header: {
     width: '100%',
-    paddingHorizontal: 24,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: SCREEN_HEIGHT * 0.03, // 3% of screen height
   },
   headerTitle: {
-    fontSize: 16,
+    fontSize: 18, // Responsive font size
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
+    textAlign: 'center',
+    flex: 1, // Helps with centering
   },
   subText: {
-    fontSize: 14,
+    fontSize: SCREEN_WIDTH * 0.035,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     textAlign: 'center',
-    marginTop: 16,
-    paddingHorizontal: 24,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+    lineHeight: SCREEN_HEIGHT * 0.025, // Responsive line height
   },
-  mainContent: {
+  centerContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   evImage: {
-    width: 220,
-    height: 220,
+    width: IMAGE_SIZE,
+    height: IMAGE_SIZE,
     resizeMode: 'contain',
   },
-  loaderContainer: {
+  footer: {
     alignItems: 'center',
-    paddingBottom: 80,
+    marginBottom: FOOTER_MARGIN,
   },
   loadingText: {
-    marginTop: 12,
-    fontSize: 16,
+    marginTop: SCREEN_HEIGHT * 0.02,
+    fontSize: SCREEN_WIDTH * 0.035,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },

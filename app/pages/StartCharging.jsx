@@ -1,85 +1,98 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import BarcodeScanner from '../../components/BarcodeScanner';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const StartChargingScreen = () => {
     const router = useRouter();
     const [isCameraActive, setIsCameraActive] = useState(false);
 
-    // Handler for QR scan result
     const handleBarCodeScanned = (data) => {
-        setIsCameraActive(false); // Hide camera after scan
+        setIsCameraActive(false);
         alert(`QR Code Scanned: ${data}`);
+        router.push('/pages/WaitingConnection'); // Navigate to WaitingConnection page
     };
 
     return (
         <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.push('/(tabs)')}>
-                    <Ionicons name="close" size={24} color={colors.mainTextColor} />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Start Charging</Text>
-                <View style={{ width: 24 }} />
+            {/* Header Group */}
+            <View style={styles.headerGroup}>
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => router.push('/(tabs)')}>
+                        <Ionicons name="close" size={24} color={colors.mainTextColor} />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Start Charging</Text>
+                    <View style={{ width: 24 }} />
+                </View>
+
+                <Text style={styles.subtitle}>
+                    Scan the QR code on the charger{'\n'}to start charging
+                </Text>
             </View>
 
-            {/* Instruction */}
-            <Text style={[styles.subtitle, { marginTop: 1        }]}>
-                Scan the QR code on the charger{'\n'}to start charging
-            </Text>
-
-            {/* QR Scan Box centered */}
-            <View style={styles.centerContent}>
+            {/* Centered QR Box */}
+            <View style={styles.qrContainer}>
                 <TouchableOpacity
                     style={styles.qrBox}
-                    activeOpacity={0.8}
+                    activeOpacity={0.7}
                     onPress={() => setIsCameraActive(true)}
                     disabled={isCameraActive}
                 >
                     {isCameraActive ? (
                         <BarcodeScanner
-                            style={styles.barcodeScanner}
-                            onBarCodeScanned={handleBarCodeScanned}
+                            style={StyleSheet.absoluteFill}
+                            onScanned={handleBarCodeScanned}
                         />
                     ) : (
-                        <Text style={{ color: colors.secondaryText, fontFamily: fonts.PlusJakartaSans }}>
-                            Tap to open camera
-                        </Text>
+                        <>
+                            {/* <Ionicons name="scan" size={48} color={colors.primary} /> */}
+                            <Text style={styles.tapText}>Tap to open camera</Text>
+                        </>
                     )}
+                    
                     {/* Green corners */}
                     <View style={[styles.corner, styles.topLeft]} />
                     <View style={[styles.corner, styles.topRight]} />
                     <View style={[styles.corner, styles.bottomLeft]} />
                     <View style={[styles.corner, styles.bottomRight]} />
                 </TouchableOpacity>
-                <Text style={[styles.footerText, { marginTop:190    }]}>Point camera to QR</Text>
             </View>
+
+            {/* Footer */}
+            <Text style={styles.footerText}>Point camera to QR</Text>
         </View>
     );
 };
 
-const cornerSize = 32;
-const cornerThickness = 3;
+const cornerSize = SCREEN_WIDTH * 0.090;
+const cornerThickness = 2;
+const inset = 26;
+const qrBoxSize = SCREEN_WIDTH * 0.75;
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
-        paddingTop: 60,
         paddingHorizontal: 24,
+        
+    },
+    headerGroup: {
+        paddingTop: 60,
     },
     header: {
         width: '100%',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        marginBottom: 24,
     },
     headerTitle: {
-        fontSize: 16,
+        fontSize: 18,
         fontFamily: fonts.PlusJakartaSansBold,
         color: colors.mainTextColor,
     },
@@ -87,18 +100,17 @@ const styles = StyleSheet.create({
         fontSize: 14,
         textAlign: 'center',
         color: colors.secondaryText,
-        marginTop: 24,
         fontFamily: fonts.PlusJakartaSans,
+        marginBottom: 0,
     },
-    centerContent: {
+    qrContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        width: '100%',
     },
     qrBox: {
-        width:250,
-        height:250,
+        width: qrBoxSize,
+        height: qrBoxSize,
         borderRadius: 16,
         backgroundColor: '#E9F7F4',
         alignItems: 'center',
@@ -106,20 +118,21 @@ const styles = StyleSheet.create({
         borderWidth: 2,
         borderColor: colors.primary,
         overflow: 'hidden',
-        alignSelf: 'center', // Add this line to center horizontally
-        marginTop:250,
-        marginBottom: 0,
+        position: 'relative',
     },
-    barcodeScanner: {
-        width: 200,
-        height: 200,
-        borderRadius: 8,
+    tapText: {
+        color: colors.secondaryText,
+        fontFamily: fonts.PlusJakartaSans,
+        textAlign: 'center',
+        paddingHorizontal: 20,
+        // marginTop: 16,
     },
     footerText: {
-        marginTop: 24,
+        textAlign: 'center',
         fontSize: 14,
         color: colors.secondaryText,
         fontFamily: fonts.PlusJakartaSans,
+        marginBottom: 40,
     },
     corner: {
         position: 'absolute',
@@ -129,26 +142,26 @@ const styles = StyleSheet.create({
         borderRadius: 8,
     },
     topLeft: {
-        top: 0,
-        left: 0,
+        top: inset,
+        left: inset,
         borderTopWidth: cornerThickness,
         borderLeftWidth: cornerThickness,
     },
     topRight: {
-        top: 0,
-        right: 0,
+        top: inset,
+        right: inset,
         borderTopWidth: cornerThickness,
         borderRightWidth: cornerThickness,
     },
     bottomLeft: {
-        bottom: 0,
-        left: 0,
+        bottom: inset,
+        left: inset,
         borderBottomWidth: cornerThickness,
         borderLeftWidth: cornerThickness,
     },
     bottomRight: {
-        bottom: 0,
-        right: 0,
+        bottom: inset,
+        right: inset,
         borderBottomWidth: cornerThickness,
         borderRightWidth: cornerThickness,
     },
