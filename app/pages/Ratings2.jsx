@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Ratings3 = () => {
+const Ratings2 = () => {
   const [selectedRating, setSelectedRating] = useState(2);
   const [selectedFeedback, setSelectedFeedback] = useState([]);
 
@@ -250,8 +250,8 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
-    color: '#ffffff',
+    color: colors.background,
   },
 });
 
-export default Ratings3;
+export default Ratings2;

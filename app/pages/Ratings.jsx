@@ -13,7 +13,7 @@ const Ratings = () => {
   };
 
   const handleBackPress = () => {
-    router.back();
+    router.push('/');
   };
 
   const renderStars = () => {
