@@ -29,8 +29,18 @@ const Profile1 = () => {
   const [otpValue, setOtpValue] = useState('');
   const [otpDigits, setOtpDigits] = useState(['3', '5', '2', '9', '3', '5']);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [focusedOtpIndex, setFocusedOtpIndex] = useState(null);
+  
+  // Security states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showRecoveryPhoneModal, setShowRecoveryPhoneModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [recoveryPhone, setRecoveryPhone] = useState('+94 71 653 5');
+  const [focusedPasswordField, setFocusedPasswordField] = useState(null);
   
   const [userInfo, setUserInfo] = useState({
     name: 'Vishwani Vilochana',
@@ -125,6 +135,44 @@ const Profile1 = () => {
     Alert.alert('Code Resent', 'A new verification code has been sent to your email.');
   };
 
+  // Security handlers
+  const handlePasswordUpdate = () => {
+    if (newPassword.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters long');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+    // Mock password update
+    setShowPasswordModal(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    Alert.alert('Success', 'Password updated successfully');
+  };
+
+  const isPasswordValid = () => {
+    return newPassword.length >= 8 && newPassword === confirmPassword && newPassword !== '' && confirmPassword !== '';
+  };
+
+  const handleRecoveryPhoneUpdate = () => {
+    if (recoveryPhone.length < 10) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return;
+    }
+    // Mock phone update
+    setShowRecoveryPhoneModal(false);
+    Alert.alert('Success', 'Recovery phone number updated successfully');
+  };
+
+  const isRecoveryPhoneValid = () => {
+    // Check if phone number is fully typed (should be at least 12 characters including country code and spaces)
+    // For Sri Lankan numbers: +94 71 123 4567 (minimum 12-13 characters)
+    const cleanPhone = recoveryPhone.replace(/\s/g, '');
+    return cleanPhone.length >= 12 && cleanPhone.startsWith('+94');
+  };
+
   const ProfilePictureModal = () => (
     <Modal
       visible={showProfileModal}
@@ -152,7 +200,7 @@ const EmailModal = () => (
     <Modal
         visible={showEmailModal}
         animationType="slide"
-        presentationStyle="pageSheet"
+        presentationStyle="fullScreen"
     >
         <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
@@ -200,7 +248,7 @@ const EmailModal = () => (
     <Modal
       visible={showVerifyModal}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
@@ -258,7 +306,7 @@ const EmailModal = () => (
     <Modal
       visible={showSuccessModal}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
@@ -300,6 +348,162 @@ const EmailModal = () => (
         
         <View style={styles.successContainer}>
           <Text style={styles.successText}>✓ Verification successful!</Text>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const PasswordModal = () => (
+    <Modal
+      visible={showPasswordModal}
+      animationType="slide"
+      presentationStyle="fullScreen"
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
+            <Text style={styles.backButton}>‹</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.passwordModalContent}>
+          <Text style={styles.modalTitle}>Password</Text>
+          <Text style={styles.passwordSubtitle}>
+            Your password must be at least 8 characters long
+          </Text>
+          
+          <View style={styles.passwordInputContainer}>
+            <Text style={styles.passwordLabel}>New Password*</Text>
+            <View style={styles.passwordInputWrapper}>
+              <TextInput
+                style={[
+                  styles.passwordInput,
+                  (focusedPasswordField === 'newPassword' || newPassword !== '') && styles.passwordInputFocused
+                ]}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                onFocus={() => setFocusedPasswordField('newPassword')}
+                onBlur={() => setFocusedPasswordField(null)}
+                secureTextEntry={!showNewPassword}
+                placeholder=""
+                placeholderTextColor={colors.secondaryText}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowNewPassword(!showNewPassword)}
+              >
+                <Image 
+                  source={showNewPassword ? require('../../assets/eye-open.png') : require('../../assets/eye-closed.png')}
+                  style={styles.eyeIconImage}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <View style={styles.passwordInputContainer}>
+            <Text style={styles.passwordLabel}>Confirm New Password*</Text>
+            <View style={styles.passwordInputWrapper}>
+              <TextInput
+                style={[
+                  styles.passwordInput,
+                  (focusedPasswordField === 'confirmPassword' || confirmPassword !== '') && styles.passwordInputFocused
+                ]}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                onFocus={() => setFocusedPasswordField('confirmPassword')}
+                onBlur={() => setFocusedPasswordField(null)}
+                secureTextEntry={!showConfirmPassword}
+                placeholder=""
+                placeholderTextColor={colors.secondaryText}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Image 
+                  source={showConfirmPassword ? require('../../assets/eye-open.png') : require('../../assets/eye-closed.png')}
+                  style={styles.eyeIconImage}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <CustomButton
+            title="Update"
+            onPress={handlePasswordUpdate}
+            backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
+            disabled={!isPasswordValid()}
+            textStyle={{
+              color: isPasswordValid() ? colors.white : colors.darkGray,
+              fontSize: 16,
+              fontWeight: 'bold',
+            }}
+            style={styles.updatePasswordButton}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const RecoveryPhoneModal = () => (
+    <Modal
+      visible={showRecoveryPhoneModal}
+      animationType="slide"
+      presentationStyle="fullScreen"
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowRecoveryPhoneModal(false)}>
+            <Text style={styles.backButton}>‹</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.recoveryPhoneModalContent}>
+          <Text style={styles.modalTitle}>Recovery Phone</Text>
+          <Text style={styles.recoveryPhoneSubtitle}>
+            You'll use this number to recover your account
+          </Text>
+          
+          <View style={styles.phoneInputContainer}>
+            <Text style={styles.phoneLabel}>Phone Number*</Text>
+            <TextInput
+              style={[
+                styles.phoneInput,
+                recoveryPhone.length > 5 && styles.phoneInputFilled
+              ]}
+              value={recoveryPhone}
+              onChangeText={setRecoveryPhone}
+              placeholder="+94"
+              placeholderTextColor={colors.secondaryText}
+              keyboardType="phone-pad"
+            />
+          </View>
+          
+          <Text style={styles.phoneNote}>
+            A verification code will be sent to this email
+          </Text>
+          
+          <TouchableOpacity
+            style={[
+              styles.updatePhoneButton,
+              {
+                backgroundColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText,
+                opacity: isRecoveryPhoneValid() ? 1 : 0.8,
+              }
+            ]}
+            onPress={isRecoveryPhoneValid() ? handleRecoveryPhoneUpdate : null}
+            disabled={!isRecoveryPhoneValid()}
+            activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
+          >
+            <Text style={[
+              styles.updatePhoneButtonText,
+              {
+                color: colors.background,
+              }
+            ]}>
+              Update
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -352,7 +556,7 @@ const EmailModal = () => (
     <Modal
       visible={showAddressModal}
       animationType="slide"
-      presentationStyle="pageSheet"
+      presentationStyle="fullScreen"
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
@@ -445,7 +649,7 @@ const EmailModal = () => (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.push('/')}>
           <Text style={styles.backButtonText}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Account</Text>
@@ -540,7 +744,21 @@ const EmailModal = () => (
 
         {activeTab === 'Security' && (
           <View style={styles.securityContainer}>
-            <Text style={styles.securityPlaceholder}>Security settings will be implemented here</Text>
+            <View style={styles.securityItem}>
+              <Text style={styles.securityLabel}>Password</Text>
+              <TouchableOpacity onPress={() => setShowPasswordModal(true)}>
+                <Text style={styles.securityArrow}>›</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.securityDivider} />
+            
+            <View style={styles.securityItem}>
+              <Text style={styles.securityLabel}>Recovery Phone Number</Text>
+              <TouchableOpacity onPress={() => setShowRecoveryPhoneModal(true)}>
+                <Text style={styles.securityArrow}>›</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -550,6 +768,8 @@ const EmailModal = () => (
       <EmailModal />
       <VerifyEmailModal />
       <SuccessModal />
+      <PasswordModal />
+      <RecoveryPhoneModal />
     </View>
   );
 };
@@ -1137,12 +1357,157 @@ const styles = StyleSheet.create({
   // Security styles
   securityContainer: {
     paddingTop: 20,
+    backgroundColor: colors.background,
+  },
+  securityItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 0,
+  },
+  securityLabel: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+  },
+  securityArrow: {
+    fontSize: 20,
+    color: colors.mainTextColor,
+    fontFamily: fonts.PlusJakartaSans,
+  },
+  securityDivider: {
+    height: 1,
+    backgroundColor: colors.stroke,
+    marginHorizontal: 0,
   },
   securityPlaceholder: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
+  },
+  
+  // Password Modal styles
+  passwordModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  passwordSubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 40,
+    lineHeight: 20,
+  },
+  passwordInputContainer: {
+    marginBottom: 24,
+  },
+  passwordLabel: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    marginBottom: 8,
+  },
+  passwordInputWrapper: {
+    position: 'relative',
+  },
+  passwordInput: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingRight: 50,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+  },
+  passwordInputFocused: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 12,
+    padding: 4,
+  },
+  eyeIconImage: {
+    width: 20,
+    height: 20,
+    tintColor: colors.secondaryText,
+  },
+  eyeIconText: {
+    fontSize: 16,
+    color: colors.secondaryText,
+  },
+  updatePasswordButton: {
+    backgroundColor: colors.primary,
+    marginTop: 40,
+  },
+  updatePasswordButtonDisabled: {
+    backgroundColor: colors.secondaryText,
+    opacity: 0.5,
+  },
+  
+  // Recovery Phone Modal styles
+  recoveryPhoneModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  recoveryPhoneSubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 40,
+    lineHeight: 20,
+  },
+  phoneInputContainer: {
+    marginBottom: 20,
+  },
+  phoneLabel: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    marginBottom: 8,
+  },
+  phoneInput: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+  },
+  phoneInputFilled: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  phoneNote: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginBottom: 40,
+    marginTop: 8,
+  },
+  updatePhoneButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+  },
+  updatePhoneButtonText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    textAlign: 'center',
   },
 
 });
