@@ -21,6 +21,17 @@ const Profile1 = () => {
   const [isEditing, setIsEditing] = useState(null);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  
+  // Signin Info states
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [emailValue, setEmailValue] = useState('');
+  const [otpValue, setOtpValue] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['3', '5', '2', '9', '3', '5']);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(true);
+  const [focusedOtpIndex, setFocusedOtpIndex] = useState(null);
+  
   const [userInfo, setUserInfo] = useState({
     name: 'Vishwani Vilochana',
     email: 'vishwani2002@gmail.com',
@@ -73,6 +84,47 @@ const Profile1 = () => {
     setShowProfileModal(true);
   };
 
+  // Signin Info handlers
+  const handleEmailEdit = () => {
+    setEmailValue(userInfo.email);
+    setShowEmailModal(true);
+  };
+
+  const handleEmailUpdate = () => {
+    setShowEmailModal(false);
+    setShowVerifyModal(true);
+  };
+
+  const handleOtpDigitChange = (value, index) => {
+    const newOtpDigits = [...otpDigits];
+    newOtpDigits[index] = value;
+    setOtpDigits(newOtpDigits);
+    
+    // Auto focus next input
+    if (value && index < 5) {
+      // Focus next input (you'd need refs in a real implementation)
+    }
+  };
+
+  const handleVerifyOtp = () => {
+    const otp = otpDigits.join('');
+    if (otp === '352935') { // Mock verification
+      setShowVerifyModal(false);
+      setShowSuccessModal(true);
+      // Update email after success
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        setUserInfo(prev => ({ ...prev, email: emailValue }));
+        setOtpDigits(['', '', '', '', '', '']);
+      }, 3000);
+    }
+  };
+
+  const handleResendCode = () => {
+    // Mock resend functionality
+    Alert.alert('Code Resent', 'A new verification code has been sent to your email.');
+  };
+
   const ProfilePictureModal = () => (
     <Modal
       visible={showProfileModal}
@@ -91,6 +143,163 @@ const Profile1 = () => {
           <TouchableOpacity style={styles.profileModalCancel} onPress={() => setShowProfileModal(false)}>
             <Text style={styles.profileModalCancelText}>Cancel</Text>
           </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
+const EmailModal = () => (
+    <Modal
+        visible={showEmailModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+    >
+        <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+                <TouchableOpacity onPress={() => setShowEmailModal(false)}>
+                    <Text style={styles.backButton}>‹</Text>
+                </TouchableOpacity>
+            </View>
+            
+            <View style={styles.emailModalContent}>
+                <Text style={styles.modalTitle}>Email</Text>
+                <Text style={styles.emailSubtitle}>
+                    You'll use this email to get sign in and get notifications
+                </Text>
+                
+                <View style={styles.emailInputContainer}>
+                    <Text style={styles.emailLabel}>Email Address*</Text>
+                    <TextInput
+                        style={styles.emailInput}
+                        value={emailValue}
+                        onChangeText={setEmailValue}
+                        placeholder="vishwani2002@gmail.com"
+                        placeholderTextColor={colors.secondaryText}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                    />
+                </View>
+                
+                <Text style={styles.emailNote}>
+                    A verification code will be sent to this email
+                </Text>
+                
+                <View style={styles.emailModalFooter}>
+                    <CustomButton
+                        title="Update"
+                        onPress={handleEmailUpdate}
+                        style={styles.updateEmailButton}
+                    />
+                </View>
+            </View>
+        </View>
+    </Modal>
+);
+
+  const VerifyEmailModal = () => (
+    <Modal
+      visible={showVerifyModal}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowVerifyModal(false)}>
+            <Text style={styles.backButton}>‹</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.verifyModalContent}>
+          <Text style={styles.modalTitle}>Verify Email</Text>
+          <Text style={styles.verifySubtitle}>
+            We've sent a 6-digit OTP to{'\n'}vishwani2002@gmail.com
+          </Text>
+          
+          <View style={styles.otpContainer}>
+            <Text style={styles.otpLabel}>OTP</Text>
+            <View style={styles.otpInputsContainer}>
+              {otpDigits.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  style={[
+                    styles.otpInput,
+                    digit && styles.otpInputFilled,
+                    focusedOtpIndex === index && styles.otpInputFocused
+                  ]}
+                  value={digit}
+                  onChangeText={(value) => handleOtpDigitChange(value, index)}
+                  onFocus={() => setFocusedOtpIndex(index)}
+                  onBlur={() => setFocusedOtpIndex(null)}
+                  maxLength={1}
+                  keyboardType="numeric"
+                />
+              ))}
+            </View>
+          </View>
+          
+          <CustomButton
+            title="Continue"
+            onPress={handleVerifyOtp}
+            style={styles.continueButton}
+          />
+        </View>
+        
+        <View style={styles.resendContainer}>
+          <Text style={styles.resendText}>Don't you receive any code? </Text>
+          <TouchableOpacity onPress={handleResendCode}>
+            <Text style={styles.resendLink}>Resend Code</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+
+  const SuccessModal = () => (
+    <Modal
+      visible={showSuccessModal}
+      animationType="slide"
+      presentationStyle="pageSheet"
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowSuccessModal(false)}>
+            <Text style={styles.backButton}>‹</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.verifyModalContent}>
+          <Text style={styles.modalTitle}>Verify Email</Text>
+          <Text style={styles.verifySubtitle}>
+            We've sent a 6-digit OTP to{'\n'}vishwani2002@gmail.com
+          </Text>
+          
+          <View style={styles.otpContainer}>
+            <Text style={styles.otpLabel}>OTP</Text>
+            <View style={styles.otpInputsContainer}>
+              {otpDigits.map((digit, index) => (
+                <TextInput
+                  key={index}
+                  style={[
+                    styles.otpInput,
+                    styles.otpInputFilled
+                  ]}
+                  value={digit}
+                  editable={false}
+                  maxLength={1}
+                />
+              ))}
+            </View>
+          </View>
+          
+          <CustomButton
+            title="Continue"
+            onPress={() => setShowSuccessModal(false)}
+            style={styles.continueButton}
+          />
+        </View>
+        
+        <View style={styles.successContainer}>
+          <Text style={styles.successText}>✓ Verification successful!</Text>
         </View>
       </View>
     </Modal>
@@ -266,54 +475,81 @@ const Profile1 = () => {
       </View>
 
       <ScrollView style={styles.content}>
-        {/* Profile Picture */}
-        <View style={styles.profileSection}>
-          <View style={styles.profileImageContainer}>
-            <View style={styles.profileImage}>
-              <Text style={styles.profileImageText}>👤</Text>
+        {activeTab === 'Basic Info' && (
+          <>
+            {/* Profile Picture */}
+            <View style={styles.profileSection}>
+              <View style={styles.profileImageContainer}>
+                <View style={styles.profileImage}>
+                  <Text style={styles.profileImageText}>👤</Text>
+                </View>
+                <TouchableOpacity style={styles.editProfileButton} onPress={handleProfilePictureChange}>
+                  <Text style={styles.editProfileButtonText}>✏️</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <TouchableOpacity style={styles.editProfileButton} onPress={handleProfilePictureChange}>
-              <Text style={styles.editProfileButtonText}>✏️</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        {/* Profile Fields */}
-        <View style={styles.fieldsContainer}>
-          <ProfileField
-            label="Name"
-            value={userInfo.name}
-            field="name"
-          />
-          
-          <ProfileField
-            label="Email Address"
-            value={userInfo.email}
-            field="email"
-          />
-          
-          <ProfileField
-            label="Contact Number"
-            value={userInfo.contactNumber}
-            field="contactNumber"
-          />
-          
-          <ProfileField
-            label="Home Address"
-            value={userInfo.homeAddress}
-            field="homeAddress"
-          />
-          
-          <ProfileField
-            label="Work Place"
-            value={userInfo.workPlace}
-            field="workPlace"
-          />
-        </View>
+            {/* Profile Fields */}
+            <View style={styles.fieldsContainer}>
+              <ProfileField
+                label="Name"
+                value={userInfo.name}
+                field="name"
+              />
+              
+              <ProfileField
+                label="Email Address"
+                value={userInfo.email}
+                field="email"
+              />
+              
+              <ProfileField
+                label="Contact Number"
+                value={userInfo.contactNumber}
+                field="contactNumber"
+              />
+              
+              <ProfileField
+                label="Home Address"
+                value={userInfo.homeAddress}
+                field="homeAddress"
+              />
+              
+              <ProfileField
+                label="Work Place"
+                value={userInfo.workPlace}
+                field="workPlace"
+              />
+            </View>
+          </>
+        )}
+
+        {activeTab === 'Signin Info' && (
+          <View style={styles.signinInfoContainer}>
+            <View style={styles.signinInfoItem}>
+              <Text style={styles.signinInfoLabel}>Email Address</Text>
+              <View style={styles.signinInfoRow}>
+                <Text style={styles.signinInfoValue}>{userInfo.email}</Text>
+                <TouchableOpacity onPress={handleEmailEdit}>
+                  <Text style={styles.signinInfoArrow}>›</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {activeTab === 'Security' && (
+          <View style={styles.securityContainer}>
+            <Text style={styles.securityPlaceholder}>Security settings will be implemented here</Text>
+          </View>
+        )}
       </ScrollView>
 
       <AddressModal />
       <ProfilePictureModal />
+      <EmailModal />
+      <VerifyEmailModal />
+      <SuccessModal />
     </View>
   );
 };
@@ -335,7 +571,7 @@ const styles = StyleSheet.create({
     marginRight: 15,
   },
   backButtonText: {
-    fontSize: 24,
+    fontSize: 30,
     color: colors.mainTextColor,
     fontFamily: fonts.PlusJakartaSans,
   },
@@ -484,10 +720,11 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   modalTitle: {
-    fontSize: 18,
-    fontFamily: fonts.PlusJakartaSansMedium,
+    fontSize: 24,
+    fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginLeft: 15,
+    marginLeft: 0,
+    textAlign: 'left',
   },
   modalSubtitle: {
     fontSize: 14,
@@ -719,6 +956,193 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans,
     color: colors.primary,
     textAlign: 'center',
+  },
+  // Signin Info styles
+  signinInfoContainer: {
+    paddingTop: 20,
+  },
+  signinInfoItem: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  signinInfoLabel: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    marginBottom: 4,
+  },
+  signinInfoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  signinInfoValue: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+  },
+  signinInfoArrow: {
+    fontSize: 20,
+    color: colors.mainTextColor,
+    fontFamily: fonts.PlusJakartaSans,
+  },
+  // Email Modal styles
+  emailModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  emailSubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 30,
+    lineHeight: 20,
+  },
+  emailInputContainer: {
+    marginBottom: 20,
+  },
+  emailLabel: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    marginBottom: 8,
+  },
+  emailInput: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+  },
+  emailNote: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginBottom: 40,
+    marginTop: 8,
+  },
+  emailModalFooter: {
+    paddingBottom: 40,
+  },
+  updateEmailButton: {
+    backgroundColor: colors.primary,
+  },
+  // Verify Email Modal styles
+  verifyModalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  verifySubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 40,
+    lineHeight: 20,
+    textAlign: 'left',
+  },
+  otpContainer: {
+    marginBottom: 40,
+  },
+  otpLabel: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    marginBottom: 16,
+  },
+  otpInputsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  otpInput: {
+    width: 45,
+    height: 45,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    borderRadius: 8,
+    textAlign: 'center',
+    fontSize: 18,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    backgroundColor: colors.background,
+  },
+  otpInputFilled: {
+    borderColor: colors.primary,
+    backgroundColor: colors.bgGreen,
+  },
+  otpInputFocused: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  continueButton: {
+    backgroundColor: colors.primary,
+    marginBottom: 40,
+  },
+  resendContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+    backgroundColor: colors.background,
+  },
+  resendText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+  },
+  resendLink: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
+  },
+  successContainer: {
+    backgroundColor: colors.bgGreen,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    position: 'absolute',
+    bottom: 0,
+    left: 20,
+    right: 20,
+    marginBottom: 20,
+  },
+  successText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
+  },
+  successModalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  // Security styles
+  securityContainer: {
+    paddingTop: 20,
+    alignItems: 'center',
+  },
+  securityPlaceholder: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
   },
 
 });
