@@ -5,8 +5,8 @@ import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Ratings5 = () => {
-  const [selectedRating, setSelectedRating] = useState(4);
+const Ratings6 = () => {
+  const [selectedRating, setSelectedRating] = useState(5);
   const [selectedFeedback, setSelectedFeedback] = useState([]);
 
   const ratingLabels = {
@@ -18,20 +18,20 @@ const Ratings5 = () => {
   };
 
   const feedbackOptions = [
-    'Some unnecessary stops',
-    'Station availability could improve',
-    'Suggestions mostly helpful'
+    'Smooth, stress-free trip',
+    'Well-timed station suggestions',
+    'Minimal stops',
+    'Efficient route',
+    'Stations available as planned'
   ];
 
   const handleStarPress = (rating) => {
-    // Only allow selection of the fourth star (Good)
-    if (rating === 4) {
-      setSelectedRating(rating);
-    }
+    // Allow selection of any star rating from 1 to 5
+    setSelectedRating(rating);
   };
 
   const handleBackPress = () => {
-    router.push('/pages/Ratings4');
+    router.push('/pages/Ratings5');
   };
 
   const handleFeedbackPress = (feedback) => {
@@ -52,21 +52,19 @@ const Ratings5 = () => {
   const renderStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-      const isClickable = i === 4; // Only fourth star is clickable
-      const isSelected = i <= 4; // Only first 4 stars should be colored
+      const isClickable = true; // All stars are clickable
+      const isSelected = i <= selectedRating; // Stars up to selected rating are colored
       
       stars.push(
         <TouchableOpacity
           key={i}
           onPress={() => handleStarPress(i)}
-          style={[styles.starButton, !isClickable && styles.disabledStar]}
-          disabled={!isClickable}
+          style={styles.starButton}
         >
           <Ionicons
             name={isSelected ? "star" : "star-outline"}
             size={40}
             color={isSelected ? colors.primary : colors.secondaryText}
-            style={!isClickable && styles.disabledStarIcon}
           />
         </TouchableOpacity>
       );
@@ -98,10 +96,10 @@ const Ratings5 = () => {
             {renderStars()}
           </View>
 
-          {/* Feedback Section - Only show for Good rating */}
-          {selectedRating === 4 && (
+          {/* Feedback Section - Show for any rating */}
+          {selectedRating > 0 && (
             <View style={styles.feedbackSection}>
-              <Text style={styles.feedbackTitle}>Almost perfect, but...</Text>
+              <Text style={styles.feedbackTitle}>What did you like?</Text>
               
               {/* Feedback Options */}
               <View style={styles.feedbackOptions}>
@@ -254,4 +252,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Ratings5;
+export default Ratings6;
