@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Ratings2 = () => {
+const Ratings3 = () => {
   const [selectedRating, setSelectedRating] = useState(2);
   const [selectedFeedback, setSelectedFeedback] = useState([]);
 
@@ -24,14 +24,14 @@ const Ratings2 = () => {
   ];
 
   const handleStarPress = (rating) => {
-    // Only allow selection of the second star (Poor)
-    if (rating === 2) {
+    // Allow selection of any star rating from 1 to 2
+    if (rating <= 2) {
       setSelectedRating(rating);
     }
   };
 
   const handleBackPress = () => {
-    router.push('/pages/Ratings');
+    router.push('/pages/Ratings1');
   };
 
   const handleFeedbackPress = (feedback) => {
@@ -52,8 +52,8 @@ const Ratings2 = () => {
   const renderStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-      const isClickable = i === 2; // Only second star is clickable
-      const isSelected = i <= selectedRating;
+      const isClickable = i <= 2; // First 2 stars are clickable
+      const isSelected = i <= selectedRating; // Stars up to selected rating are colored
       
       stars.push(
         <TouchableOpacity
@@ -98,7 +98,7 @@ const Ratings2 = () => {
             {renderStars()}
           </View>
 
-          {/* Feedback Section - Only show for Poor rating */}
+          {/* Feedback Section - Show for rating 2 */}
           {selectedRating === 2 && (
             <View style={styles.feedbackSection}>
               <Text style={styles.feedbackTitle}>Issues you noticed</Text>
@@ -254,4 +254,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Ratings2;
+export default Ratings3;
