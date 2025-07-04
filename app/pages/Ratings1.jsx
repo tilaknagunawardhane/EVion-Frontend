@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Ratings1 = ({ navigation }) => {
+const Ratings1 = () => {
   const [selectedRating, setSelectedRating] = useState(1);
   const [selectedFeedback, setSelectedFeedback] = useState([]);
 
@@ -24,11 +25,14 @@ const Ratings1 = ({ navigation }) => {
   ];
 
   const handleStarPress = (rating) => {
-    setSelectedRating(rating);
+    // Only allow selection of the first star (Very Poor)
+    if (rating === 1) {
+      setSelectedRating(rating);
+    }
   };
 
   const handleBackPress = () => {
-    navigation.goBack();
+    router.push('/pages/Ratings');
   };
 
   const handleFeedbackPress = (feedback) => {
@@ -49,16 +53,21 @@ const Ratings1 = ({ navigation }) => {
   const renderStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
+      const isClickable = i === 1; // Only first star is clickable
+      const isSelected = i <= selectedRating;
+      
       stars.push(
         <TouchableOpacity
           key={i}
           onPress={() => handleStarPress(i)}
-          style={styles.starButton}
+          style={[styles.starButton, !isClickable && styles.disabledStar]}
+          disabled={!isClickable}
         >
           <Ionicons
-            name={i <= selectedRating ? "star" : "star-outline"}
+            name={isSelected ? "star" : "star-outline"}
             size={40}
-            color={i <= selectedRating ? colors.primary : colors.secondaryText}
+            color={isSelected ? colors.primary : colors.secondaryText}
+            style={!isClickable && styles.disabledStarIcon}
           />
         </TouchableOpacity>
       );
@@ -90,33 +99,35 @@ const Ratings1 = ({ navigation }) => {
             {renderStars()}
           </View>
 
-          {/* Feedback Section */}
-          <View style={styles.feedbackSection}>
-            <Text style={styles.feedbackTitle}>What went wrong?</Text>
-            
-            {/* Feedback Options */}
-            <View style={styles.feedbackOptions}>
-              {feedbackOptions.map((option, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.feedbackOption,
-                    selectedFeedback.includes(option) && styles.feedbackOptionSelected
-                  ]}
-                  onPress={() => handleFeedbackPress(option)}
-                >
-                  <Text
+          {/* Feedback Section - Only show for Very Poor rating */}
+          {selectedRating === 1 && (
+            <View style={styles.feedbackSection}>
+              <Text style={styles.feedbackTitle}>What went wrong?</Text>
+              
+              {/* Feedback Options */}
+              <View style={styles.feedbackOptions}>
+                {feedbackOptions.map((option, index) => (
+                  <TouchableOpacity
+                    key={index}
                     style={[
-                      styles.feedbackOptionText,
-                      selectedFeedback.includes(option) && styles.feedbackOptionTextSelected
+                      styles.feedbackOption,
+                      selectedFeedback.includes(option) && styles.feedbackOptionSelected
                     ]}
+                    onPress={() => handleFeedbackPress(option)}
                   >
-                    {option}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                    <Text
+                      style={[
+                        styles.feedbackOptionText,
+                        selectedFeedback.includes(option) && styles.feedbackOptionTextSelected
+                      ]}
+                    >
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-          </View>
+          )}
         </View>
       </ScrollView>
 
@@ -182,6 +193,12 @@ const styles = StyleSheet.create({
   starButton: {
     padding: 8,
   },
+  disabledStar: {
+    opacity: 0.5,
+  },
+  disabledStarIcon: {
+    opacity: 0.3,
+  },
   feedbackSection: {
     width: '100%',
     alignItems: 'center',
@@ -226,7 +243,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -234,7 +251,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansMedium,
-    color: '#ffffff',
+    color: colors.background,
   },
 });
 
