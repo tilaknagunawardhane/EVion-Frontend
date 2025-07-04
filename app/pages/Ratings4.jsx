@@ -5,8 +5,8 @@ import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Ratings4 = () => {
-  const [selectedRating, setSelectedRating] = useState(3);
+const Ratings5 = () => {
+  const [selectedRating, setSelectedRating] = useState(4);
   const [selectedFeedback, setSelectedFeedback] = useState([]);
 
   const ratingLabels = {
@@ -18,20 +18,20 @@ const Ratings4 = () => {
   };
 
   const feedbackOptions = [
-    'Route worked but not ideal',
-    'Fewer stops expected',
-    'Availability not consistent'
+    'Some unnecessary stops',
+    'Station availability could improve',
+    'Suggestions mostly helpful'
   ];
 
   const handleStarPress = (rating) => {
-    // Only allow selection of the third star (Average)
-    if (rating === 3) {
+    // Allow selection of any star rating from 1 to 4
+    if (rating <= 4) {
       setSelectedRating(rating);
     }
   };
 
   const handleBackPress = () => {
-    router.push('/pages/Ratings3');
+    router.push('/pages/Ratings4');
   };
 
   const handleFeedbackPress = (feedback) => {
@@ -52,8 +52,8 @@ const Ratings4 = () => {
   const renderStars = () => {
     const stars = [];
     for (let i = 1; i <= 5; i++) {
-      const isClickable = i === 3; // Only third star is clickable
-      const isSelected = i <= 3; // Only first 3 stars should be colored
+      const isClickable = i <= 4; // First 4 stars are clickable
+      const isSelected = i <= selectedRating; // Stars up to selected rating are colored
       
       stars.push(
         <TouchableOpacity
@@ -98,10 +98,10 @@ const Ratings4 = () => {
             {renderStars()}
           </View>
 
-          {/* Feedback Section - Only show for Average rating */}
-          {selectedRating === 3 && (
+          {/* Feedback Section - Show for rating 4 */}
+          {selectedRating === 4 && (
             <View style={styles.feedbackSection}>
-              <Text style={styles.feedbackTitle}>What could be better?</Text>
+              <Text style={styles.feedbackTitle}>Almost perfect, but...</Text>
               
               {/* Feedback Options */}
               <View style={styles.feedbackOptions}>
@@ -254,4 +254,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Ratings4;
+export default Ratings5;
