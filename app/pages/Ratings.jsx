@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Ratings = ({ navigation }) => {
+const Ratings = () => {
   const [selectedRating, setSelectedRating] = useState(0);
 
   const handleStarPress = (rating) => {
@@ -12,7 +13,7 @@ const Ratings = ({ navigation }) => {
   };
 
   const handleBackPress = () => {
-    navigation.goBack();
+    router.back();
   };
 
   const renderStars = () => {
