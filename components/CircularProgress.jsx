@@ -1,21 +1,29 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 const CircularProgress = ({ 
   percentage, 
-  size = 200, 
-  strokeWidth = 8, 
+  size = SCREEN_WIDTH * 0.5, // Default to 50% of screen width
+  strokeWidth = 12, 
   progressColor = colors.primary,
   backgroundColor = colors.stroke,
   showPercentage = true,
-  additionalText = ''
+  additionalText = '',
+  activeColor = colors.primary
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const progress = (percentage / 100) * circumference;
+
+  // Responsive font sizes
+  const percentageFontSize = size * 0.24;
+  const symbolFontSize = size * 0.12;
+  const additionalTextFontSize = size * 0.07;
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -28,13 +36,14 @@ const CircularProgress = ({
           stroke={backgroundColor}
           strokeWidth={strokeWidth}
           fill="none"
+          opacity={0.2}
         />
         {/* Progress Circle */}
         <Circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={progressColor}
+          stroke={activeColor}
           strokeWidth={strokeWidth}
           fill="none"
           strokeDasharray={circumference}
@@ -47,11 +56,26 @@ const CircularProgress = ({
       {showPercentage && (
         <View style={styles.textContainer}>
           <View style={styles.percentageContainer}>
-            <Text style={styles.percentageText}>{percentage}</Text>
-            <Text style={styles.percentageSymbol}>%</Text>
+            <Text style={[
+              styles.percentageText,
+              { fontSize: percentageFontSize, lineHeight: percentageFontSize }
+            ]}>
+              {Math.floor(percentage)}
+            </Text>
+            <Text style={[
+              styles.percentageSymbol,
+              { fontSize: symbolFontSize, marginTop: percentageFontSize * 0.1 }
+            ]}>
+              %
+            </Text>
           </View>
           {additionalText && (
-            <Text style={styles.additionalText}>{additionalText}</Text>
+            <Text style={[
+              styles.additionalText,
+              { fontSize: additionalTextFontSize }
+            ]}>
+              {additionalText}
+            </Text>
           )}
         </View>
       )}
@@ -71,27 +95,22 @@ const styles = StyleSheet.create({
   textContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 1,
   },
   percentageContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   percentageText: {
-    fontSize: 48,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    lineHeight: 48,
+    fontWeight: '700',
   },
   percentageSymbol: {
-    fontSize: 24,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginTop: 5,
     marginLeft: 2,
   },
   additionalText: {
-    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     marginTop: 8,

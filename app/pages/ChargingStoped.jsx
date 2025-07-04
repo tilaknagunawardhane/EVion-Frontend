@@ -18,16 +18,16 @@ const ChargingStopedScreen = () => {
   const cost = '1650.00';
 
   const handleBackPress = () => {
-    router.push('/pages/FullCharged');
+    router.back();
   };
 
   const handleResumePress = () => {
-    router.push('/pages/Charging');
+    router.push('/pages/StartChargeWalk-In');
   };
 
   const handleFinishChargingPress = () => {
     // Navigate to home or completion screen
-    router.push('/');
+    // router.push('/');
   };
 
 return (

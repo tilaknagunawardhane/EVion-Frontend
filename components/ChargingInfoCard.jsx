@@ -28,8 +28,8 @@ const ChargingInfoCard = ({ items }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 24,
-    marginVertical: 30,
+    paddingHorizontal: 0,
+    marginVertical: 20,
   },
   infoRow: {
     flexDirection: 'row',
@@ -44,6 +44,7 @@ const styles = StyleSheet.create({
     borderColor: colors.stroke,
     borderRadius: 6,
     padding: 8,
+    paddingLeft: 18,
     shadowColor:colors.stroke,
     shadowOffset: {
       width: 0,
