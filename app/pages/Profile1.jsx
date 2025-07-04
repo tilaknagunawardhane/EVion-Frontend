@@ -1,14 +1,71 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar, 
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+   TextInput, // Added this import
+  Image // Added this import
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
-const Profile1 = () => {
+// Mock API service (replace with your actual API calls)
+const ProfileService = {
+  getProfile: async () => {
+    // Replace with actual API call
+    return {
+      name: 'Vishwam Vilochana',
+      email: 'vishwam2002@gmail.com',
+      phone: '+94 71 597 1236',
+      homeAddress: 'Your home address',
+      workAddress: 'Your work place address',
+      avatar: null
+    };
+  },
+  updateProfile: async (data) => {
+    // Replace with actual API call
+    console.log('Updating profile with:', data);
+    return { success: true };
+  },
+  changePassword: async (currentPassword, newPassword) => {
+    // Replace with actual API call
+    return { success: true };
+  }
+};
+
+const ProfileScreen = () => {
   const [activeTab, setActiveTab] = useState('Basic Info');
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [editingField, setEditingField] = useState(null);
+  const [tempValue, setTempValue] = useState('');
 
   const tabs = ['Basic Info', 'Signin Info', 'Security'];
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const profileData = await ProfileService.getProfile();
+      setProfile(profileData);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to fetch profile data');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBackPress = () => {
     router.back();
@@ -16,86 +73,179 @@ const Profile1 = () => {
 
   const handleTabPress = (tab) => {
     setActiveTab(tab);
+    setEditingField(null);
   };
 
-  const renderBasicInfo = () => (
-    <View style={styles.contentContainer}>
-      {/* Profile Avatar */}
-      <View style={styles.avatarContainer}>
-        <View style={styles.avatar}>
-          <Ionicons name="person" size={30} color={colors.secondaryText} />
+  const startEditing = (field) => {
+    setEditingField(field);
+    setTempValue(profile[field] || '');
+  };
+
+  const cancelEditing = () => {
+    setEditingField(null);
+  };
+
+  const saveChanges = async () => {
+    try {
+      if (!tempValue.trim()) {
+        Alert.alert('Error', 'Field cannot be empty');
+        return;
+      }
+
+      const updatedProfile = { ...profile, [editingField]: tempValue };
+      const result = await ProfileService.updateProfile(updatedProfile);
+      
+      if (result.success) {
+        setProfile(updatedProfile);
+        setEditingField(null);
+      } else {
+        throw new Error('Update failed');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile');
+      console.error(error);
+    }
+  };
+
+  const renderEditControls = (field) => {
+    if (editingField === field) {
+      return (
+        <View style={styles.editControls}>
+          <TouchableOpacity onPress={cancelEditing}>
+            <Text style={styles.cancelButton}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={saveChanges}>
+            <Text style={styles.saveButton}>Save</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.editIconContainer}>
-          <Ionicons name="pencil" size={12} color="#ffffff" />
+      );
+    }
+    return (
+      <TouchableOpacity 
+        style={styles.editButton}
+        onPress={() => startEditing(field)}
+      >
+        <Ionicons name="pencil" size={16} color={colors.secondaryText} />
+        <Text style={styles.editText}>Edit</Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderBasicInfo = () => {
+    if (!profile) return null;
+
+    return (
+      <View style={styles.contentContainer}>
+        {/* Profile Avatar */}
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            {profile.avatar ? (
+              <Image source={{ uri: profile.avatar }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person" size={30} color={colors.secondaryText} />
+            )}
+          </View>
+          <TouchableOpacity style={styles.editIconContainer}>
+            <Ionicons name="pencil" size={12} color="#ffffff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Profile Fields */}
+        <View style={styles.fieldsContainer}>
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Name</Text>
+            <View style={styles.fieldContent}>
+              {editingField === 'name' ? (
+                <TextInput
+                  style={styles.input}
+                  value={tempValue}
+                  onChangeText={setTempValue}
+                  autoFocus
+                />
+              ) : (
+                <Text style={styles.fieldValue}>{profile.name}</Text>
+              )}
+              {renderEditControls('name')}
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Email Address</Text>
+            <View style={styles.fieldContent}>
+              <Text style={styles.fieldValue}>{profile.email}</Text>
+              <TouchableOpacity style={styles.editButton} disabled>
+                <Text style={styles.editTextDisabled}>Verified</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Contact Number</Text>
+            <View style={styles.fieldContent}>
+              {editingField === 'phone' ? (
+                <TextInput
+                  style={styles.input}
+                  value={tempValue}
+                  onChangeText={setTempValue}
+                  keyboardType="phone-pad"
+                  autoFocus
+                />
+              ) : (
+                <Text style={styles.fieldValue}>{profile.phone}</Text>
+              )}
+              {renderEditControls('phone')}
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Home Address</Text>
+            <View style={styles.fieldContent}>
+              {editingField === 'homeAddress' ? (
+                <TextInput
+                  style={styles.input}
+                  value={tempValue}
+                  onChangeText={setTempValue}
+                  autoFocus
+                  multiline
+                />
+              ) : (
+                <Text style={styles.fieldValue}>{profile.homeAddress}</Text>
+              )}
+              {renderEditControls('homeAddress')}
+            </View>
+          </View>
+
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Work Place</Text>
+            <View style={styles.fieldContent}>
+              {editingField === 'workAddress' ? (
+                <TextInput
+                  style={styles.input}
+                  value={tempValue}
+                  onChangeText={setTempValue}
+                  autoFocus
+                  multiline
+                />
+              ) : (
+                <Text style={styles.fieldValue}>{profile.workAddress}</Text>
+              )}
+              {renderEditControls('workAddress')}
+            </View>
+          </View>
         </View>
       </View>
-
-      {/* Profile Fields */}
-      <View style={styles.fieldsContainer}>
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Name</Text>
-          <View style={styles.fieldContent}>
-            <Text style={styles.fieldValue}>Vishwam Vilochana</Text>
-            <TouchableOpacity style={styles.editButton}>
-              <Ionicons name="pencil" size={16} color={colors.secondaryText} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Email Address</Text>
-          <View style={styles.fieldContent}>
-            <Text style={styles.fieldValue}>vishwam2002@gmail.com</Text>
-            <TouchableOpacity style={styles.editButton}>
-              <Ionicons name="pencil" size={16} color={colors.secondaryText} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Contact Number</Text>
-          <View style={styles.fieldContent}>
-            <Text style={styles.fieldValue}>+94 71 597 1236</Text>
-            <TouchableOpacity style={styles.editButton}>
-              <Ionicons name="pencil" size={16} color={colors.secondaryText} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Home Address</Text>
-          <View style={styles.fieldContent}>
-            <Text style={styles.fieldValue}>Your home address</Text>
-            <TouchableOpacity style={styles.editButton}>
-              <Ionicons name="pencil" size={16} color={colors.secondaryText} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Work Place</Text>
-          <View style={styles.fieldContent}>
-            <Text style={styles.fieldValue}>Your work place address</Text>
-            <TouchableOpacity style={styles.editButton}>
-              <Ionicons name="pencil" size={16} color={colors.secondaryText} />
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderSigninInfo = () => (
     <View style={styles.contentContainer}>
-      <TouchableOpacity style={styles.listItem}>
+      <TouchableOpacity 
+        style={styles.listItem}
+        onPress={() => router.push('/profile/change-email')}
+      >
         <Text style={styles.listItemText}>Email Address</Text>
         <View style={styles.listItemRight}>
-          <Text style={styles.listItemValue}>vishwam2002@gmail.com</Text>
+          <Text style={styles.listItemValue}>{profile?.email || ''}</Text>
           <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
         </View>
       </TouchableOpacity>
@@ -104,12 +254,18 @@ const Profile1 = () => {
 
   const renderSecurity = () => (
     <View style={styles.contentContainer}>
-      <TouchableOpacity style={styles.listItem}>
-        <Text style={styles.listItemText}>Password</Text>
+      <TouchableOpacity 
+        style={styles.listItem}
+        onPress={() => router.push('/profile/change-password')}
+      >
+        <Text style={styles.listItemText}>Change Password</Text>
         <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
       </TouchableOpacity>
       
-      <TouchableOpacity style={styles.listItem}>
+      <TouchableOpacity 
+        style={styles.listItem}
+        onPress={() => router.push('/profile/recovery-phone')}
+      >
         <Text style={styles.listItemText}>Recovery Phone Number</Text>
         <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
       </TouchableOpacity>
@@ -117,6 +273,14 @@ const Profile1 = () => {
   );
 
   const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      );
+    }
+
     switch (activeTab) {
       case 'Basic Info':
         return renderBasicInfo();
@@ -238,6 +402,12 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 24,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 50,
+  },
   avatarContainer: {
     alignItems: 'center',
     marginBottom: 40,
@@ -250,6 +420,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.stroke,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   editIconContainer: {
     position: 'absolute',
@@ -287,15 +462,43 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
     flex: 1,
   },
+  input: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    flex: 1,
+    padding: 0,
+  },
   editButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    padding: 4,
+  },
+  editControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  saveButton: {
+    color: colors.primary,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    fontSize: 14,
+  },
+  cancelButton: {
+    color: colors.secondaryText,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    fontSize: 14,
   },
   editText: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
+  },
+  editTextDisabled: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.success,
   },
   listItem: {
     flexDirection: 'row',
@@ -322,4 +525,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default Profile1;
+export default ProfileScreen;

@@ -1,15 +1,28 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, StatusBar, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  StyleSheet, 
+  SafeAreaView, 
+  StatusBar, 
+  ScrollView,
+  Dimensions
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
+import RatingsFeedback from '../../components/RatingsFeedback';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const Ratings1 = () => {
-  const [selectedRating, setSelectedRating] = useState(1);
+  const [selectedRating, setSelectedRating] = useState(0);
   const [selectedFeedback, setSelectedFeedback] = useState([]);
 
   const ratingLabels = {
+    0: 'Please take a moment to rate',
     1: 'Very Poor',
     2: 'Poor',
     3: 'Average',
@@ -17,22 +30,52 @@ const Ratings1 = () => {
     5: 'Excellent'
   };
 
-  const feedbackOptions = [
-    'Inaccurate route suggestions',
-    'Too many unnecessary stops',
-    'Suggested stations were full',
-    'Couldn\'t complete the trip'
-  ];
+  const feedbackOptionsMap = {
+    1: [
+      'Inaccurate route suggestions',
+      'Too many unnecessary stops',
+      'Suggested stations were full',
+      "Couldn't complete the trip"
+    ],
+    2: [
+      'Stops not well-placed',
+      'Wrong distance or time estimates',
+      'Suggested unavailable stations'
+    ],
+    3: [
+      'Route worked but not ideal',
+      'Fewer stops expected',
+      'Availability not consistent'
+    ],
+    4: [
+      'Some unnecessary stops',
+      'Station availability could improve',
+      'Suggestions mostly helpful'
+    ],
+    5: [
+      'Smooth, stress-free trip',
+      'Well-timed station suggestions',
+      'Minimal stops',
+      'Efficient route',
+      'Stations available as planned'
+    ]
+  };
+
+  const feedbackLables = {
+    1: ['What went wrong?'],
+    2: ['Issues you noticed'],
+    3: ['What could be better?'],
+    4: ['Almost perfect, but…'],
+    5: ['What did you like?']
+  };
 
   const handleStarPress = (rating) => {
-    // Only allow selection of the first star (Very Poor)
-    if (rating === 1) {
-      setSelectedRating(rating);
-    }
+    setSelectedRating(rating);
+    setSelectedFeedback([]);
   };
 
   const handleBackPress = () => {
-    router.push('/pages/Ratings');
+    router.push('/(tabs)/');
   };
 
   const handleFeedbackPress = (feedback) => {
@@ -44,103 +87,88 @@ const Ratings1 = () => {
   };
 
   const handleSubmit = () => {
-    // Handle submit logic here
     console.log('Rating:', selectedRating);
     console.log('Feedback:', selectedFeedback);
-    // You can add navigation or API call here
   };
 
   const renderStars = () => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      const isClickable = i === 1; // Only first star is clickable
-      const isSelected = i <= selectedRating;
-      
-      stars.push(
+    return Array(5).fill(0).map((_, i) => {
+      const ratingValue = i + 1;
+      const isSelected = ratingValue <= selectedRating;
+      return (
         <TouchableOpacity
-          key={i}
-          onPress={() => handleStarPress(i)}
-          style={[styles.starButton, !isClickable && styles.disabledStar]}
-          disabled={!isClickable}
+          key={ratingValue}
+          onPress={() => handleStarPress(ratingValue)}
+          style={styles.starButton}
         >
           <Ionicons
             name={isSelected ? "star" : "star-outline"}
-            size={40}
+            size={SCREEN_WIDTH * 0.08} // Responsive star size
             color={isSelected ? colors.primary : colors.secondaryText}
-            style={!isClickable && styles.disabledStarIcon}
           />
         </TouchableOpacity>
       );
-    }
-    return stars;
+    });
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      
+
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={colors.mainTextColor} />
+          <Ionicons 
+            name="chevron-back" 
+            size={SCREEN_WIDTH * 0.06} 
+            color={colors.mainTextColor} 
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>How was Your Experience?</Text>
-        <View style={styles.placeholder} />
+        <View style={{ width: SCREEN_WIDTH * 0.02 }} />
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Content */}
         <View style={styles.content}>
           {/* Rating Label */}
-          <Text style={styles.ratingLabel}>{ratingLabels[selectedRating]}</Text>
-          
+          <Text style={styles.ratingLabel}>
+            {selectedRating > 0 ? ratingLabels[selectedRating] : ratingLabels[0]}
+          </Text>
+
           {/* Star Rating */}
           <View style={styles.starContainer}>
             {renderStars()}
           </View>
 
-          {/* Feedback Section - Only show for Very Poor rating */}
-          {selectedRating === 1 && (
-            <View style={styles.feedbackSection}>
-              <Text style={styles.feedbackTitle}>What went wrong?</Text>
-              
-              {/* Feedback Options */}
-              <View style={styles.feedbackOptions}>
-                {feedbackOptions.map((option, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.feedbackOption,
-                      selectedFeedback.includes(option) && styles.feedbackOptionSelected
-                    ]}
-                    onPress={() => handleFeedbackPress(option)}
-                  >
-                    <Text
-                      style={[
-                        styles.feedbackOptionText,
-                        selectedFeedback.includes(option) && styles.feedbackOptionTextSelected
-                      ]}
-                    >
-                      {option}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
+          {/* Feedback Section */}
+          {selectedRating > 0 && (
+            <RatingsFeedback
+              feedbackOptions={feedbackOptionsMap[selectedRating] || []}
+              selectedFeedback={selectedFeedback}
+              onFeedbackPress={handleFeedbackPress}
+              feedbackLabel={feedbackLables[selectedRating]?.[0] || 'What went wrong?'}
+            />
           )}
         </View>
       </ScrollView>
 
       {/* Submit Button */}
-      <View style={styles.submitContainer}>
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit</Text>
-        </TouchableOpacity>
-      </View>
+      {selectedRating > 0 && (
+        <View style={styles.submitContainer}>
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
+// Responsive styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -150,106 +178,63 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: SCREEN_WIDTH * 0.04,
+    paddingVertical: SCREEN_HEIGHT * 0.02,
     backgroundColor: colors.background,
   },
   backButton: {
-    padding: 8,
-    marginLeft: -8,
+    padding: SCREEN_WIDTH * 0.02,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: SCREEN_WIDTH * 0.05,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
     textAlign: 'center',
     flex: 1,
   },
-  placeholder: {
-    width: 40,
-  },
-  scrollView: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: SCREEN_HEIGHT * 0.1,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: SCREEN_WIDTH * 0.06,
+    paddingTop: SCREEN_HEIGHT * 0.03,
     alignItems: 'center',
+    width: '100%',
   },
   ratingLabel: {
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.04,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
-    marginBottom: 20,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+    textAlign: 'center',
   },
   starContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    width: '80%',
-    maxWidth: 300,
-    marginBottom: 50,
+    width: SCREEN_WIDTH * 0.8,
+    maxWidth: 400,
+    // marginBottom: SCREEN_HEIGHT * 0.05,
   },
   starButton: {
-    padding: 8,
-  },
-  disabledStar: {
-    opacity: 0.5,
-  },
-  disabledStarIcon: {
-    opacity: 0.3,
-  },
-  feedbackSection: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  feedbackTitle: {
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 20,
-  },
-  feedbackOptions: {
-    width: '100%',
-    gap: 12,
-  },
-  feedbackOption: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-  },
-  feedbackOptionSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.bgGreen,
-  },
-  feedbackOptionText: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    textAlign: 'center',
-  },
-  feedbackOptionTextSelected: {
-    color: colors.primary,
-    fontFamily: fonts.PlusJakartaSansMedium,
+    padding: SCREEN_WIDTH * 0.03,
   },
   submitContainer: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    paddingTop: 16,
+    paddingHorizontal: SCREEN_WIDTH * 0.06,
+    paddingBottom: SCREEN_HEIGHT * 0.04,
+    paddingTop: SCREEN_HEIGHT * 0.02,
     backgroundColor: colors.background,
   },
   submitButton: {
     backgroundColor: colors.primary,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: SCREEN_HEIGHT * 0.015,
+    borderRadius: SCREEN_WIDTH * 0.03,
     alignItems: 'center',
     justifyContent: 'center',
   },
   submitButtonText: {
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH * 0.04,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.background,
   },
