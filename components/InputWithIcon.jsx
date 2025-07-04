@@ -57,7 +57,7 @@ const InputWithIcon = ({
 const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 10,
-    width: 332,
+    width: '99.99%',
     height: 55,
     alignSelf: 'center',
   },
