@@ -25,7 +25,12 @@ export default function Tab() {
         textStyle={{ color: colors.black }}
         onPress={() => router.push('/pages/SignInScreen.jsx')}
         />
-
+<CustomButton
+        title= "Ratings"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/Ratings.jsx')}
+        />
       <CustomButton
         title="Filters"
         type="primary"
