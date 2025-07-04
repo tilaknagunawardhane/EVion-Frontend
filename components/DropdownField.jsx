@@ -20,6 +20,7 @@ const DropdownField = ({
   onValueChange,
   placeholder,
   options = [],
+  style,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownTop, setDropdownTop] = useState(0);
@@ -39,7 +40,7 @@ const DropdownField = ({
 
       <TouchableOpacity
         ref={dropdownRef}
-        style={styles.dropdown}
+        style={[styles.dropdown, style]}
         onPress={openDropdown}
         activeOpacity={0.7}
       >

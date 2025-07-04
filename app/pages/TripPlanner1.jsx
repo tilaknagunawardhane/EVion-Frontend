@@ -171,6 +171,7 @@ const PlanTripScreen = () => {
                   value={batteryLevel}
                   onChangeText={setBatteryLevel}
                   keyboardType="numeric"
+                  style={{ width: '90%' , alignSelf: 'center' }}
                 />
               </View>
             </View>
@@ -184,6 +185,7 @@ const PlanTripScreen = () => {
                   onValueChange={setPassengers}
                   placeholder="Select Here"
                   options={['1', '2', '3', '4', '5', '6+']}
+                  style={{ width: '90%', alignSelf: 'center' }}
                 />
               </View>
             </View>
