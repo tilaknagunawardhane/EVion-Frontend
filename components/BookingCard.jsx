@@ -8,7 +8,8 @@ import fonts from '../constants/fonts.js';
 const BookingCard = ({
   dateLabel,
   duration,
-  time,
+  startTime,
+  endTime,
   stationName,
   address,
   carImage,
@@ -22,7 +23,8 @@ const BookingCard = ({
     navigation.navigate('BookingDetails', {
       dateLabel,
       duration,
-      time,
+      startTime,
+      endTime,
       stationName,
       address,
       carImage,
@@ -38,7 +40,7 @@ const BookingCard = ({
         <View style={styles.duration}>
           <Text style={styles.durationText}>{duration}</Text>
         </View>
-        <Text style={styles.timeText}>{time}</Text>
+        <Text style={styles.timeText}>{startTime}-{endTime}</Text>
       </View>
 
       <View style={styles.separator} />
@@ -107,7 +109,7 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontFamily: fonts.PlusJakartaSansBold, // Use bold font from constants
-    fontSize: 16,
+    fontSize: 14,
     color: colors.mainTextColor, // Use main text color from constants
   },
   separator: {
