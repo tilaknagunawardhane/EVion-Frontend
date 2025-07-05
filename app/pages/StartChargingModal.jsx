@@ -9,35 +9,37 @@ import {
   Platform,
   StatusBar,
 } from 'react-native';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
-import PopupAppBar from '../../components/PopupAppBar';
-import SlotItem from '../../components/SlotItem';
-import { useNavigation } from '@react-navigation/native';  
+import { router } from 'expo-router';
+
+import colors        from '../../constants/color';
+import fonts         from '../../constants/fonts';
+import PopupAppBar   from '../../components/PopupAppBar';
+import SlotItem      from '../../components/SlotItem';
 
 const StartChargingModal = ({ visible, onClose, onReserve }) => {
-  const navigation = useNavigation();                     
   const [selectedSlot, setSelectedSlot] = useState(null);
 
+  /* ───────── reserve handler ───────── */
   const handleReserve = () => {
-    // 1) notify parent (if supplied) …
-    if (onReserve) {
-      onReserve(selectedSlot);
-    }
-    // 2) close the modal locally …
-    onClose?.();
-    // 3) navigate to the booking receipt screen
-    navigation.navigate('pages/BookingReceipt');                 
+    onReserve?.(selectedSlot);     // pass slot up if parent cares
+    onClose?.();                   // hide this modal
+    router.push('/pages/BookingReceipt');
   };
+
   return (
     <Modal transparent visible={visible} animationType="fade">
       <View style={styles.fullOverlay}>
         <PopupAppBar />
 
         <View style={styles.card}>
+          {/* header */}
           <View style={styles.headerRow}>
             <Text style={styles.title}>Reserve Next Slot?</Text>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity
+              onPress={() => {
+                onClose?.();
+                router.back();     // pop the modal route if present
+              }}>
               <Text style={styles.closeText}>×</Text>
             </TouchableOpacity>
           </View>
@@ -46,6 +48,7 @@ const StartChargingModal = ({ visible, onClose, onReserve }) => {
             Charging allowed until next reservation. Reserve upcoming slots to keep charging.
           </Text>
 
+          {/* slot list */}
           <ScrollView>
             <SlotItem
               type="current"
@@ -71,19 +74,23 @@ const StartChargingModal = ({ visible, onClose, onReserve }) => {
             />
           </ScrollView>
 
+          {/* footer buttons */}
           <View style={styles.footerRow}>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity
+              onPress={() => {
+                onClose?.();
+                router.back();
+              }}>
               <Text style={styles.enoughText}>Enough for now</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.reserveBtn,
-                !selectedSlot && { opacity: 0.5 }
+                !selectedSlot && { opacity: 0.5 },
               ]}
               disabled={!selectedSlot}
-              onPress={handleReserve}
-            >
+              onPress={handleReserve}>
               <Text style={styles.reserveText}>Reserve</Text>
             </TouchableOpacity>
           </View>
@@ -95,6 +102,7 @@ const StartChargingModal = ({ visible, onClose, onReserve }) => {
 
 export default StartChargingModal;
 
+/* ───────── styles ───────── */
 const styles = StyleSheet.create({
   fullOverlay: {
     flex: 1,
@@ -103,12 +111,16 @@ const styles = StyleSheet.create({
   },
   card: {
     marginHorizontal: 20,
+    marginTop: 40,
     backgroundColor: colors.background,
     borderRadius: 20,
     padding: 20,
     elevation: 5,
-    marginTop: 40,
     maxHeight: '85%',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   headerRow: {
     flexDirection: 'row',
