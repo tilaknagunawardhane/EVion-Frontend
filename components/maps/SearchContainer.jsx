@@ -9,6 +9,8 @@ const SearchContainer = ({
   setSearchQuery,
   fetchSuggestions,
   onFilterPress,
+  hideFilterButton = false,
+  placeholder = 'Search an area...'
 }) => {
   return (
     <View style={styles.container}>
@@ -16,11 +18,11 @@ const SearchContainer = ({
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search an area..."
+          placeholder={placeholder}
           value={searchQuery}
           onChangeText={(text) => {
             setSearchQuery(text);
-            fetchSuggestions(text);
+            fetchSuggestions && fetchSuggestions(text);
           }}
           placeholderTextColor={colors.secondaryText}
         />
@@ -30,13 +32,15 @@ const SearchContainer = ({
       </View>
 
       {/* Separate Filter Button */}
-      <TouchableOpacity 
-        style={styles.filterButton} 
-        onPress={onFilterPress}
-        activeOpacity={0.7}
-      >
-        <MaterialIcons name="filter-list" size={24} color={colors.background} />
-      </TouchableOpacity>
+      {!hideFilterButton && (
+        <TouchableOpacity 
+          style={styles.filterButton} 
+          onPress={onFilterPress}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons name="filter-list" size={24} color={colors.background} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 };

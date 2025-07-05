@@ -19,6 +19,8 @@ import { GOOGLE_MAPS_API_KEY } from '@env';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import AppBar from '../../../components/AppBar';
 import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
+import SearchContainer from '../../../components/maps/SearchContainer';
 
 export default function DirectionsScreen() {
   const params = useLocalSearchParams();
@@ -215,9 +217,10 @@ export default function DirectionsScreen() {
 
       {/* Input fields for From and To */}
       <View style={styles.inputContainer}>
-        <View style={{ position: 'relative' }}>
+       
+        <View style={styles.searchContainer}>
           <TextInput
-            style={styles.input}
+            style={styles.searchInput}
             value={fromText}
             onChangeText={setFromText}
             placeholder="From"
@@ -226,6 +229,7 @@ export default function DirectionsScreen() {
               geocodeAddress(fromText, setFromCoords, setFromText);
             }}
             returnKeyType="search"
+            placeholderTextColor={colors.secondaryText}
           />
           {fromText.length > 0 && (
             <TouchableOpacity
@@ -237,9 +241,9 @@ export default function DirectionsScreen() {
             </TouchableOpacity>
           )}
         </View>
-        <View style={{ position: 'relative' }}>
+        <View style={styles.searchContainer}>
           <TextInput
-            style={styles.input}
+            style={styles.searchInput}
             value={toText}
             onChangeText={setToText}
             placeholder="To"
@@ -248,6 +252,7 @@ export default function DirectionsScreen() {
               geocodeAddress(toText, setToCoords, setToText);
             }}
             returnKeyType="search"
+            placeholderTextColor={colors.secondaryText}
           />
           {toText.length > 0 && (
             <TouchableOpacity
@@ -357,7 +362,7 @@ const styles = StyleSheet.create({
     top: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 50,
     left: 16,
     zIndex: 20,
-    backgroundColor: `${colors.stroke}4D`,
+    backgroundColor: `${colors.stroke}6D`,
     borderRadius: 20,
     padding: 10,
   },
@@ -367,8 +372,26 @@ const styles = StyleSheet.create({
     tintColor: colors.mainTextColor,
     resizeMode: 'contain',
   },
-  headerTextContainer: {
+  searchContainer: {
+    position: 'relative',
     flex: 1,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
+  },
+  searchInput: { 
+    flex: 1, 
+    paddingVertical: 8, 
+    fontFamily: fonts.PlusJakartaSans, 
+    color: colors.mainTextColor 
   },
   destinationTitle: {
     color: '#fff',
@@ -430,12 +453,15 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     position: 'absolute',
+    gap: 10,
     marginTop: 100,
     top: 0,
     left: 0,
     right: 0,
     zIndex: 10,
-    padding: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    alignSelf: 'center',
   },
   input: {
     backgroundColor: '#fff',
@@ -448,7 +474,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 10,
     top: '50%',
-    marginTop: -16,
+    marginTop: -12,
     zIndex: 2,
   },
 });
