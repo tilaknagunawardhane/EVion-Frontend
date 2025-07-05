@@ -23,7 +23,9 @@ import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import SearchContainer from '../../components/maps/SearchContainer';
+
 import SuggestionsDropdown from '../../components/maps/SuggestionsDropdown';
+import chargingStations from '../../utils/ChargingStations';
 
 const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
 
@@ -37,32 +39,7 @@ export default function MapScreen() {
   const mapRef = useRef(null);
   const navigation = useNavigation();
 
-  const chargingStations = [
-    {
-      id: 'station1',
-      latitude: 6.9271,
-      longitude: 79.8612,
-      title: 'Colombo Saved Station',
-      description: 'Charging Station 1',
-      address: '123 Galle Road, Colombo, Sri Lanka',
-    },
-    {
-      id: 'station2',
-      latitude: 6.9150,
-      longitude: 79.8630,
-      title: 'Station 2',
-      description: 'Charging Station 2',
-      address: '456 Marine Drive, Colombo, Sri Lanka',
-    },
-    {
-      id: 'station3',
-      latitude: 6.9300,
-      longitude: 79.8700,
-      title: 'Station 3',
-      description: 'Charging Station 3',
-      address: '789 Lotus Road, Colombo, Sri Lanka',
-    },
-  ];
+
 
   useEffect(() => {
     (async () => {
