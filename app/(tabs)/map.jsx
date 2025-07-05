@@ -9,7 +9,8 @@ import {
   TextInput,
   FlatList,
   Image,
-  Alert
+  Alert,
+  TouchableWithoutFeedback
 } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location';
@@ -24,7 +25,7 @@ import fonts from '../../constants/fonts';
 import SearchContainer from '../../components/maps/SearchContainer';
 import SuggestionsDropdown from '../../components/maps/SuggestionsDropdown';
 
-const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY; // Fixed this line (removed curly braces)
+const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
@@ -100,15 +101,13 @@ export default function MapScreen() {
     }
   }, [location]);
 
-  // Show nearby stations when location is available
   useEffect(() => {
     if (location) {
       const nearby = chargingStations.filter((station) => {
         const distance = getDistanceFromLatLonInKm(location.latitude, location.longitude, station.latitude, station.longitude);
-        return distance <= 10; // Show stations within 10km
+        return distance <= 10;
       });
       setNearbyStations(nearby);
-      // setShowDropdown(nearby.length > 0);
     }
   }, [location]);
 
@@ -127,26 +126,28 @@ export default function MapScreen() {
     return d;
   };
 
-  const fetchSuggestions = async (input) => {
-    if (!input) {
+  const fetchSuggestions = React.useCallback(async (input) => {
+    if (!input || input.trim() === '') {
       setSuggestions([]);
       return;
     }
 
     try {
       const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${input}&key=${GOOGLE_API_KEY}&components=country:lk`
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_API_KEY}&components=country:lk`
       );
 
       if (response.data.status === 'OK') {
         setSuggestions(response.data.predictions);
       } else {
         setSuggestions([]);
+        console.warn('Places API returned:', response.data.status);
       }
     } catch (error) {
       console.error('Places API error:', error);
+      setSuggestions([]);
     }
-  };
+  }, []);
 
   const handleSearch = async (placeId = null, description = null) => {
     if (!searchQuery.trim() && !description) return;
@@ -155,7 +156,6 @@ export default function MapScreen() {
       let geocodedLocations;
 
       if (placeId) {
-        // Get coordinates from place ID
         const response = await axios.get(
           `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
         );
@@ -217,7 +217,7 @@ export default function MapScreen() {
 
   const navigateToDirections = (destinationLat, destinationLng, destinationTitle) => {
     if (!location) return;
-    
+
     router.push({
       pathname: '/pages/maps/DirectionsScreen',
       params: {
@@ -228,6 +228,12 @@ export default function MapScreen() {
         destinationTitle: destinationTitle || 'Destination'
       }
     });
+  };
+
+  const handleMapPress = () => {
+    // Close dropdown when map is pressed
+    setShowDropdown(false);
+    setSuggestions([]);
   };
 
   if (errorMsg) {
@@ -250,9 +256,7 @@ export default function MapScreen() {
   const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
   const MapViewComponent = MapNamespace.View;
 
-  // Combine Google suggestions and local charging stations for suggestions dropdown
   const combinedSuggestions = [
-    // Local stations as suggestions
     ...chargingStations
       .filter(station =>
         station.title.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== ''
@@ -265,9 +269,10 @@ export default function MapScreen() {
         longitude: station.longitude,
         address: station.address,
       })),
-    // Google API suggestions
     ...suggestions
   ];
+
+  // Replace the return statement in your MapScreen component with this:
 
   return (
     <View style={styles.container}>
@@ -292,43 +297,60 @@ export default function MapScreen() {
             icon: { uri: Image.resolveAssetSource(stationIcon).uri, width: 40, height: 40 }
           })),
         ]}
+        onPress={handleMapPress} // Add this line to handle map presses
       />
+
+      {/* Transparent overlay that appears when suggestions are visible */}
+      {suggestions.length > 0 && (
+        <TouchableWithoutFeedback onPress={handleMapPress}>
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+      )}
 
       {/* Search Bar */}
       <SearchContainer
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        setSearchQuery={(text) => {
+          setSearchQuery(text);
+          fetchSuggestions(text);
+        }}
+        handleSearch={() => handleSearch()}
+        onFilterPress={() => console.log('Filter pressed')}
         fetchSuggestions={fetchSuggestions}
-        handleSearch={handleSearch}
-        onFilterPress={() => {
-    // Add your filter logic here
-    console.log('Filter button pressed');
-    // For example:
-    // setShowFilterModal(true);
-  }}
-      />
-
-      {/* Suggestions Dropdown */}
-      <SuggestionsDropdown
-        suggestions={combinedSuggestions}
-        getDetails={async (placeId, isLocal, lat, lng) => {
-          if (isLocal) {
-            // For local station, return lat/lng directly
-            return { lat, lng };
+        onFocus={() => {
+          if (searchQuery) {
+            fetchSuggestions(searchQuery);
           }
-          // For Google API suggestion
-          const response = await axios.get(
-            `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
-          );
-          const { lat: gLat, lng: gLng } = response.data.result.geometry.location;
-          return { lat: gLat, lng: gLng };
-        }}
-        onSelect={(details, description, isLocal) => {
-          navigateToDirections(details.lat, details.lng, description);
         }}
       />
 
-      {/* Show Nearby Stations Dropdown */}
+      {/* Rest of your components (SuggestionsDropdown, resultsContainer, fab) remain the same */}
+      {suggestions.length > 0 && (
+        <SuggestionsDropdown
+          suggestions={combinedSuggestions}
+          getDetails={async (placeId, isLocal, lat, lng) => {
+            if (isLocal) return { lat, lng };
+            try {
+              const response = await axios.get(
+                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
+              );
+              const { lat: gLat, lng: gLng } = response.data.result.geometry.location;
+              return { lat: gLat, lng: gLng };
+            } catch (error) {
+              console.error('Details fetch error:', error);
+              return null;
+            }
+          }}
+          onSelect={(details, description, isLocal) => {
+            setSearchQuery(description);
+            setSuggestions([]);
+            if (details) {
+              navigateToDirections(details.lat, details.lng, description);
+            }
+          }}
+        />
+      )}
+
       {showDropdown && nearbyStations.length > 0 && (
         <View style={styles.resultsContainer}>
           <FlatList
@@ -349,14 +371,8 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* Recenter Button */}
       <TouchableOpacity style={styles.fab} onPress={reCenter}>
         <MaterialIcons name="my-location" size={24} color="#fff" />
-      </TouchableOpacity>
-
-      {/* Show All Stations Button */}
-      <TouchableOpacity style={[styles.fab, styles.stationsFab]} onPress={showAllStations}>
-        <MaterialIcons name="local-gas-station" size={24} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -385,6 +401,15 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
+   overlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'transparent',
+    zIndex: 5, // Below dropdown but above map
+  },
   distanceText: {
     fontSize: 12,
     color: '#666',
@@ -392,9 +417,9 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 30,
-    right: 20,
-    backgroundColor: '#007AFF',
+    bottom: 100,
+    right: 10,
+    backgroundColor: colors.primary,
     padding: 12,
     borderRadius: 25,
     elevation: 3,
