@@ -8,7 +8,8 @@ import {
   Platform,
   TouchableOpacity,
   Image,
-  StatusBar
+  StatusBar,
+  TouchableWithoutFeedback
 } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location';
@@ -18,12 +19,13 @@ import { GOOGLE_MAPS_API_KEY } from '@env';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
+import SearchContainer from '../../../components/maps/SearchContainer';
+import SuggestionsDropdown from '../../../components/maps/SuggestionsDropdown';
+import chargingStations from '../../../utils/ChargingStations';
 
 export default function DirectionsScreen() {
   const params = useLocalSearchParams();
   const navigation = useNavigation();
-
-  console.log('DirectionsScreen params:', params);
 
   // State management
   const [userLocation] = useState({
@@ -51,7 +53,9 @@ export default function DirectionsScreen() {
     latitude: parseFloat(params.destinationLatitude),
     longitude: parseFloat(params.destinationLongitude)
   });
-
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [activeField, setActiveField] = useState(null); // 'from' or 'to'
 
   // Effects
   useEffect(() => {
@@ -160,7 +164,88 @@ export default function DirectionsScreen() {
     }
   };
 
+  const fetchSuggestions = async (input, field) => {
+    if (!input || input.trim() === '') {
+      setSuggestions([]);
+      return;
+    }
 
+    try {
+      // Get local station suggestions
+      const localSuggestions = chargingStations
+        .filter(station => station.title.toLowerCase().includes(input.toLowerCase()))
+        .map(station => ({
+          id: station.id,
+          description: station.title,
+          isLocal: true,
+          latitude: station.latitude,
+          longitude: station.longitude,
+          address: station.address,
+        }));
+
+      // Get Google Places API suggestions
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}&components=country:lk`
+      );
+      
+      const apiSuggestions = response.data.status === 'OK' 
+        ? response.data.predictions.map(prediction => ({
+            id: prediction.place_id,
+            description: prediction.description,
+            isLocal: false,
+            placeId: prediction.place_id
+          }))
+        : [];
+
+      setSuggestions([...localSuggestions, ...apiSuggestions]);
+      setActiveField(field);
+      setShowDropdown(true);
+    } catch (error) {
+      console.error('Suggestions error:', error);
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionSelect = async (item) => {
+    try {
+      let coords;
+      if (item.isLocal) {
+        // Local station selected
+        coords = {
+          latitude: item.latitude,
+          longitude: item.longitude
+        };
+        if (activeField === 'from') {
+          setFromText(item.description);
+          setFromCoords(coords);
+        } else {
+          setToText(item.description);
+          setToCoords(coords);
+        }
+      } else {
+        // Google Places API result selected
+        const response = await axios.get(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.placeId}&key=${GOOGLE_MAPS_API_KEY}`
+        );
+        const { lat, lng } = response.data.result.geometry.location;
+        coords = { latitude: lat, longitude: lng };
+        
+        if (activeField === 'from') {
+          setFromText(item.description);
+          setFromCoords(coords);
+        } else {
+          setToText(item.description);
+          setToCoords(coords);
+        }
+      }
+
+      setShowDropdown(false);
+      setSuggestions([]);
+    } catch (error) {
+      console.error('Suggestion selection error:', error);
+      Alert.alert('Error', 'Failed to get location details');
+    }
+  };
 
   const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
   const MapViewComponent = MapNamespace.View;
@@ -175,7 +260,73 @@ export default function DirectionsScreen() {
         />
       </TouchableOpacity>
 
+      {/* Overlay to dismiss dropdowns when tapping outside search (not on map) */}
+      {showDropdown && (
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setShowDropdown(false);
+            setSuggestions([]);
+          }}
+        >
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+      )}
 
+      {/* Search Containers */}
+      <View style={styles.searchStack} pointerEvents={showDropdown ? 'box-none' : 'auto'}>
+        <View style={{ marginBottom: 60 }}>
+          <SearchContainer
+            searchQuery={fromText}
+            setSearchQuery={(text) => {
+              setFromText(text);
+              if (text.length > 2) fetchSuggestions(text, 'from');
+            }}
+            placeholder="From"
+            onFocus={() => {
+              if (fromText.length > 2) fetchSuggestions(fromText, 'from');
+            }}
+            onSearch={() => fetchSuggestions(fromText, 'from')}
+            hideFilterButton={true}
+          />
+          {/* Suggestions Dropdown for FROM field */}
+          {showDropdown && suggestions.length > 0 && activeField === 'from' && (
+            <SuggestionsDropdown
+              suggestions={suggestions}
+              onSelect={handleSuggestionSelect}
+              onClose={() => {
+                setShowDropdown(false);
+                setSuggestions([]);
+              }}
+            />
+          )}
+        </View>
+        <View>
+          <SearchContainer
+            searchQuery={toText}
+            setSearchQuery={(text) => {
+              setToText(text);
+              if (text.length > 2) fetchSuggestions(text, 'to');
+            }}
+            placeholder="To"
+            onFocus={() => {
+              if (toText.length > 2) fetchSuggestions(toText, 'to');
+            }}
+            onSearch={() => fetchSuggestions(toText, 'to')}
+            hideFilterButton={true}
+          />
+          {/* Suggestions Dropdown for TO field */}
+          {showDropdown && suggestions.length > 0 && activeField === 'to' && (
+            <SuggestionsDropdown
+              suggestions={suggestions}
+              onSelect={handleSuggestionSelect}
+              onClose={() => {
+                setShowDropdown(false);
+                setSuggestions([]);
+              }}
+            />
+          )}
+        </View>
+      </View>
 
       {/* Map View */}
       {loading && <ActivityIndicator size="large" style={styles.loader} />}
@@ -197,15 +348,15 @@ export default function DirectionsScreen() {
           {
             id: 'start',
             coordinates: fromCoords,
-            title: fromText,
-            description: 'Starting point',
+            title: 'Start',
+            description: fromText,
             icon: { uri: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png' }
           },
           {
             id: 'end',
             coordinates: toCoords,
-            title: toText,
-            description: 'Destination',
+            title: 'Destination',
+            description: toText,
             icon: { uri: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png' }
           },
         ]}
