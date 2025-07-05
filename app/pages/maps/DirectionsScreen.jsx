@@ -8,7 +8,9 @@ import {
   Platform,
   TouchableOpacity,
   TextInput,
-  Keyboard
+  Keyboard,
+  Image,
+  StatusBar
 } from 'react-native';
 import axios from 'axios';
 import * as ExpoMaps from 'expo-maps';
@@ -16,6 +18,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { GOOGLE_MAPS_API_KEY } from '@env';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import AppBar from '../../../components/AppBar';
+import colors from '../../../constants/color';
 
 export default function DirectionsScreen() {
   const params = useLocalSearchParams();
@@ -61,7 +64,7 @@ export default function DirectionsScreen() {
       // Center between start and end points to show the route
       const centerLat = (userLocation.latitude + destination.latitude) / 2;
       const centerLng = (userLocation.longitude + destination.longitude) / 2;
-      
+
       mapRef.current.setCameraPosition({
         coordinates: { latitude: centerLat, longitude: centerLng },
         zoom: 12,
@@ -158,13 +161,13 @@ export default function DirectionsScreen() {
 
   const recenterMap = () => {
     console.log('Recenter button pressed');
-    
+
     if (mapRef.current?.setCameraPosition) {
       if (routePoints.length > 0) {
         // Center between start and end points to show the route
         const centerLat = (userLocation.latitude + destination.latitude) / 2;
         const centerLng = (userLocation.longitude + destination.longitude) / 2;
-        
+
         mapRef.current.setCameraPosition({
           coordinates: userLocation,
           zoom: 12,
@@ -202,8 +205,13 @@ export default function DirectionsScreen() {
   const MapViewComponent = MapNamespace.View;
 
   return (
-    <View style={{ flex: 1 }}>
-      <AppBar />
+    <View style={ styles.container }>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Image
+            source={require('../../../assets/back-icon.png')}
+            style={styles.backIcon}
+          />
+        </TouchableOpacity>
 
       {/* Input fields for From and To */}
       <View style={styles.inputContainer}>
@@ -329,8 +337,8 @@ export default function DirectionsScreen() {
       )}
 
       {/* Recenter Button */}
-      <TouchableOpacity 
-        style={styles.recenterButton} 
+      <TouchableOpacity
+        style={styles.recenterButton}
         onPress={recenterMap}
         activeOpacity={0.7}
       >
@@ -341,20 +349,23 @@ export default function DirectionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#007AFF',
-    padding: 15,
-    paddingTop: 50,
-    zIndex: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+  container: {
+    flex: 1,
   },
   backButton: {
-    marginRight: 15,
+    position: 'absolute',
+    top: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 50,
+    left: 16,
+    zIndex: 20,
+    backgroundColor: `${colors.stroke}4D`,
+    borderRadius: 20,
+    padding: 10,
+  },
+  backIcon: {
+    width: 18,
+    height: 18,
+    tintColor: colors.mainTextColor,
+    resizeMode: 'contain',
   },
   headerTextContainer: {
     flex: 1,
