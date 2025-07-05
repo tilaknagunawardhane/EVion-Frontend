@@ -6,7 +6,6 @@ import {
   Platform,
   ActivityIndicator,
   TouchableOpacity,
-  TextInput,
   FlatList,
   Image,
   Alert,
@@ -18,16 +17,15 @@ import * as ExpoMaps from 'expo-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import stationIcon from '../../assets/map/station-icon.png';
 import { GOOGLE_MAPS_API_KEY } from '@env';
-import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
 import SearchContainer from '../../components/maps/SearchContainer';
-
+import StationInfoCard from '../../components/maps/StationInfoCard';
 import SuggestionsDropdown from '../../components/maps/SuggestionsDropdown';
 import chargingStations from '../../utils/ChargingStations';
 
 const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
+
 
 export default function MapScreen() {
   const [location, setLocation] = useState(null);
@@ -36,26 +34,19 @@ export default function MapScreen() {
   const [nearbyStations, setNearbyStations] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [selectedStation, setSelectedStation] = useState(null);
   const mapRef = useRef(null);
-  const navigation = useNavigation();
 
-
-
+  // Get user location
   useEffect(() => {
     (async () => {
-      let servicesEnabled = await Location.hasServicesEnabledAsync();
-      if (!servicesEnabled) {
-        setErrorMsg('Enable location services in device settings');
-        return;
-      }
-
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setErrorMsg('Permission denied');
-        return;
-      }
-
       try {
+        let { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setErrorMsg('Permission denied');
+          return;
+        }
+
         let loc = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.High,
           timeout: 15000,
@@ -68,6 +59,7 @@ export default function MapScreen() {
     })();
   }, []);
 
+  // Center map on user location
   useEffect(() => {
     if (location && mapRef.current?.setCameraPosition) {
       mapRef.current.setCameraPosition({
@@ -78,16 +70,23 @@ export default function MapScreen() {
     }
   }, [location]);
 
+  // Find nearby stations
   useEffect(() => {
     if (location) {
       const nearby = chargingStations.filter((station) => {
-        const distance = getDistanceFromLatLonInKm(location.latitude, location.longitude, station.latitude, station.longitude);
+        const distance = getDistanceFromLatLonInKm(
+          location.latitude,
+          location.longitude,
+          station.latitude,
+          station.longitude
+        );
         return distance <= 10;
       });
       setNearbyStations(nearby);
     }
   }, [location]);
 
+  // Calculate distance between coordinates
   const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -99,10 +98,12 @@ export default function MapScreen() {
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const d = R * c;
-    return d;
+    return R * c;
   };
 
+
+
+  // Fetch place suggestions
   const fetchSuggestions = React.useCallback(async (input) => {
     if (!input || input.trim() === '') {
       setSuggestions([]);
@@ -113,66 +114,60 @@ export default function MapScreen() {
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_API_KEY}&components=country:lk`
       );
-
-      if (response.data.status === 'OK') {
-        setSuggestions(response.data.predictions);
-      } else {
-        setSuggestions([]);
-        console.warn('Places API returned:', response.data.status);
-      }
+      setSuggestions(response.data.status === 'OK' ? response.data.predictions : []);
     } catch (error) {
       console.error('Places API error:', error);
       setSuggestions([]);
     }
   }, []);
 
+  // Handle search
   const handleSearch = async (placeId = null, description = null) => {
     if (!searchQuery.trim() && !description) return;
 
     try {
-      let geocodedLocations;
-
+      let coords;
       if (placeId) {
         const response = await axios.get(
           `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
         );
-
         const { lat, lng } = response.data.result.geometry.location;
-        geocodedLocations = [{ latitude: lat, longitude: lng }];
+        coords = { latitude: lat, longitude: lng };
         setSearchQuery(description);
       } else {
-        geocodedLocations = await Location.geocodeAsync(searchQuery);
+        const geocoded = await Location.geocodeAsync(searchQuery);
+        if (geocoded.length === 0) {
+          Alert.alert('No results found');
+          return;
+        }
+        coords = geocoded[0];
       }
-
-      if (geocodedLocations.length === 0) {
-        Alert.alert('No results found for this location.');
-        setShowDropdown(false);
-        return;
-      }
-
-      const { latitude, longitude } = geocodedLocations[0];
 
       mapRef.current?.setCameraPosition({
-        coordinates: { latitude, longitude },
+        coordinates: coords,
         zoom: 14,
         duration: 1000,
       });
 
-      const nearby = chargingStations.filter((station) => {
-        const distance = getDistanceFromLatLonInKm(latitude, longitude, station.latitude, station.longitude);
-        return distance <= 3;
-      });
+      const nearby = chargingStations.filter(station =>
+        getDistanceFromLatLonInKm(
+          coords.latitude,
+          coords.longitude,
+          station.latitude,
+          station.longitude
+        ) <= 3
+      );
 
       setNearbyStations(nearby);
       setShowDropdown(nearby.length > 0);
       setSuggestions([]);
     } catch (error) {
       console.error('Search error:', error);
-      Alert.alert('Error searching for location.');
-      setShowDropdown(false);
+      Alert.alert('Error searching for location');
     }
   };
 
+  // Recenter map
   const reCenter = () => {
     if (mapRef.current?.setCameraPosition && location) {
       mapRef.current.setCameraPosition({
@@ -181,20 +176,16 @@ export default function MapScreen() {
         duration: 1000,
       });
     }
-    setNearbyStations([]);
     setSearchQuery('');
     setShowDropdown(false);
     setSuggestions([]);
+    setSelectedStation(null);
+    // Don't clear nearbyStations - let the useEffect handle it
   };
 
-  const showAllStations = () => {
-    setNearbyStations(chargingStations);
-    setShowDropdown(true);
-  };
-
+  // Navigate to directions
   const navigateToDirections = (destinationLat, destinationLng, destinationTitle) => {
     if (!location) return;
-
     router.push({
       pathname: '/pages/maps/DirectionsScreen',
       params: {
@@ -207,12 +198,25 @@ export default function MapScreen() {
     });
   };
 
-  const handleMapPress = () => {
-    // Close dropdown when map is pressed
-    setShowDropdown(false);
-    setSuggestions([]);
-  };
+  // Combine suggestions
+  const combinedSuggestions = [
+    ...chargingStations
+      .filter(station =>
+        station.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        searchQuery.trim() !== ''
+      )
+      .map(station => ({
+        id: station.id,
+        description: station.title,
+        isLocal: true,
+        latitude: station.latitude,
+        longitude: station.longitude,
+        address: station.address,
+      })),
+    ...suggestions
+  ];
 
+  // Loading states
   if (errorMsg) {
     return (
       <View style={styles.centered}>
@@ -233,24 +237,6 @@ export default function MapScreen() {
   const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
   const MapViewComponent = MapNamespace.View;
 
-  const combinedSuggestions = [
-    ...chargingStations
-      .filter(station =>
-        station.title.toLowerCase().includes(searchQuery.toLowerCase()) && searchQuery.trim() !== ''
-      )
-      .map(station => ({
-        id: station.id,
-        description: station.title,
-        isLocal: true,
-        latitude: station.latitude,
-        longitude: station.longitude,
-        address: station.address,
-      })),
-    ...suggestions
-  ];
-
-  // Replace the return statement in your MapScreen component with this:
-
   return (
     <View style={styles.container}>
       <MapViewComponent
@@ -260,26 +246,46 @@ export default function MapScreen() {
         userLocationPriority="high"
         userLocationUpdateInterval={5000}
         camera={{
-          centerCoordinate: { latitude: location.latitude, longitude: location.longitude },
+          centerCoordinate: {
+            latitude: location.latitude,
+            longitude: location.longitude
+          },
           zoom: 15,
         }}
         markers={[
-          { id: 'user-location', coordinates: { latitude: location.latitude, longitude: location.longitude }, title: 'You are here', snippet: 'Current location', description: 'Current location' },
-          ...chargingStations.map((station) => ({
+          {
+            id: 'user-location',
+            coordinates: {
+              latitude: location.latitude,
+              longitude: location.longitude
+            },
+            title: 'You are here'
+          },
+          ...chargingStations.map(station => ({
             id: station.id,
-            coordinates: { latitude: station.latitude, longitude: station.longitude },
+            coordinates: {
+              latitude: station.latitude,
+              longitude: station.longitude
+            },
             title: station.title,
             snippet: station.description,
-            description: station.description,
-            icon: { uri: Image.resolveAssetSource(stationIcon).uri, width: 40, height: 40 }
-          })),
+            stationData: station,
+            icon: {
+              uri: Image.resolveAssetSource(stationIcon).uri,
+              width: 48,
+              height: 48
+            }
+          }))
         ]}
-        onPress={handleMapPress} // Add this line to handle map presses
+
       />
 
-      {/* Transparent overlay that appears when suggestions are visible */}
+      {/* Transparent overlay for suggestions */}
       {suggestions.length > 0 && (
-        <TouchableWithoutFeedback onPress={handleMapPress}>
+        <TouchableWithoutFeedback onPress={() => {
+          setSuggestions([]);
+          setSelectedStation(null);
+        }}>
           <View style={styles.overlay} />
         </TouchableWithoutFeedback>
       )}
@@ -289,19 +295,15 @@ export default function MapScreen() {
         searchQuery={searchQuery}
         setSearchQuery={(text) => {
           setSearchQuery(text);
-          fetchSuggestions(text);
+          fetchSuggestions && fetchSuggestions(text);
         }}
         handleSearch={() => handleSearch()}
         onFilterPress={() => console.log('Filter pressed')}
         fetchSuggestions={fetchSuggestions}
-        onFocus={() => {
-          if (searchQuery) {
-            fetchSuggestions(searchQuery);
-          }
-        }}
+        onFocus={() => fetchSuggestions && searchQuery && fetchSuggestions(searchQuery)}
       />
 
-      {/* Rest of your components (SuggestionsDropdown, resultsContainer, fab) remain the same */}
+      {/* Suggestions Dropdown */}
       {suggestions.length > 0 && (
         <SuggestionsDropdown
           suggestions={combinedSuggestions}
@@ -321,13 +323,12 @@ export default function MapScreen() {
           onSelect={(details, description, isLocal) => {
             setSearchQuery(description);
             setSuggestions([]);
-            if (details) {
-              navigateToDirections(details.lat, details.lng, description);
-            }
+            details && navigateToDirections(details.lat, details.lng, description);
           }}
         />
       )}
 
+      {/* Nearby Stations List */}
       {showDropdown && nearbyStations.length > 0 && (
         <View style={styles.resultsContainer}>
           <FlatList
@@ -336,11 +337,20 @@ export default function MapScreen() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.resultItem}
-                onPress={() => navigateToDirections(item.latitude, item.longitude, item.title)}
+                onPress={() => navigateToDirections(
+                  item.latitude,
+                  item.longitude,
+                  item.title
+                )}
               >
                 <Text>{item.title}</Text>
                 <Text style={styles.distanceText}>
-                  {getDistanceFromLatLonInKm(location.latitude, location.longitude, item.latitude, item.longitude).toFixed(2)} km away
+                  {getDistanceFromLatLonInKm(
+                    location.latitude,
+                    location.longitude,
+                    item.latitude,
+                    item.longitude
+                  ).toFixed(2)} km away
                 </Text>
               </TouchableOpacity>
             )}
@@ -348,9 +358,79 @@ export default function MapScreen() {
         </View>
       )}
 
-      <TouchableOpacity style={styles.fab} onPress={reCenter}>
+      {/* Station Info Card */}
+      {selectedStation && (
+        <StationInfoCard
+          station={selectedStation}
+          onClose={() => {
+            console.log('Closing station info card');
+            setSelectedStation(null);
+            reCenter();
+          }}
+          onNavigate={(station) => {
+            navigateToDirections(
+              station.latitude,
+              station.longitude,
+              station.title
+            );
+            setSelectedStation(null);
+          }}
+        />
+      )}
+      {/* Recenter Button */}
+      <TouchableOpacity
+        style={[
+          styles.fab,
+          { bottom: selectedStation ? 180 : 100 }
+        ]}
+        onPress={reCenter}
+      >
         <MaterialIcons name="my-location" size={24} color="#fff" />
       </TouchableOpacity>
+
+
+
+      {/* Nearby Stations Menu */}
+      {/* {nearbyStations.length > 0 && !selectedStation && (
+        <View style={styles.nearbyMenu}>
+          <Text style={styles.nearbyTitle}>Nearby Stations</Text>
+          <FlatList
+            data={nearbyStations.slice(0, 3)} // Show max 3 stations
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.nearbyItem}
+                onPress={() => {
+                  console.log('Selected nearby station:', item.title);
+                  setSelectedStation(item);
+                  // Center map on selected station
+                  mapRef.current?.setCameraPosition({
+                    coordinates: {
+                      latitude: item.latitude,
+                      longitude: item.longitude
+                    },
+                    zoom: 16,
+                    duration: 300,
+                  });
+                }}
+              >
+                <MaterialIcons name="ev-station" size={20} color={colors.primary} />
+                <View style={styles.nearbyItemText}>
+                  <Text style={styles.nearbyItemTitle}>{item.title}</Text>
+                  <Text style={styles.nearbyItemDistance}>
+                    {getDistanceFromLatLonInKm(
+                      location.latitude,
+                      location.longitude,
+                      item.latitude,
+                      item.longitude
+                    ).toFixed(1)} km away
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )} */}
     </View>
   );
 }
@@ -378,14 +458,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: '#ddd',
   },
-   overlay: {
+  overlay: {
     position: 'absolute',
     top: 0,
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: 'transparent',
-    zIndex: 5, // Below dropdown but above map
+    zIndex: 5,
   },
   distanceText: {
     fontSize: 12,
@@ -394,7 +474,6 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 100,
     right: 10,
     backgroundColor: colors.primary,
     padding: 12,
@@ -405,9 +484,53 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
   },
-  stationsFab: {
-    bottom: 90,
-    right: 20,
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  nearbyMenu: {
+    position: 'absolute',
+    bottom: 120,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    maxHeight: 200,
+  },
+  nearbyTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: colors.black,
+  },
+  nearbyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#f8f9fa',
+  },
+  nearbyItemText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  nearbyItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.black,
+  },
+  nearbyItemDistance: {
+    fontSize: 12,
+    color: colors.gray,
+    marginTop: 2,
+  },
 });
