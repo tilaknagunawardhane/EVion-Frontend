@@ -16,6 +16,7 @@ import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { router } from 'expo-router';
 import ConfirmationModal from '../../components/ConfirmationModal';
+import VehicleCard from '../../components/Card';
 
 const PlanTripScreen = () => {
   const [startingLocation, setStartingLocation] = useState('');
@@ -128,36 +129,22 @@ const PlanTripScreen = () => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.vehicleOptions}
             >
-              <TouchableOpacity
-                style={[
-                  styles.vehicleCard,
-                  selectedVehicle === 'BYD Atto 3' && styles.selectedCard,
-                ]}
+              <VehicleCard
+                name="BYD Atto 3"
+                type="SUV"
+                image={require('../../assets/byd.png')}
+                selected={selectedVehicle === 'BYD Atto 3'}
                 onPress={() => setSelectedVehicle('BYD Atto 3')}
-              >
-              <View style={styles.iconWrapper}>
-                <Image
-                  source={require('../../assets/byd.png')}
-                  style={styles.bydIcon}
-                  />
-              </View>
-
-                <Text style={styles.vehicleText}>BYD Atto 3 (SUV)</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.vehicleCard,
-                  selectedVehicle === 'Hyundai Kona' && styles.selectedCard,
-                ]}
+                isBYD={true}
+              />
+              <VehicleCard
+                name="Hyundai Kona Electric"
+                type="SUV"
+                image={require('../../assets/kona.png')}
+                selected={selectedVehicle === 'Hyundai Kona'}
                 onPress={() => setSelectedVehicle('Hyundai Kona')}
-              >
-                <Image
-                  source={require('../../assets/kona.png')}
-                  style={styles.vehicleImage}
-                />
-                <Text style={styles.vehicleText}>Hyundai Kona Electric (SUV)</Text>
-              </TouchableOpacity>
+                isBYD={false}
+              />
             </ScrollView>
 
             <View style={[styles.inputContainer, { marginTop: 12 }]}>
@@ -309,48 +296,6 @@ const styles = StyleSheet.create({
   vehicleOptions: {
     flexDirection: 'row',
     paddingVertical: 4,
-  },
-  vehicleCard: {
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    marginRight: 12,
-    width: 118,
-    height:134,
-  },
-  selectedCard: {
-    borderColor: colors.primary,
-    backgroundColor: colors.background,
-  },
-  vehicleImage: {
-    width: 76,
-    height: 76,
-    marginBottom: 8,
-    resizeMode: 'contain',
-  },
-  iconWrapper: {
-    width: 76,
-    height: 76,
-    borderRadius: 38,
-    backgroundColor: '#E6F7F2',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  
-  bydIcon: {
-    width: 32,
-    height: 32,
-    resizeMode: 'contain',
-  },
-  
-  vehicleText: {
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    textAlign: 'center',
   },
 });
 

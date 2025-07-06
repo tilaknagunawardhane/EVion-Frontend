@@ -20,10 +20,9 @@ const ConfirmationModal = ({ visible, onCancel, onConfirm }) => {
     >
       <View style={styles.overlay}>
         <View style={styles.modal}>
-          {/* Custom Close Button */}
           <TouchableOpacity onPress={onCancel} style={styles.closeButton}>
             <Image
-              source={require('../assets/Closeaffordance.png')} // Replace with your actual image path
+              source={require('../assets/Closeaffordance.png')} 
               style={styles.closeIcon}
             />
           </TouchableOpacity>
