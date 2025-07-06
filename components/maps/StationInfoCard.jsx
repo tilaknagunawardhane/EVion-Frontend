@@ -46,10 +46,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    zIndex: 1,
+    padding: 4,
   },
   title: {
     fontSize: 18,
