@@ -88,7 +88,6 @@ const QuickCheckModal = ({ visible, onClose, onSubmit }) => {
               </View>
             ))}
 
-            {/* Divider */}
             <View style={styles.divider} />
 
             <Text style={styles.sectionTitle}>Second Stop</Text>
@@ -128,7 +127,7 @@ export default QuickCheckModal;
 const styles = StyleSheet.create({
   fullOverlay: {
     flex: 1,
-    backgroundColor: '#BDBDBD',
+    backgroundColor: colors.secondaryText,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 50,
   },
   card: {
@@ -137,7 +136,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     elevation: 5,
-    marginTop: 60,
+    marginTop: 40,
     maxHeight: '85%',
   },
   headerRow: {

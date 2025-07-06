@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
     paddingBottom: 10,
     paddingHorizontal: 16,
-    backgroundColor: '#BDBDBD', // Full gray background
+    backgroundColor: colors.secondaryText, 
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 25,
     height: 25,
-    tintColor: 'black',
+    tintColor: colors.mainTextColor,
     resizeMode: 'contain',
   },
 });

@@ -12,26 +12,6 @@ export default function Tab() {
       <Text>Tab [Home]</Text>
 
       <CustomButton
-        title="Signin"
-        type="primary"
-        onPress={() => router.push('/pages/SignInScreen.jsx')}
-      />
-
-      <CustomButton
-        title={strings.sample1ButtonText}
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/SignInScreen.jsx')}
-      />
-
-      <CustomButton
-        title="Ratings"
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/Ratings')}
-      />
-
-      <CustomButton
         title="Filters"
         type="primary"
         textStyle={{ color: colors.black }}
@@ -44,24 +24,20 @@ export default function Tab() {
         onPress={() => router.push('/pages/TripPlanner1')}
       />
       <CustomButton
-        title="Route History"
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/SavedTripsScreen')}
-      />
-      <CustomButton
         title="Battery Status"
         type="primary"
         textStyle={{ color: colors.black }}
         onPress={() => router.push('/pages/BatteryStatusModal')}
-      />
-
-      <CustomButton
-        title="QuickCheck"
+        />
+        <CustomButton
+        title="Charging Session"
         type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/QuickCheckModal')}
-      />
+        onPress={() => router.push('/pages/StartChargingModal')}
+        />
+
+
+
     </View>
   );
 }
