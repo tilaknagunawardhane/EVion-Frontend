@@ -52,12 +52,13 @@ const VehicleProfileScreen = () => {
       <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.imageAndStatsRow}>
           <Image source={vehicle.image} style={styles.image} />
+
           <View style={styles.rightStats}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{vehicle.batteryCapacity} kWh</Text>
               <Text style={styles.statLabel}>Battery Capacity</Text>
             </View>
-            <View style={[styles.statItem, { marginTop: 18 }]}>
+            <View style={styles.statItem}>
               <Text style={styles.statValue}>{vehicle.batteryHealth} %</Text>
               <Text style={styles.statLabel}>Battery Health</Text>
             </View>
@@ -66,23 +67,23 @@ const VehicleProfileScreen = () => {
 
         <View style={styles.connectorSection}>
           <View style={styles.connectorWrapper}>
-    <Text style={styles.connectorLabel}>AC Connectors</Text>
-    <View style={styles.connectorCard}>
-      <Image source={require('../../../assets/type2.png')} style={styles.connectorIcon} />
-      <Text style={styles.connectorType}>{vehicle.acConnector.type}</Text>
-      <Text style={styles.connectorPower}>{vehicle.acConnector.power} kW</Text>
-    </View>
-  </View>
+            <Text style={styles.connectorLabel}>AC Connectors</Text>
+            <View style={styles.connectorCard}>
+              <Image source={require('../../../assets/type2.png')} style={styles.connectorIcon} />
+              <Text style={styles.connectorType}>{vehicle.acConnector.type}</Text>
+              <Text style={styles.connectorPower}>{vehicle.acConnector.power} kW</Text>
+            </View>
+          </View>
 
-  <View style={styles.connectorWrapper}>
-    <Text style={styles.connectorLabel}>DC Connectors</Text>
-    <View style={styles.connectorCard}>
-      <Image source={require('../../../assets/ccs2.png')} style={styles.connectorIcon} />
-      <Text style={styles.connectorType}>{vehicle.dcConnector.type}</Text>
-      <Text style={styles.connectorPower}>{vehicle.dcConnector.power} kW</Text>
-    </View>
-  </View>
-</View>
+          <View style={styles.connectorWrapper}>
+            <Text style={styles.connectorLabel}>DC Connectors</Text>
+            <View style={styles.connectorCard}>
+              <Image source={require('../../../assets/ccs2.png')} style={styles.connectorIcon} />
+              <Text style={styles.connectorType}>{vehicle.dcConnector.type}</Text>
+              <Text style={styles.connectorPower}>{vehicle.dcConnector.power} kW</Text>
+            </View>
+          </View>
+        </View>
 
 
         <TouchableOpacity style={styles.chargeNowButton}>
@@ -135,8 +136,8 @@ const styles = StyleSheet.create({
   },
   imageAndStatsRow: {
     flexDirection: 'row',
+    alignItems: 'center', // This centers items vertically
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
   image: {
     width: 180,
@@ -145,12 +146,12 @@ const styles = StyleSheet.create({
   },
   rightStats: {
     flex: 1,
-    marginLeft: 12,
-    justifyContent: 'center',
+    marginLeft: 20, // Increased margin for better spacing
+    justifyContent: 'center', // Centers content vertically within the container
   },
   statItem: {
-    alignItems: 'flex-end',
     marginBottom: 18,
+    // Removed alignItems: 'flex-start' to allow natural centering
   },
   statValue: {
     fontSize: 24,
