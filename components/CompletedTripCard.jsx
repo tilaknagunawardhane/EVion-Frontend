@@ -88,12 +88,12 @@ const CompletedTripCard = ({ trip, onOptionsPress }) => {
         </View>
 
         <View style={styles.infoIconGroup}>
-          <Image source={PassengerIcon} style={styles.iconSmall} />
+          <Image source={PassengerIcon} style={styles.iconSmallPassenger} />
           <Text style={styles.infoText}>0{trip.passengers}</Text>
         </View>
 
         <View style={styles.infoIconGroup}>
-          <Image source={StopIcon} style={styles.iconSmall} />
+          <Image source={StopIcon} style={styles.iconSmallStation} />
           <Text style={styles.infoText}>
             0{trip.stopsCount} stop{trip.stopsCount > 1 ? 's' : ''}
           </Text>
@@ -153,6 +153,18 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
     borderLeftColor: colors.mainTextColor,
     borderStyle: 'dashed',
+  },
+  iconSmallPassenger: {
+    width: 24,
+    height: 24,
+    marginTop: 8,
+    resizeMode: 'contain',
+  },
+  iconSmallStation: {
+    width: 24,
+    height: 24,
+    marginTop: 2,
+    resizeMode: 'contain',
   },
   iconSmall: {
     width: 24,

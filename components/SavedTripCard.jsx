@@ -54,12 +54,12 @@ const SavedTripCard = ({ trip }) => {
         </View>
 
         <View style={styles.infoIconGroup}>
-          <Image source={PassengerIcon} style={styles.iconSmall} />
+          <Image source={PassengerIcon} style={styles.iconSmallPassenger} />
           <Text style={styles.infoText}>0{trip.passengers}</Text>
         </View>
 
         <View style={styles.infoIconGroup}>
-          <Image source={BatteryIcon} style={styles.iconSmall} />
+          <Image source={BatteryIcon} style={styles.iconSmallBattery} />
           <Text style={styles.infoText}>{trip.battery}</Text>
         </View>
       </View>
@@ -99,7 +99,13 @@ const styles = StyleSheet.create({
     borderLeftColor: colors.mainTextColor,
     borderStyle: 'dashed',
   },
-  iconSmall: {
+  iconSmallPassenger: {
+    width: 24,
+    height: 24,
+    marginTop: 8,
+    resizeMode: 'contain',
+  },
+  iconSmallBattery: {
     width: 24,
     height: 24,
     marginTop: 2,
@@ -176,6 +182,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.secondaryText,
+    marginLeft: 5,
   },
 });
 
