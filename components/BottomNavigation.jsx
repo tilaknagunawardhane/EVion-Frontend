@@ -62,7 +62,7 @@ const BottomNavigation = ({ activeTab = "Community" }) => {
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    backgroundColor: "white",
+    backgroundColor:colors.background,
     paddingVertical: 8,
     paddingHorizontal: 16,
     paddingBottom: 30,
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 8,
-    shadowColor: "#000",
+    shadowColor: colors.stroke,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   centerIcon: {
     width: 24,
     height: 24,
-    tintColor: "white",
+    tintColor: colors.background,
   },
 });
 

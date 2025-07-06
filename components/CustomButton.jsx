@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     marginRight: 8,
-    tintColor: "white",
+    tintColor: colors.background, // Use imported color
   },
   buttonContent: {
     flexDirection: "row",

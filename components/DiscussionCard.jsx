@@ -161,13 +161,14 @@ const DiscussionCard = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
+    bordercolor: colors.border,
     padding: 16,
     position: "relative",
-    shadowColor: "#000",
+    shadowColor: colors.secondaryText,
     shadowOffset: {
       width: 0,
       height: 1,
@@ -195,16 +196,16 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    backgroundColor:colors.mainTextColor,
     justifyContent: "center",
     alignItems: "center",
   },
   menuDropdown: {
-    backgroundColor: "white",
+    backgroundColor: colors.background,
     borderRadius: 8,
     paddingVertical: 8,
     minWidth: 150,
-    shadowColor: "#000",
+    shadowColor:colors.stroke,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   hiEveryoneBox: {
-    backgroundColor: "#F5F5F5",
+    backgroundColor: colors.stroke,
     padding: 12,
     borderRadius: 8,
     marginBottom: 16,
