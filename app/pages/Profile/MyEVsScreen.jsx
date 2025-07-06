@@ -52,7 +52,15 @@ const MyEVsScreen = () => {
           <TouchableOpacity
             key={index}
             style={styles.card}
-            onPress={() => alert(`${vehicle.brand} ${vehicle.model}`)}
+             onPress={() =>
+                router.push({
+                  pathname: 'pages/Profile/VehicleProfile',
+                  params: {
+                    ...vehicle,
+                    image: Image.resolveAssetSource(vehicle.image).uri,
+                  },
+                })
+              }
           >
             <Image source={vehicle.image} style={styles.image} />
             <View style={styles.info}>
@@ -63,19 +71,8 @@ const MyEVsScreen = () => {
               <Text style={styles.year}>{vehicle.year}</Text>
               <Text style={styles.kW}>{vehicle.power}</Text>
             </View>
-            <TouchableOpacity
-        onPress={() =>
-          router.push({
-            pathname: 'pages/Profile/VehicleProfile',
-            params: {
-              ...vehicle,
-              image: Image.resolveAssetSource(vehicle.image).uri, 
-            },
-          })
-         }
-      >
-  <Ionicons name="chevron-forward" size={20} color={colors.mainTextColor} />
-</TouchableOpacity>
+            
+              <Ionicons name="chevron-forward" size={20} color={colors.mainTextColor} />
 
           </TouchableOpacity>
         ))}

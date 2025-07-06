@@ -1,43 +1,49 @@
 import { View, Text, StyleSheet } from 'react-native';
-// import { Link } from 'expo-router';
 import CustomButton from '../../components/CustomButton';
-import {router} from 'expo-router';
-import React from 'react';
-import strings from '../../constants/strings';
 import colors from '../../constants/color';
+import {router} from 'expo-router';
+
+
 
 export default function Tab() {
   return (
     <View style={styles.container}>
-      <Text>Tab [Home]</Text>
+      <Text>Tab [Settings]</Text>
 
       <CustomButton
-        title="Filters"
+        title="Add vehicle profile"
         type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/Filters')}
-      />
-      <CustomButton
-        title="Planning a Route"
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/TripPlanner1')}
-      />
-      <CustomButton
-        title="Battery Status"
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/BatteryStatusModal')}
+        onPress={() => router.push('/pages/addedvprofile')}
         />
+
         <CustomButton
-        title="Charging Session"
+        title="Station profile"
         type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/StartChargingModal')}
+        onPress={() => router.push('/pages/StationProfile')}
         />
 
+        <CustomButton
+        title="Start Charging"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/StartCharging')}
+        />
 
-
+        <CustomButton
+        title="Waiting Connection"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/WaitingConnection')}
+        />
+<CustomButton
+        title="Waiting Connection"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/FullCharged')}
+        />
+        
     </View>
   );
 }
