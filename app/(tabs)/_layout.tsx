@@ -4,7 +4,7 @@ import colors from '../../constants/color';
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary , headerShown: false }}>
       <Tabs.Screen
         name="index"
         options={{
@@ -25,10 +25,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="Profile"
+        
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }) => (
-            <FontAwesome name="user" size={28} color={color} />
+            <FontAwesome name="user-o" size={24} color={color} />
           ),
         }}
       />
