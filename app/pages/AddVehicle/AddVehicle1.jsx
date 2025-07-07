@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AppBar from '../../../components/AppBar';
 import CustomButton from '../../../components/CustomButton';
@@ -8,23 +8,59 @@ import InputField from '../../../components/InputField';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import { router } from 'expo-router';
+import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+
 
 const AddVehicleScreen = () => {
   const [vehicleMake, setVehicleMake] = useState('');
   const [vehicleModel, setVehicleModel] = useState('');
   const [manufactureYear, setManufactureYear] = useState('');
+  const [color, setColor] = useState('');
   const [vehicleType, setVehicleType] = useState('');
+
+  const [dropdownData, setDropdownData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const navigation = useNavigation();
 
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/vehicles/dropdowndata`); // Replace with your backend URL
+        const data = await response.json();
+        if (data.success) {
+          setDropdownData(data.data);
+          // console.log(data.data)
+
+        } else {
+          console.error('Error fetching dropdown data');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDropdownData();
+  }, []);
+
   const handleNext = () => {
-    // Add form validation & submission logic here
     router.push('/pages/AddVehicle/AddVehicle2');
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <AppBar/>
+      <AppBar />
       <ScrollView contentContainerStyle={styles.scrollContainer} keyboardShouldPersistTaps="handled">
         <View style={styles.mainContent}>
           <Text style={styles.title}>Add Your EV</Text>
@@ -44,7 +80,7 @@ const AddVehicleScreen = () => {
             selectedValue={vehicleMake}
             onValueChange={setVehicleMake}
             placeholder="Select the make"
-            options={['Audi', 'BMW', 'BYD', 'Hyundai', 'Kia', 'MG(Morris Garages)']} 
+            options={dropdownData?.vehicleMakes.map(item => item.make) || []}
           />
 
           <DropdownField
@@ -52,7 +88,7 @@ const AddVehicleScreen = () => {
             selectedValue={vehicleModel}
             onValueChange={setVehicleModel}
             placeholder="Select the model"
-            options={['Model 3', 'Model Y', 'Leaf', 'i3', 'Other']} 
+            options={dropdownData?.vehicleModels.map(item => item.model)}
           />
 
           <DropdownField
@@ -70,6 +106,14 @@ const AddVehicleScreen = () => {
             placeholder="Sedan, SUV, Hatchback etc."
           />
 
+          <DropdownField
+            label="Color"
+            selectedValue={color}
+            onValueChange={setColor}
+            placeholder="Select the EV color"
+            options={dropdownData?.vehicleColors.map(item => item.color)}
+          />
+
           <TouchableOpacity>
             <Text style={styles.skipText}>Skip for now</Text>
           </TouchableOpacity>
@@ -85,6 +129,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   mainContent: {
     paddingHorizontal: 24,

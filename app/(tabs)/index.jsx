@@ -22,10 +22,10 @@ export default function Tab() {
 
       <ClearUserButton/>
       <CustomButton
-        title={strings.sample1ButtonText}
+        title="Add EV"
         type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/SignInScreen.jsx')}
+        onPress={() => router.push('/pages/AddVehicle/AddVehicle1')}
         />
 
       <CustomButton
