@@ -20,7 +20,7 @@ const CompletedBookingCard = ({
       <View style={styles.topRow}>
           <Text style={styles.dateText}>{dateLabel}</Text>
           <View style={styles.costContainer}>
-            <Text style={styles.costText}>{cost}</Text>
+            <Text style={styles.costText}>LKR {cost}</Text>
           </View>
           <TouchableOpacity style={styles.bookAgainButton}>
             <Text style={styles.bookAgainText}>Book Again</Text>
