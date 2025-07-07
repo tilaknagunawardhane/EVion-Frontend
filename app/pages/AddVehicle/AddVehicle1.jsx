@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import AppBar from '../../components/AppBar';
-import CustomButton from '../../components/CustomButton';
-import DropdownField from '../../components/DropdownField';
-import InputField from '../../components/InputField';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
+import AppBar from '../../../components/AppBar';
+import CustomButton from '../../../components/CustomButton';
+import DropdownField from '../../../components/DropdownField';
+import InputField from '../../../components/InputField';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
 import { router } from 'expo-router';
 
 const AddVehicleScreen = () => {
@@ -19,7 +19,7 @@ const AddVehicleScreen = () => {
 
   const handleNext = () => {
     // Add form validation & submission logic here
-    router.push('/pages/AddVehicle2');
+    router.push('/pages/AddVehicle/AddVehicle2');
   };
 
   return (

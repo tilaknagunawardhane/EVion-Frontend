@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import InputField from '../../components/InputField';
-import CustomButton from '../../components/CustomButton';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
+import InputField from '../../../components/InputField';
+import CustomButton from '../../../components/CustomButton';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
-import AppBar from '../../components/AppBar';
+import AppBar from '../../../components/AppBar';
 
 const AddPaymentMethodScreen = () => {
   const [cardNumber, setCardNumber] = useState('');

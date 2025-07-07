@@ -1,12 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import CustomButton from '../../components/CustomButton';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
-import VehicleProfile from '../../components/VehicleProfile';
-import VehicleCard from '../../components/VehicleCard';
+import CustomButton from '../../../components/CustomButton';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
+import VehicleProfile from '../../../components/VehicleProfile';
+import VehicleCard from '../../../components/VehicleCard';
 import { useNavigation } from '@react-navigation/native';
-import InputField from '../../components/InputField';
+import InputField from '../../../components/InputField';
 import { router } from 'expo-router'; // Ensure you have this import for navigation
 
 
@@ -35,11 +35,11 @@ const VehicleAddedScreen = ({ navigation, route }) => {
         <View style={styles.vehicleListContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
             <VehicleProfile
-              image={require('../../assets/car.png')}
+              image={require('../../../assets/car.png')}
               name={'BYD Atto 3\n(SUV)'}
             />
             <VehicleProfile
-              image={require('../../assets/car.png')}
+              image={require('../../../assets/car.png')}
               name={'Tesla Model 3\n(Sedan)'}
             />
           </ScrollView>
@@ -50,14 +50,14 @@ const VehicleAddedScreen = ({ navigation, route }) => {
 
         {/* Pass all vehicle parameters to VehicleCard */}
         <VehicleCard
-          image={require('../../assets/car.png')}
+          image={require('../../../assets/car.png')}
           name="BYD Atto 3 (SUV)"
           year="2022"
           batteryCapacity="60.48kWh"
           batteryHealth="94%"
-          connector1_image={require('../../assets/type2charger.png')}
+          connector1_image={require('../../../assets/type2charger.png')}
           connector1_name="Type 2 (Mennekes)"
-          connector2_image={require('../../assets/chademocharger.png')}
+          connector2_image={require('../../../assets/chademocharger.png')}
           connector2_name="CHAdeMO"
         />
 
@@ -69,13 +69,13 @@ const VehicleAddedScreen = ({ navigation, route }) => {
         <View style={{ marginBottom: -40 }} />
         <Text
           style={styles.addAnotherLink}
-         onPress={() => router.push('/pages/addedvprofile')}
+         onPress={() => router.push('/pages/AddVehicle/addedvprofile')}
         >
           
           Add Another Vehicle
         </Text>
         
-        <CustomButton title="Continue" onPress={() => router.push('/pages/Addcard')}/>
+        <CustomButton title="Continue" onPress={() => router.push('/pages/AddVehicle/Addcard')}/>
        
       </View>
 

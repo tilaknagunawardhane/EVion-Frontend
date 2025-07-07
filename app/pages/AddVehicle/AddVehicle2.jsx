@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { router } from 'expo-router';
-import AppBar from '../../components/AppBar';
-import CustomButton from '../../components/CustomButton';
-import PlugBox from '../../components/PlugBox';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
+import AppBar from '../../../components/AppBar';
+import CustomButton from '../../../components/CustomButton';
+import PlugBox from '../../../components/PlugBox';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
 
 const plugTypes = [
-  { id: 'type1', label: 'Type 1\n(SAE J1772)', image: require('../../assets/type1.png') },
-  { id: 'type2', label: 'Type 2\n(Mennekes)', image: require('../../assets/type2.png') },
-  { id: 'ccs1', label: 'CCS Combo\nType 1', image: require('../../assets/ccs1.png') },
-  { id: 'ccs2', label: 'CCS Combo\nType 2', image: require('../../assets/ccs2.png') },
-  { id: 'chademo', label: 'CHAdeMO', image: require('../../assets/chademo.png') },
-  { id: 'tesla', label: 'Tesla', image: require('../../assets/tesla.png') },
+  { id: 'type1', label: 'Type 1\n(SAE J1772)', image: require('../../../assets/type1.png') },
+  { id: 'type2', label: 'Type 2\n(Mennekes)', image: require('../../../assets/type2.png') },
+  { id: 'ccs1', label: 'CCS Combo\nType 1', image: require('../../../assets/ccs1.png') },
+  { id: 'ccs2', label: 'CCS Combo\nType 2', image: require('../../../assets/ccs2.png') },
+  { id: 'chademo', label: 'CHAdeMO', image: require('../../../assets/chademo.png') },
+  { id: 'tesla', label: 'Tesla', image: require('../../../assets/tesla.png') },
 ];
 
 const AddPlugTypeScreen = () => {
@@ -27,7 +27,7 @@ const AddPlugTypeScreen = () => {
 
   const handleNext = () => {
     if (selectedPlugs.length > 0) {
-      router.push('/pages/AddVehicle3'); // You can also pass the selected plugs via query or context
+      router.push('/pages/AddVehicle/AddVehicle3'); // You can also pass the selected plugs via query or context
     } else {
       Alert.alert('Select Plug Type', 'Please select at least one plug type before proceeding.');
     }

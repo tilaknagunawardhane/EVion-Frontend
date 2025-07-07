@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
-import CustomButton from '../../components/CustomButton';
-import AppBar from '../../components/AppBar';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
+import CustomButton from '../../../components/CustomButton';
+import AppBar from '../../../components/AppBar';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router'; // Ensure you have this import for navigation
 
@@ -52,7 +52,7 @@ const AddYourEVScreen = () => {
 
         <View style={styles.uploadBox}>
           <Image
-            source={require('../../assets/upload.png')}
+            source={require('../../../assets/upload.png')}
             style={styles.uploadIcon}
           />
           <Text style={styles.uploadText}>Upload files here</Text>
@@ -69,7 +69,7 @@ const AddYourEVScreen = () => {
       </TouchableOpacity>
       <CustomButton
         title="Add Vehicle"
-        onPress={() => router.push('/pages/addedvprofile2')}
+        onPress={() => router.push('/pages/AddVehicle/addedvprofile2')}
         type="primary"
         style={styles.addButton}
       />

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import AppBar from '../../components/AppBar';
-import CustomButton from '../../components/CustomButton';
-import DropdownField from '../../components/DropdownField';
-import InputField from '../../components/InputField';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
+import AppBar from '../../../components/AppBar';
+import CustomButton from '../../../components/CustomButton';
+import DropdownField from '../../../components/DropdownField';
+import InputField from '../../../components/InputField';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
 import { router } from 'expo-router';
 
 const AddEVScreen = () => {
@@ -15,7 +15,7 @@ const AddEVScreen = () => {
   const [passengers, setPassengers] = useState('');
 
   const handleNext = () => {
-    router.push('/pages/addedvprofile');
+    router.push('/pages/AddVehicle/addedvprofile');
   };
 
   return (
