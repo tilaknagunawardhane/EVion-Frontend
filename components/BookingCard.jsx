@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   dateText: {
-    fontFamily: fonts.PlusJakartaSansBold, // Use bold font from constants
+    fontFamily: fonts.PlusJakartaSansMedium, // Use bold font from constants
     fontSize: 16,
     color: colors.mainTextColor, // Use main text color from constants
   },
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stationName: {
-    fontFamily: fonts.PlusJakartaSansBold, // Use bold font from constants
+    fontFamily: fonts.PlusJakartaSansMedium, // Use bold font from constants
     fontSize: 16,
     color: colors.mainTextColor, // Use main text color from constants
   },

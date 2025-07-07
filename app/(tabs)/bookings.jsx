@@ -132,7 +132,16 @@ const BookingsScreen = () => {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerRow}>
       <Text style={styles.title}>My Bookings</Text>
+      <TouchableOpacity
+        style={styles.bookingButton}
+        onPress={() => router.push('/pages/bookings/AddBooking')}
+      >
+        <Text style={styles.addBookingText}>Add Booking</Text>
+      </TouchableOpacity>
+    </View>
+
 
       {/* Tabs */}
       <View style={styles.tabs}>
@@ -165,9 +174,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     paddingTop: 50,
   },
+  headerRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginHorizontal: 16,
+  marginBottom: 10,
+},
   title: {
     fontSize: 24,
-    fontFamily: fonts.PlusJakartaSansBold,
+    fontFamily: fonts.PlusJakartaSansMedium,
     marginHorizontal: 16,
     marginBottom: 10,
     color: colors.mainTextColor,
@@ -200,4 +216,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
+  bookingButton: {
+    backgroundColor: colors.primary,
+    padding: 8,
+    borderRadius: 10,
+    width: '40%',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  addBookingText: {
+  color: '#fff',
+  fontFamily: fonts.PlusJakartaSansMedium,
+},
+
 });
