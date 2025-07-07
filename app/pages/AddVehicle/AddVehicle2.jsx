@@ -6,6 +6,7 @@ import CustomButton from '../../../components/CustomButton';
 import PlugBox from '../../../components/PlugBox';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
+import { useLocalSearchParams } from 'expo-router';
 
 const plugTypes = [
   { id: 'type1', label: 'Type 1\n(SAE J1772)', image: require('../../../assets/type1.png') },
@@ -17,7 +18,29 @@ const plugTypes = [
 ];
 
 const AddPlugTypeScreen = () => {
+  const params = useLocalSearchParams();
   const [selectedPlugs, setSelectedPlugs] = useState([]); // Multiple selections
+  const {
+      vehicleMakeId = '',
+      vehicleMake = '',
+      vehicleModelId='',
+      vehicleModel='',
+      manufactureYear,
+      colorId='',
+      color='',
+      vehicleType=''
+  } = params;
+
+  console.log('Received vehicle data:', {
+    vehicleMakeId,
+    vehicleMake,
+    vehicleModelId,
+    vehicleModel,
+    manufactureYear,
+    colorId,
+    color,
+    vehicleType
+  });
 
   const togglePlugSelection = (id) => {
     setSelectedPlugs((prev) =>
