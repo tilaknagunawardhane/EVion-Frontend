@@ -156,7 +156,8 @@ const SignUpScreen = () => {
 
           <View style={styles.termsContainer}>
             <Text style={styles.termsText}>By signing up, you agree to our</Text>
-            <TouchableOpacity>
+
+            <TouchableOpacity onPress={() => router.push('/pages/Profile/PrivacyPolicy')}>
               <Text style={styles.linkText}>Terms & Privacy Policy</Text>
             </TouchableOpacity>
           </View>

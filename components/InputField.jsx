@@ -15,7 +15,8 @@ const InputField = ({
   showPassword,
   setShowPassword,
   isPassword = false,
-  error
+  error,
+  style,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -26,6 +27,7 @@ const InputField = ({
         <TextInput
           style={[
             styles.input,
+            style,
             isPassword && styles.passwordInput,
             isFocused && { borderColor: colors.primary },
             { color: value ? 'black' : colors.mainTextColor }, //  change text color based on value

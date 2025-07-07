@@ -33,32 +33,26 @@ export default function Tab() {
         type="primary"
         textStyle={{ color: colors.black }}
         onPress={() => router.push('/pages/Filters')}
-        />
+      />
       <CustomButton
         title="Planning a Route"
         type="primary"
         textStyle={{ color: colors.black }}
         onPress={() => router.push('/pages/TripPlanner1')}
-        />
-      <CustomButton
-        title="Route History"
-        type="primary"
-        textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/SavedTripsScreen')}
-        />
+      />
       <CustomButton
         title="Battery Status"
         type="primary"
         textStyle={{ color: colors.black }}
         onPress={() => router.push('/pages/BatteryStatusModal')}
         />
-
-      <CustomButton
-        title="QuickCheck"
+        <CustomButton
+        title="Charging Session"
         type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/QuickCheckModal')}
+        onPress={() => router.push('/pages/StartChargingModal')}
         />
+
 
 
     </View>
