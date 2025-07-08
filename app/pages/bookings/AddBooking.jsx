@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import SelectableInput from '../../../components/SelectableInput';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import SelectVehicleCard from '../../../components/SelectVehicleCard';
+import { API_BASE_URL } from '@env';
 
 const AddBooking = () => {
   const navigation = useNavigation();
@@ -27,6 +28,51 @@ const AddBooking = () => {
   const [datetime, setDatetime] = useState(null);
   const [vehicleModalVisible, setVehicleModalVisible] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [ownedVehicles, setOwnedVehicles] = useState(null);
+
+  console.log('API_BASE_URL:', API_BASE_URL);
+
+  useEffect(() => {
+    const fetchOwnedVehicles = async () => {
+      try{
+        const url = `${API_BASE_URL}/api/bookings/getOwnedVehicles?ev_user_id=686cc1846c2941a55f13a8cd`;
+        console.log('Fetching from:', url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          header: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+
+      // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response:', text);
+      throw new Error(`Server returned non-JSON response (status: ${response.status})`);
+    }
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if(response.ok) {
+        setOwnedVehicles(data);
+      }
+      else{
+        console.error('Error:', data.message || 'No message provided');
+      }
+      }catch (error) {
+        console.error('Fetch error:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+      console.log('ownedVehicles: ', ownedVehicles);
+    };
+
+    fetchOwnedVehicles();
+  }, [selectedField]);
 
   const isFormComplete = station && vehicle && connector && datetime;
 
@@ -174,7 +220,7 @@ const AddBooking = () => {
             <Text style={styles.modalTitle}>Select Vehicle</Text>
 
             <ScrollView>
-              {vehicles.map((item) => (
+              {ownedVehicles?.map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   onPress={() => setSelectedVehicle(item)}
@@ -185,7 +231,11 @@ const AddBooking = () => {
                     selected={selectedVehicle?.id === item.id}
                   />
                 </TouchableOpacity>
-              ))}
+              )) || (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No vehicles found</Text>
+                </View>
+              )}
             </ScrollView>
 
             <TouchableOpacity style={styles.addNewBtn}>

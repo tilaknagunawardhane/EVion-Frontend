@@ -13,7 +13,8 @@ const VehicleCard = ({ vehicle, selected }) => {
           <Text style={styles.name}>{vehicle.name}</Text>
           <Text style={styles.year}>{vehicle.year}</Text>
           <Text style={styles.details}>Battery Capacity: {vehicle.battery}</Text>
-          <Text style={styles.details}>Charging Speed: {vehicle.speed}</Text>
+          <Text style={styles.details}>Charging Power DC: {vehicle.max_power_DC}</Text>
+          <Text style={styles.details}>Charging Power AC: {vehicle.max_power_AC}</Text>
         </View>
       </View>
 
