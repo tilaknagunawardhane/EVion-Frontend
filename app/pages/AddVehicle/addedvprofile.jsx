@@ -1,32 +1,155 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import CustomButton from '../../../components/CustomButton';
 import AppBar from '../../../components/AppBar';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
-import { useNavigation } from '@react-navigation/native';
-import { router } from 'expo-router'; // Ensure you have this import for navigation
-
+import { router, useLocalSearchParams } from 'expo-router';
+import { API_BASE_URL } from '@env';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AddYourEVScreen = () => {
-  const navigation = useNavigation();
+  const params = useLocalSearchParams();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState(null);
 
-  const handleSelectFiles = () => {
-    // Implement file/image picker logic here
-    console.log('Select files tapped');
+  useEffect(() => {
+    async function getUser() {
+      const user = await AsyncStorage.getItem('user');
+      if (user) {
+        console.log(user);
+        setUser(JSON.parse(user));
+      }
+    }
+    getUser();
+  }, []);
+
+  const handleSelectFiles = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== 'granted') {
+      Alert.alert(
+        'Permission required',
+        'Sorry, we need camera roll permissions to make this work!',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8, // Reduced quality for faster uploads
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+    }
   };
 
-  const handleSkip = () => {
-    console.log('Skip tapped');
-    // Navigate or skip action
+  const handleSkip = async () => {
+    await submitVehicleData(null); // Submit without image
   };
 
-  const handleAddVehicle = () => {
-    console.log('Add vehicle tapped');
-    navigation.navigate('addedvprofile2'); // Replace with actual screen
+  const handleAddVehicle = async () => {
+    if (!selectedImage) {
+      Toast.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'No Image Selected',
+        textBody: 'Please upload an image of your vehicle or skip this step',
+      });
+      return;
+    }
+    await submitVehicleData(selectedImage);
   };
 
+  const submitVehicleData = async (imageUri) => {
+    setIsLoading(true);
+    try {
 
+      if (user && user._id) {
+        const userId = user._id;
+        console.log(userId);
+
+        const formData = new FormData();
+
+         formData.append('ownerId', userId);
+         
+        // Add all vehicle data from previous screens
+        Object.entries(params).forEach(([key, value]) => {
+          if (value) formData.append(key, value);
+        });
+
+        // Add image file if exists
+        if (imageUri) {
+          const filename = imageUri.split('/').pop();
+          const match = /\.(\w+)$/.exec(filename);
+          const type = match ? `image/${match[1]}` : 'image';
+
+          formData.append('vehicleImage', {
+            uri: imageUri,
+            name: filename,
+            type
+          });
+        }
+
+        console.log(formData);
+
+        const response = await fetch(`${API_BASE_URL}/api/vehicles/addVehicle`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to add vehicle');
+        }
+
+        // Navigate to success screen
+        router.replace('/pages/AddVehicle/addedvprofile2');
+      }
+      else {
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: 'Please Sign Up first',
+        });
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+      Toast.show({
+        type: ALERT_TYPE.ERROR,
+        title: 'Error',
+        textBody: error.message || 'Failed to submit vehicle data',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Dynamic styles based on selectedImage
+  const uploadBoxStyle = {
+    ...styles.uploadBox,
+    borderStyle: selectedImage ? 'solid' : 'dashed',
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Uploading your vehicle...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -36,11 +159,9 @@ const AddYourEVScreen = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Title and Subtitle */}
         <Text style={styles.title}>Add Your EV</Text>
         <Text style={styles.subtitle}>Upload an image of your vehicle</Text>
 
-        {/* Step indicator */}
         <View style={styles.stepIndicator}>
           <View style={styles.dot} />
           <View style={styles.dot} />
@@ -50,33 +171,46 @@ const AddYourEVScreen = () => {
 
         <Text style={styles.sectionTitle}>Vehicle Photo</Text>
 
-        <View style={styles.uploadBox}>
-          <Image
-            source={require('../../../assets/upload.png')}
-            style={styles.uploadIcon}
-          />
-          <Text style={styles.uploadText}>Upload files here</Text>
-          <TouchableOpacity style={styles.selectButton} onPress={handleSelectFiles}>
-            <Text style={styles.selectButtonText}>Select Files</Text>
+        <View style={uploadBoxStyle}>
+          {selectedImage ? (
+            <Image
+              source={{ uri: selectedImage }}
+              style={styles.previewImage}
+              resizeMode="contain"
+            />
+          ) : (
+            <>
+              <Image
+                source={require('../../../assets/upload.png')}
+                style={styles.uploadIcon}
+              />
+              <Text style={styles.uploadText}>Upload files here</Text>
+            </>
+          )}
+          <TouchableOpacity
+            style={styles.selectButton}
+            onPress={handleSelectFiles}
+            disabled={isLoading}
+          >
+            <Text style={styles.selectButtonText}>
+              {selectedImage ? 'Change Image' : 'Select Files'}
+            </Text>
           </TouchableOpacity>
         </View>
-        </ScrollView>
+      </ScrollView>
 
-        {/* Moved outside ScrollView to stay near bottom */}
-    <View style={styles.bottomSection}>
-      <TouchableOpacity onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip for now</Text>
-      </TouchableOpacity>
-      <CustomButton
-        title="Add Vehicle"
-        onPress={() => router.push('/pages/AddVehicle/addedvprofile2')}
-        type="primary"
-        style={styles.addButton}
-      />
-
-       
-    </View>
-      
+      <View style={styles.bottomSection}>
+        <TouchableOpacity onPress={handleSkip} disabled={isLoading}>
+          <Text style={styles.skipText}>Skip for now</Text>
+        </TouchableOpacity>
+        <CustomButton
+          title="Add Vehicle"
+          onPress={handleAddVehicle}
+          type="primary"
+          style={styles.addButton}
+          loading={isLoading}
+        />
+      </View>
     </View>
   );
 };
@@ -130,13 +264,13 @@ const styles = StyleSheet.create({
   uploadBox: {
     borderWidth: 1,
     borderColor: colors.stroke,
-    borderStyle: 'dashed',
     borderRadius: 12,
     height: 232,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.background,
     marginBottom: 20,
+    overflow: 'hidden',
   },
   uploadIcon: {
     width: 32,
@@ -150,11 +284,17 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     marginBottom: 12,
   },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+  },
   selectButton: {
     backgroundColor: colors.primary,
     paddingHorizontal: 25,
     paddingVertical: 10,
     borderRadius: 8,
+    position: 'absolute',
+    bottom: 16,
   },
   selectButtonText: {
     color: colors.background,
@@ -173,15 +313,25 @@ const styles = StyleSheet.create({
     height: 48,
     alignSelf: 'center',
   },
-bottomSection: {
-  paddingHorizontal: 24,
-  paddingBottom: 32,
-  paddingTop: 8,
-  alignItems: 'center',
-  gap: 9,
-  backgroundColor: colors.background,
-},
-
+  bottomSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 32,
+    paddingTop: 8,
+    alignItems: 'center',
+    gap: 9,
+    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+  },
 });
 
 export default AddYourEVScreen;
