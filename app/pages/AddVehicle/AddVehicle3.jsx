@@ -7,12 +7,42 @@ import InputField from '../../../components/InputField';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import { router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 
 const AddEVScreen = () => {
+  const params = useLocalSearchParams();
   const [batteryCapacity, setBatteryCapacity] = useState('');
   const [batteryHealth, setBatteryHealth] = useState('');
   const [chargingPower, setChargingPower] = useState('');
   const [passengers, setPassengers] = useState('');
+
+   const selectedPlugIds = params.selectedPlugIds 
+    ? JSON.parse(params.selectedPlugIds) 
+    : [];
+
+  // Access all parameters
+  const {
+    vehicleMakeId,
+    vehicleMake,
+    vehicleModelId,
+    vehicleModel,
+    manufactureYear,
+    colorId,
+    color,
+    vehicleType
+  } = params;
+
+  // console.log('All received params:', {
+  //   vehicleMakeId,
+  //   vehicleMake,
+  //   vehicleModelId,
+  //   vehicleModel,
+  //   manufactureYear,
+  //   colorId,
+  //   color,
+  //   vehicleType,
+  //   selectedPlugIds
+  // });
 
   const handleNext = () => {
     router.push('/pages/AddVehicle/addedvprofile');
