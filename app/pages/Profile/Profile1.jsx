@@ -11,9 +11,9 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import colors from '../../constants/color';
-import fonts from '../../constants/fonts';
-import CustomButton from '../../components/CustomButton';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
+import CustomButton from '../../../components/CustomButton';
 
 const Profile1 = () => {
   const router = useRouter();
@@ -393,7 +393,7 @@ const EmailModal = () => (
                 onPress={() => setShowNewPassword(!showNewPassword)}
               >
                 <Image 
-                  source={showNewPassword ? require('../../assets/eye-open.png') : require('../../assets/eye-closed.png')}
+                  source={showNewPassword ? require('../../../assets/eye-open.png') : require('../../../assets/eye-closed.png')}
                   style={styles.eyeIconImage}
                 />
               </TouchableOpacity>
@@ -421,7 +421,7 @@ const EmailModal = () => (
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 <Image 
-                  source={showConfirmPassword ? require('../../assets/eye-open.png') : require('../../assets/eye-closed.png')}
+                  source={showConfirmPassword ? require('../../../assets/eye-open.png') : require('../../../assets/eye-closed.png')}
                   style={styles.eyeIconImage}
                 />
               </TouchableOpacity>
