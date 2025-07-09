@@ -7,32 +7,43 @@ import {
   Platform,
   StatusBar,
   Image,
+  ActivityIndicator,
 } from "react-native";
-import colors from "../constants/color";
-import fonts from "../constants/fonts";
+import colors from "../../constants/color";
+import fonts from "../../constants/fonts";
 
-const YourThoughtsHeader = ({ title, onBack, onEdit, onPost }) => {
+const YourThoughtsHeader = ({ title, onBack, onAttach, onPost, isSubmitting }) => {
   return (
     <View style={styles.header}>
       <TouchableOpacity style={styles.backButton} onPress={onBack}>
         <Image
-          source={require("../assets/back.png")}
+          source={require("../../assets/back.png")}
           style={styles.backIcon}
         />
       </TouchableOpacity>
       <Text style={styles.headerTitle}>{title}</Text>
       <View style={styles.headerRight}>
-        <TouchableOpacity style={styles.actionButton} onPress={onEdit}>
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={onAttach}
+          disabled={isSubmitting}
+        >
           <Image
-            source={require("../assets/Attached.png")}
-            style={styles.actionIcon}
+            source={require("../../assets/Attached.png")}
+            style={[styles.actionIcon, { tintColor: colors.mainTextColor }]}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton} onPress={onPost}>
-          <Image
-            source={require("../assets/Share.png")}
-            style={styles.actionIcon}
-          />
+        <TouchableOpacity 
+          style={styles.postButton} 
+          onPress={onPost}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator size="small" color={colors.background} />
+          ) : (
+            
+            <Text style={styles.postButtonText}>Post</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -72,12 +83,25 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
-    marginLeft: 8,
+    marginRight: 12,
   },
   actionIcon: {
     width: 20,
     height: 20,
-    tintColor: colors.mainTextColor,
+  },
+  postButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    minWidth: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  postButtonText: {
+    color: colors.background,
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
   },
 });
 

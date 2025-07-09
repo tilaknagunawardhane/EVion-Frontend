@@ -10,29 +10,51 @@ import {
   StatusBar,
   Image,
 } from "react-native";
-import DiscussionCard from "../../components/DiscussionCard";
-import BottomNavigation from "../../components/BottomNavigation";
+import DiscussionCard from "../../components/community/DiscussionCard";
+// import BottomNavigation from "../../components/BottomNavigation";
 import CustomButton from "../../components/CustomButton";
 import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
+import { router } from "expo-router";
+
 
 const Discussions = () => {
   const [activeTab, setActiveTab] = useState("Pins");
   const [searchText, setSearchText] = useState("");
-
-  const discussionsData = [
+const [discussionsData, setDiscussionsData] = useState([
     {
       id: 1,
       hashtags: ["EVrange", "realworldperformance"],
-      title:
-        "Realistic Range vs. Manufacturer Claimed Range - What Are You Getting?",
+      title: "Realistic Range vs. Manufacturer Claimed Range - What Are You Getting?",
       userName: "John Doe",
       timeAgo: "3 hrs ago",
-      content:
-        "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. Read More",
+      content: "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. For example, my EV is supposed to do 450 km per charge, but I barely get 320 km, even with careful driving. I'm trying to understand what factors actually affect this - things like AC usage, passenger load, or terrain. Can other EV users share their experiences? How much range are you realistically getting, and what are your driving conditions like? Also, any tips to improve range would be great.",
       likes: 18,
-      replies: 0,
+      replies: 2,
       isPinned: false,
+      comments: [
+        {
+          id: "c1",
+          text: "I have the same experience with my EV. The advertised range is always under ideal conditions.",
+          userName: "Sarah Johnson",
+          timeAgo: "2 hrs ago",
+          replies: [
+            {
+              id: "r1",
+              text: "Exactly! They test these in perfect weather with no AC.",
+              userName: "Mike Chen",
+              timeAgo: "1 hr ago"
+            }
+          ]
+        },
+        {
+          id: "c2",
+          text: "Try reducing your speed on highways. I get 20% more range at 100km/h vs 120km/h.",
+          userName: "Raj Patel",
+          timeAgo: "1 hr ago",
+          replies: []
+        }
+      ]
     },
     {
       id: 2,
@@ -40,16 +62,38 @@ const Discussions = () => {
       title: "BYD Atto 3 vs Nissan Leaf - Which is Better for Long Trips?",
       userName: "John Doe",
       timeAgo: "3 hrs ago",
-      content:
-        "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. Read More",
+      content: "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. Read More",
       likes: 18,
       replies: 0,
       isPinned: true,
+      comments: []
     },
-  ];
+  ]);
+
+  const handleAddComment = (discussionId, newComment) => {
+    setDiscussionsData(prevData => 
+      prevData.map(discussion => {
+        if (discussion.id === discussionId) {
+          const updatedComments = [
+            ...discussion.comments,
+            {
+              ...newComment,
+              id: Math.random().toString(36).substring(7),
+            }
+          ];
+          return {
+            ...discussion,
+            comments: updatedComments,
+            replies: updatedComments.length + 
+                    updatedComments.reduce((sum, c) => sum + (c.replies?.length || 0), 0)
+          };
+        }
+        return discussion;
+      })
+    );
+  };
 
   const renderContent = () => {
-    // Filter discussions based on active tab
     const filteredDiscussions = activeTab === "Pins" 
       ? discussionsData.filter(discussion => discussion.isPinned)
       : discussionsData;
@@ -67,6 +111,8 @@ const Discussions = () => {
             likes={discussion.likes}
             replies={discussion.replies}
             isPinned={discussion.isPinned}
+            comments={discussion.comments}
+            onAddComment={(comment) => handleAddComment(discussion.id, comment)}
           />
         ))}
         <View style={styles.bottomPadding} />
@@ -106,6 +152,7 @@ const Discussions = () => {
           style={styles.startDiscussionButton}
           textStyle={styles.startDiscussionText}
           icon={require("../../assets/Pencil.png")}
+          onPress={()=> router.push('/pages/Community/StartDiscussion')}
         />
       </View>
 
@@ -156,7 +203,7 @@ const Discussions = () => {
       {renderContent()}
 
       {/* Bottom Navigation */}
-      <BottomNavigation activeTab="Community" />
+      {/* <BottomNavigation activeTab="Community" /> */}
     </View>
   );
 };

@@ -6,9 +6,11 @@ import {
   Image,
   StyleSheet,
   Modal,
+  TextInput,
+  ScrollView,
 } from "react-native";
-import colors from "../constants/color";
-import fonts from "../constants/fonts";
+import colors from "../../constants/color";
+import fonts from "../../constants/fonts";
 
 const DiscussionCard = ({
   hashtags = [],
@@ -21,9 +23,14 @@ const DiscussionCard = ({
   isPinned = false,
   userAvatar,
   onPinToggle,
+  comments = [], // Array of comment objects
+  onAddComment, // Function to add new comment
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
 
   const handlePinToggle = () => {
     setShowMenu(false);
@@ -36,10 +43,34 @@ const DiscussionCard = ({
     setIsExpanded(!isExpanded);
   };
 
-  const shortContent = "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range.";
-  
-  const fullContent = `Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. For example, my EV is supposed to do 450 km per charge, but I barely get 320 km, even with careful driving. I'm trying to understand what factors actually affect this - things like AC usage, passenger load, or terrain. Can other EV users share their experiences? How much range are you realistically getting, and what are your driving conditions like? Also, any tips to improve range would be great.`;
+  const toggleComments = () => {
+    setShowComments(!showComments);
+  };
 
+  const handleAddComment = () => {
+    if (newComment.trim()) {
+      if (onAddComment) {
+        onAddComment({
+          id: Math.random().toString(36).substring(7),
+          text: newComment,
+          userName: "Current User", // You would replace this with actual user
+          timeAgo: "Just now",
+          replies: [],
+          replyingTo: replyingTo,
+        });
+      }
+      setNewComment("");
+      setReplyingTo(null);
+    }
+  };
+
+  const handleReply = (commentId) => {
+    setReplyingTo(commentId);
+    setShowComments(true);
+  };
+
+  const shortContent = content.length > 150 ? content.substring(0, 150) + "..." : content;
+  
   return (
     <View style={styles.card}>
       {/* Three dots menu */}
@@ -69,7 +100,7 @@ const DiscussionCard = ({
           <View style={styles.menuDropdown}>
             <TouchableOpacity style={styles.menuItem} onPress={handlePinToggle}>
               <Image
-                source={require("../assets/pin.png")}
+                source={require("../../assets/pin.png")}
                 style={styles.menuIcon}
               />
               <Text style={styles.menuText}>
@@ -98,7 +129,7 @@ const DiscussionCard = ({
         {isPinned && (
           <View style={styles.pinnedBadge}>
             <Image
-              source={require("../assets/pin.png")}
+              source={require("../../assets/pin.png")}
               style={styles.pinnedIcon}
             />
             <Text style={styles.pinnedText}>Pinned</Text>
@@ -109,7 +140,7 @@ const DiscussionCard = ({
       {/* User Info */}
       <View style={styles.userInfo}>
         <Image
-          source={require("../assets/Jone-Doe.png")}
+          source={require("../../assets/Jone-Doe.png")}
           style={styles.avatar}
         />
         <View style={styles.userTextContainer}>
@@ -118,17 +149,17 @@ const DiscussionCard = ({
         </View>
       </View>
 
-      {/* Hi Everyone Box with Read More */}
+      {/* Content with Read More */}
       <View style={styles.hiEveryoneBox}>
         <Text style={styles.hiEveryoneText}>
-          {isExpanded ? fullContent : shortContent}
-          {!isExpanded && (
+          {isExpanded ? content : shortContent}
+          {content.length > 150 && !isExpanded && (
             <Text style={styles.readMore} onPress={toggleExpanded}>
               {" "}Read More
             </Text>
           )}
         </Text>
-        {isExpanded && (
+        {isExpanded && content.length > 150 && (
           <TouchableOpacity onPress={toggleExpanded} style={styles.readLessContainer}>
             <Text style={styles.readLess}>Read Less</Text>
           </TouchableOpacity>
@@ -136,25 +167,109 @@ const DiscussionCard = ({
       </View>
 
       {/* Separator Line */}
-      <View style={styles.separator} />
+      <View style={styles.separatorLine} />
 
       {/* Interaction Buttons */}
       <View style={styles.interactionRow}>
         <TouchableOpacity style={styles.interactionButton}>
           <Image
-            source={require("../assets/Massages.png")}
+            source={require("../../assets/Massages.png")}
             style={styles.likeIcon}
           />
           <Text style={styles.interactionText}>{likes}</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.interactionButton}>
+        
+        <TouchableOpacity 
+          style={styles.interactionButton} 
+          onPress={toggleComments}
+        >
           <Image
-            source={require("../assets/Replyarrow.png")}
+            source={require("../../assets/Replyarrow.png")}
             style={styles.replyIcon}
           />
-          <Text style={styles.interactionText}>Reply</Text>
+          <Text style={styles.interactionText}>
+            {replies} {replies === 1 ? "Reply" : "Replies"}
+          </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Comments Section */}
+      {showComments && (
+        <View style={styles.commentsSection}>
+          {/* Comments List */}
+          {comments.length > 0 ? (
+            <ScrollView style={styles.commentsList}>
+              {comments.map((comment) => (
+                <View key={comment.id} style={styles.commentContainer}>
+                  <View style={styles.commentHeader}>
+                    <Image
+                      source={require("../../assets/Jone-Doe.png")}
+                      style={styles.commentAvatar}
+                    />
+                    <View style={styles.commentUserInfo}>
+                      <Text style={styles.commentUserName}>{comment.userName}</Text>
+                      <Text style={styles.commentTime}>{comment.timeAgo}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.commentText}>{comment.text}</Text>
+                  <TouchableOpacity 
+                    style={styles.replyButton}
+                    onPress={() => handleReply(comment.id)}
+                  >
+                    <Text style={styles.replyButtonText}>Reply</Text>
+                  </TouchableOpacity>
+                  
+                  {/* Replies to this comment */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <View style={styles.repliesContainer}>
+                      {comment.replies.map((reply) => (
+                        <View key={reply.id} style={styles.replyContainer}>
+                          <View style={styles.commentHeader}>
+                            <Image
+                              source={require("../../assets/Jone-Doe.png")}
+                              style={styles.commentAvatar}
+                            />
+                            <View style={styles.commentUserInfo}>
+                              <Text style={styles.commentUserName}>{reply.userName}</Text>
+                              <Text style={styles.commentTime}>{reply.timeAgo}</Text>
+                            </View>
+                          </View>
+                          <Text style={styles.commentText}>{reply.text}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+          ) : (
+            <Text style={styles.noCommentsText}>No comments yet</Text>
+          )}
+
+          {/* Add Comment Input */}
+          <View style={styles.addCommentContainer}>
+            {replyingTo && (
+              <Text style={styles.replyingToText}>
+                Replying to {comments.find(c => c.id === replyingTo)?.userName}
+              </Text>
+            )}
+            <TextInput
+              style={styles.commentInput}
+              placeholder="Add a comment..."
+              placeholderTextColor={colors.secondaryText}
+              value={newComment}
+              onChangeText={setNewComment}
+              multiline
+            />
+            <TouchableOpacity 
+              style={styles.postCommentButton}
+              onPress={handleAddComment}
+            >
+              <Text style={styles.postCommentButtonText}>Post</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -372,6 +487,117 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
+  },
+
+  // Add these new styles:
+  commentsSection: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: colors.stroke,
+    paddingTop: 12,
+  },
+  commentsList: {
+    maxHeight: 200,
+    marginBottom: 12,
+  },
+  commentContainer: {
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.stroke,
+  },
+  commentHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  commentAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  commentUserInfo: {
+    flex: 1,
+  },
+  commentUserName: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+  },
+  commentTime: {
+    fontSize: 10,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+  },
+  commentText: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  replyButton: {
+    alignSelf: 'flex-end',
+  },
+  replyButtonText: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+  repliesContainer: {
+    marginLeft: 16,
+    marginTop: 8,
+    borderLeftWidth: 2,
+    borderLeftColor: colors.stroke,
+    paddingLeft: 8,
+  },
+  replyContainer: {
+    marginBottom: 8,
+  },
+  noCommentsText: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    textAlign: 'center',
+    marginVertical: 16,
+  },
+  addCommentContainer: {
+    marginTop: 8,
+  },
+  replyingToText: {
+    fontSize: 10,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 4,
+  },
+  commentInput: {
+    backgroundColor: colors.stroke,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    minHeight: 40,
+    marginBottom: 8,
+  },
+  postCommentButton: {
+    alignSelf: 'flex-end',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  postCommentButtonText: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.background,
+  },
+  separatorLine: {
+    height: 1,
+    backgroundColor: colors.stroke,
+    marginBottom: 16,
   },
 });
 
