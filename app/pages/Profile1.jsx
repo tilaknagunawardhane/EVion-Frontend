@@ -15,7 +15,8 @@ import fonts from '../../constants/fonts';
 import CustomButton from '../../components/CustomButton';
 import InputField from '../../components/InputField';
 import ProfileField from '../../components/ProfileField';
-import OTPInput from '../../components/OTPInput';
+import OTPInputOriginal from '../../components/OTPInput';
+const OTPInput = React.memo(OTPInputOriginal);
 import CustomModal from '../../components/CustomModal';
 
 // Move ProfileFieldComponent outside to prevent re-creation on every render
@@ -24,21 +25,20 @@ const ProfileFieldComponent = React.memo(({
   value, 
   field, 
   showEdit = true, 
-  isEditing, 
+  isEditingField, 
   editingValue, 
   onEdit, 
   onUpdate, 
   onCancel, 
   onValueChange, 
-  setShowAddressModal,
-  handleShowAddressModal
+  onSpecialEdit
 }) => (
   <ProfileField
     label={label}
     value={value}
     field={field}
     showEdit={showEdit}
-    isEditing={isEditing}
+    isEditingField={isEditingField}
     editingValue={editingValue}
     onEdit={onEdit}
     onUpdate={onUpdate}
@@ -47,7 +47,7 @@ const ProfileFieldComponent = React.memo(({
     placeholder={value}
     multiline={field === 'homeAddress' || field === 'workPlace'}
     keyboardType={field === 'contactNumber' ? 'phone-pad' : field === 'email' ? 'email-address' : 'default'}
-    onSpecialEdit={field === 'homeAddress' ? handleShowAddressModal : undefined}
+    onSpecialEdit={onSpecialEdit}
   />
 ));
 
@@ -565,10 +565,6 @@ const Profile1 = () => {
     setShowEmailModal(true);
   }, [userInfo.email]);
 
-  const handleSetShowAddressModal = useCallback((value) => {
-    setShowAddressModal(value);
-  }, []);
-
   const handleEmailUpdate = useCallback(() => {
     setShowEmailModal(false);
     setShowVerifyModal(true);
@@ -723,70 +719,61 @@ const Profile1 = () => {
                 label="Name"
                 value={userInfo.name}
                 field="name"
-                isEditing={isEditing}
+                isEditingField={isEditing === 'name'}
                 editingValue={editingValue}
                 onEdit={handleEdit}
                 onUpdate={handleUpdate}
                 onCancel={handleCancel}
                 onValueChange={handleEditingValueChange}
-                setShowAddressModal={handleSetShowAddressModal}
-                handleShowAddressModal={handleShowAddressModal}
               />
               
               <ProfileFieldComponent
                 label="Email Address"
                 value={userInfo.email}
                 field="email"
-                isEditing={isEditing}
+                isEditingField={isEditing === 'email'}
                 editingValue={editingValue}
                 onEdit={handleEdit}
                 onUpdate={handleUpdate}
                 onCancel={handleCancel}
                 onValueChange={handleEditingValueChange}
-                setShowAddressModal={handleSetShowAddressModal}
-                handleShowAddressModal={handleShowAddressModal}
               />
               
               <ProfileFieldComponent
                 label="Contact Number"
                 value={userInfo.contactNumber}
                 field="contactNumber"
-                isEditing={isEditing}
+                isEditingField={isEditing === 'contactNumber'}
                 editingValue={editingValue}
                 onEdit={handleEdit}
                 onUpdate={handleUpdate}
                 onCancel={handleCancel}
                 onValueChange={handleEditingValueChange}
-                setShowAddressModal={handleSetShowAddressModal}
-                handleShowAddressModal={handleShowAddressModal}
               />
               
               <ProfileFieldComponent
                 label="Home Address"
                 value={userInfo.homeAddress}
                 field="homeAddress"
-                isEditing={isEditing}
+                isEditingField={isEditing === 'homeAddress'}
                 editingValue={editingValue}
                 onEdit={handleEdit}
                 onUpdate={handleUpdate}
                 onCancel={handleCancel}
                 onValueChange={handleEditingValueChange}
-                setShowAddressModal={handleSetShowAddressModal}
-                handleShowAddressModal={handleShowAddressModal}
+                onSpecialEdit={handleShowAddressModal}
               />
               
               <ProfileFieldComponent
                 label="Work Place"
                 value={userInfo.workPlace}
                 field="workPlace"
-                isEditing={isEditing}
+                isEditingField={isEditing === 'workPlace'}
                 editingValue={editingValue}
                 onEdit={handleEdit}
                 onUpdate={handleUpdate}
                 onCancel={handleCancel}
                 onValueChange={handleEditingValueChange}
-                setShowAddressModal={handleSetShowAddressModal}
-                handleShowAddressModal={handleShowAddressModal}
               />
             </View>
           </>

@@ -9,21 +9,20 @@ import colors from '../constants/color';
 import fonts from '../constants/fonts';
 import InputField from './InputField';
 
-const ProfileField = React.memo(({ 
-  label, 
-  value, 
-  field, 
-  showEdit = true, 
-  isEditing, 
-  editingValue, 
-  onEdit, 
-  onUpdate, 
-  onCancel, 
+const ProfileField = React.memo(({
+  label,
+  value,
+  field,
+  isEditingField, // now only true/false per field
+  editingValue,
+  onEdit,
+  onUpdate,
+  onCancel,
   onValueChange,
   placeholder,
   multiline = false,
   keyboardType = 'default',
-  onSpecialEdit // for special fields like address
+  onSpecialEdit,
 }) => {
   const handleEditPress = useCallback(() => {
     if (onSpecialEdit) {
@@ -32,7 +31,8 @@ const ProfileField = React.memo(({
       onEdit(field, value);
     }
   }, [onSpecialEdit, onEdit, field, value]);
-  if (isEditing === field) {
+
+  if (isEditingField) {
     return (
       <View style={styles.container}>
         <InputField
@@ -61,19 +61,14 @@ const ProfileField = React.memo(({
       <Text style={styles.fieldLabel}>{label}</Text>
       <View style={styles.fieldValueContainer}>
         <Text style={[
-          styles.fieldValue, 
-          value === 'Your home address' || value === 'Your work place address' ? styles.placeholderText : null
+          styles.fieldValue,
+          (value === 'Your home address' || value === 'Your work place address') && styles.placeholderText
         ]}>
           {value}
         </Text>
-        {showEdit && (
-          <TouchableOpacity 
-            style={styles.editButton} 
-            onPress={handleEditPress}
-          >
-            <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.editButton} onPress={handleEditPress}>
+          <Text style={styles.editText}>Edit</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
