@@ -24,18 +24,23 @@ const CustomModal = ({
   const ModalContent = () => (
     <View style={styles.container}>
       {showHeader && (
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.backButton}>
-            <Text style={styles.backButtonText}>‹</Text>
-          </TouchableOpacity>
-          {title && <Text style={styles.title}>{title}</Text>}
-        </View>
+        <TouchableOpacity onPress={onClose}>
+          <View style={styles.header}>
+            <View style={styles.backButton}>
+              <Text style={styles.backButtonText}>‹</Text>
+            </View>
+            {title && <Text style={styles.title}>{title}</Text>}
+
+          </View>
+        </TouchableOpacity>
+
+
       )}
-      
+
       {subtitle && (
         <Text style={styles.subtitle}>{subtitle}</Text>
       )}
-      
+
       <View style={styles.content}>
         {scrollable ? (
           <ScrollView showsVerticalScrollIndicator={false}>
@@ -45,7 +50,7 @@ const CustomModal = ({
           children
         )}
       </View>
-      
+
       {footerContent && (
         <View style={styles.footer}>
           {footerContent}

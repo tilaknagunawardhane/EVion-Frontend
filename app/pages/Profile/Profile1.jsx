@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,32 +18,60 @@ import ProfileField from '../../../components/ProfileField';
 import OTPInput from '../../../components/OTPInput';
 import CustomModal from '../../../components/CustomModal';
 
+// Move ProfileFieldComponent outside Profile1 for memoization and to avoid remounts
+const ProfileFieldComponent = React.memo(({
+  label,
+  value,
+  field,
+  showEdit = true,
+  isEditingField,
+  editingValue,
+  onEdit,
+  onUpdate,
+  onCancel,
+  onValueChange,
+  placeholder,
+  multiline,
+  keyboardType,
+  onSpecialEdit,
+}) => (
+  <ProfileField
+    label={label}
+    value={value}
+    field={field}
+    showEdit={showEdit}
+    isEditingField={isEditingField}
+    editingValue={editingValue}
+    onEdit={onEdit}
+    onUpdate={onUpdate}
+    onCancel={onCancel}
+    onValueChange={onValueChange}
+    placeholder={placeholder}
+    multiline={multiline}
+    keyboardType={keyboardType}
+    onSpecialEdit={onSpecialEdit}
+  />
+));
+
 const Profile1 = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Basic Info');
   const [isEditing, setIsEditing] = useState(null);
+  const [editingValues, setEditingValues] = useState({});
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  
+
   // Signin Info states
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [emailValue, setEmailValue] = useState('');
-  const [otpValue, setOtpValue] = useState(['', '', '', '', '', '']);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [focusedOtpIndex, setFocusedOtpIndex] = useState(null);
-  
+
   // Security states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRecoveryPhoneModal, setShowRecoveryPhoneModal] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [recoveryPhone, setRecoveryPhone] = useState('+94 71 653 5');
   const [focusedPasswordField, setFocusedPasswordField] = useState(null);
-  
+
   const [userInfo, setUserInfo] = useState({
     name: 'Vishwani Vilochana',
     email: 'vishwani2002@gmail.com',
@@ -52,7 +80,6 @@ const Profile1 = () => {
     workPlace: 'Your work place address',
   });
 
-  const [editingValue, setEditingValue] = useState('');
   const [addressForm, setAddressForm] = useState({
     suite: '25',
     street: 'Neelamahara Road',
@@ -60,28 +87,29 @@ const Profile1 = () => {
     district: 'Colombo',
   });
 
+  const [emailValue, setEmailValue] = useState('');
+
   const tabs = ['Basic Info', 'Signin Info', 'Security'];
 
-  const handleEdit = (field, value) => {
+  const handleEdit = useCallback((field, value) => {
     setIsEditing(field);
-    setEditingValue(value);
-  };
+    setEditingValues(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handleUpdate = () => {
+  const handleUpdate = useCallback(() => {
     if (isEditing) {
       setUserInfo(prev => ({
         ...prev,
-        [isEditing]: editingValue
+        [isEditing]: editingValues[isEditing]
       }));
       setIsEditing(null);
-      setEditingValue('');
+      setEditingValues(prev => ({ ...prev, [isEditing]: '' }));
     }
-  };
+  }, [isEditing, editingValues]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setIsEditing(null);
-    setEditingValue('');
-  };
+  }, []);
 
   const handleAddressUpdate = () => {
     const fullAddress = `${addressForm.suite}, ${addressForm.street}, ${addressForm.city}, ${addressForm.district}`;
@@ -108,21 +136,11 @@ const Profile1 = () => {
   };
 
   const handleOtpChange = (newOtpValue) => {
-    setOtpValue(newOtpValue);
+    // This handler is no longer needed as OTPInput manages its own state
   };
 
   const handleVerifyOtp = () => {
-    const otp = otpValue.join('');
-    if (otp === '352935') { // Mock verification
-      setShowVerifyModal(false);
-      setShowSuccessModal(true);
-      // Update email after success
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        setUserInfo(prev => ({ ...prev, email: emailValue }));
-        setOtpValue(['', '', '', '', '', '']);
-      }, 3000);
-    }
+    // This handler is no longer needed as OTPInput manages its own state
   };
 
   const handleResendCode = () => {
@@ -132,40 +150,21 @@ const Profile1 = () => {
 
   // Security handlers
   const handlePasswordUpdate = () => {
-    if (newPassword.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters long');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return;
-    }
-    // Mock password update
-    setShowPasswordModal(false);
-    setNewPassword('');
-    setConfirmPassword('');
-    Alert.alert('Success', 'Password updated successfully');
+    // This handler is no longer needed as PasswordModal manages its own state
   };
 
   const isPasswordValid = () => {
-    return newPassword.length >= 8 && newPassword === confirmPassword && newPassword !== '' && confirmPassword !== '';
+    // This function is no longer needed as PasswordModal manages its own state
+    return true; // Placeholder, as PasswordModal handles its own validation
   };
 
   const handleRecoveryPhoneUpdate = () => {
-    if (recoveryPhone.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
-      return;
-    }
-    // Mock phone update
-    setShowRecoveryPhoneModal(false);
-    Alert.alert('Success', 'Recovery phone number updated successfully');
+    // This handler is no longer needed as RecoveryPhoneModal manages its own state
   };
 
   const isRecoveryPhoneValid = () => {
-    // Check if phone number is fully typed (should be at least 12 characters including country code and spaces)
-    // For Sri Lankan numbers: +94 71 123 4567 (minimum 12-13 characters)
-    const cleanPhone = recoveryPhone.replace(/\s/g, '');
-    return cleanPhone.length >= 12 && cleanPhone.startsWith('+94');
+    // This function is no longer needed as RecoveryPhoneModal manages its own state
+    return true; // Placeholder, as RecoveryPhoneModal handles its own validation
   };
 
   const ProfilePictureModal = () => (
@@ -191,67 +190,90 @@ const Profile1 = () => {
     </Modal>
   );
 
-const EmailModal = () => (
-    <CustomModal
-      visible={showEmailModal}
-      onClose={() => setShowEmailModal(false)}
-      title="Email"
-      subtitle="You'll use this email to get sign in and get notifications"
-      footerContent={
-        <CustomButton
-          title="Update"
-          onPress={handleEmailUpdate}
-        />
-      }
-    >
-      <InputField
-        label="Email Address"
-        value={emailValue}
-        onChangeText={setEmailValue}
-        keyboardType="email-address"
-        required
-      />
-      
-      <Text style={styles.emailNote}>
-        A verification code will be sent to this email
-      </Text>
-    </CustomModal>
-);
-
-  const VerifyEmailModal = () => (
-    <CustomModal
-      visible={showVerifyModal}
-      onClose={() => setShowVerifyModal(false)}
-      title="Verify Email"
-      subtitle="We've sent a 6-digit OTP to vishwani2002@gmail.com"
-      footerContent={
-        <View>
+  // Refactor EmailModal to receive value and setter as props
+  const EmailModal = ({ value, onChange }) => {
+    return (
+      <CustomModal
+        visible={showEmailModal}
+        onClose={() => setShowEmailModal(false)}
+        title="Email"
+        subtitle="You'll use this email to get sign in and get notifications"
+        footerContent={
           <CustomButton
-            title="Continue"
-            onPress={handleVerifyOtp}
+            title="Update"
+            onPress={() => {
+              setShowEmailModal(false);
+              setShowVerifyModal(true);
+            }}
           />
-          <View style={styles.resendContainer}>
-            <Text style={styles.resendText}>Don't you receive any code? </Text>
-            <TouchableOpacity onPress={handleResendCode}>
-              <Text style={styles.resendLink}>Resend Code</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      }
-    >
-      <View style={styles.otpContainer}>
-        <Text style={styles.otpLabel}>OTP</Text>
-        <OTPInput
-          length={6}
-          value={otpValue}
-          onChange={handleOtpChange}
-          focusedIndex={focusedOtpIndex}
-          onFocus={setFocusedOtpIndex}
-          onBlur={() => setFocusedOtpIndex(null)}
+        }
+      >
+      
+        <InputField
+          label="Email Address"
+          value={value}
+          onChangeText={onChange}
+          keyboardType="email-address"
+          required
         />
-      </View>
-    </CustomModal>
-  );
+        <Text style={styles.emailNote}>
+          A verification code will be sent to this email
+        </Text>
+      </CustomModal>
+    );
+  };
+
+  // Refactor VerifyEmailModal to use local state
+  const VerifyEmailModal = () => {
+    const [otpValue, setOtpValue] = useState(['', '', '', '', '', '']);
+    const [focusedOtpIndex, setFocusedOtpIndex] = useState(null);
+    return (
+      
+      <CustomModal
+        visible={showVerifyModal}
+        onClose={() => setShowVerifyModal(false)}
+        title="Verify Email"
+        subtitle={`We've sent a 6-digit OTP to ${userInfo.email}`}
+        footerContent={
+          <View>
+          
+            <CustomButton
+              title="Continue"
+              onPress={() => {
+                const otp = otpValue.join('');
+                if (otp === '352935') { // Mock verification
+                  setShowVerifyModal(false);
+                  setShowSuccessModal(true);
+                  setTimeout(() => {
+                    setShowSuccessModal(false);
+                    setUserInfo(prev => ({ ...prev, email: userInfo.email }));
+                  }, 3000);
+                }
+              }}
+            />
+            <View style={styles.resendContainer}>
+              <Text style={styles.resendText}>Don't you receive any code? </Text>
+              <TouchableOpacity onPress={() => Alert.alert('Code Resent', 'A new verification code has been sent to your email.') }>
+                <Text style={styles.resendLink}>Resend Code</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        }
+      >
+        <View style={styles.otpContainer}>
+          <Text style={styles.otpLabel}>OTP</Text>
+          <OTPInput
+            length={6}
+            value={otpValue}
+            onChange={setOtpValue}
+            focusedIndex={focusedOtpIndex}
+            onFocus={setFocusedOtpIndex}
+            onBlur={() => setFocusedOtpIndex(null)}
+          />
+        </View>
+      </CustomModal>
+    );
+  };
 
   const SuccessModal = () => (
     <CustomModal
@@ -276,122 +298,134 @@ const EmailModal = () => (
         <OTPInput
           length={6}
           value={['3', '5', '2', '9', '3', '5']}
-          onChange={() => {}}
+          onChange={() => { }}
           editable={false}
         />
       </View>
     </CustomModal>
   );
 
-  const PasswordModal = () => (
-    <CustomModal
-      visible={showPasswordModal}
-      onClose={() => setShowPasswordModal(false)}
-      title="Password"
-      subtitle="Your password must be at least 8 characters long"
-      footerContent={
-        <CustomButton
-          title="Update"
-          onPress={handlePasswordUpdate}
-          backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
-          disabled={!isPasswordValid()}
-          textStyle={{
-            color: isPasswordValid() ? colors.white : colors.darkGray,
-            fontSize: 16,
-            fontWeight: 'bold',
-          }}
+  // Refactor PasswordModal to use local state
+  const PasswordModal = () => {
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [focusedPasswordField, setFocusedPasswordField] = useState(null);
+    const isPasswordValid = () => {
+      return newPassword.length >= 8 && newPassword === confirmPassword && newPassword !== '' && confirmPassword !== '';
+    };
+    return (
+      <CustomModal
+        visible={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        title="Password"
+        subtitle="Your password must be at least 8 characters long"
+        footerContent={
+          <CustomButton
+            title="Update"
+            onPress={() => {
+              if (newPassword.length < 8) {
+                Alert.alert('Error', 'Password must be at least 8 characters long');
+                return;
+              }
+              if (newPassword !== confirmPassword) {
+                Alert.alert('Error', 'Passwords do not match');
+                return;
+              }
+              setShowPasswordModal(false);
+              Alert.alert('Success', 'Password updated successfully');
+            }}
+            backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
+            disabled={!isPasswordValid()}
+            textStyle={{
+              color: isPasswordValid() ? colors.white : colors.darkGray,
+              fontSize: 16,
+              fontWeight: 'bold',
+            }}
+          />
+        }
+      >
+        <InputField
+          label="New Password"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          secureTextEntry={true}
+          showPasswordToggle={true}
+          showPassword={showNewPassword}
+          setShowPassword={setShowNewPassword}
+          onFocus={() => setFocusedPasswordField('newPassword')}
+          onBlur={() => setFocusedPasswordField(null)}
+          required
         />
-      }
-    >
-      <InputField
-        label="New Password"
-        value={newPassword}
-        onChangeText={setNewPassword}
-        secureTextEntry={true}
-        showPasswordToggle={true}
-        showPassword={showNewPassword}
-        setShowPassword={setShowNewPassword}
-        onFocus={() => setFocusedPasswordField('newPassword')}
-        onBlur={() => setFocusedPasswordField(null)}
-        required
-      />
-      
-      <InputField
-        label="Confirm New Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry={true}
-        showPasswordToggle={true}
-        showPassword={showConfirmPassword}
-        setShowPassword={setShowConfirmPassword}
-        onFocus={() => setFocusedPasswordField('confirmPassword')}
-        onBlur={() => setFocusedPasswordField(null)}
-        required
-      />
-    </CustomModal>
-  );
+        <InputField
+          label="Confirm New Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry={true}
+          showPasswordToggle={true}
+          showPassword={showConfirmPassword}
+          setShowPassword={setShowConfirmPassword}
+          onFocus={() => setFocusedPasswordField('confirmPassword')}
+          onBlur={() => setFocusedPasswordField(null)}
+          required
+        />
+      </CustomModal>
+    );
+  };
 
-  const RecoveryPhoneModal = () => (
-    <CustomModal
-      visible={showRecoveryPhoneModal}
-      onClose={() => setShowRecoveryPhoneModal(false)}
-      title="Recovery Phone"
-      subtitle="You'll use this number to recover your account"
-      footerContent={
-        <TouchableOpacity
-          style={[
-            styles.updatePhoneButton,
-            {
-              backgroundColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText,
-              opacity: isRecoveryPhoneValid() ? 1 : 0.8,
-            }
-          ]}
-          onPress={isRecoveryPhoneValid() ? handleRecoveryPhoneUpdate : null}
-          disabled={!isRecoveryPhoneValid()}
-          activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
-        >
-          <Text style={[
-            styles.updatePhoneButtonText,
-            { color: colors.background }
-          ]}>
-            Update
-          </Text>
-        </TouchableOpacity>
-      }
-    >
-      <InputField
-        label="Phone Number"
-        value={recoveryPhone}
-        onChangeText={setRecoveryPhone}
-        placeholder="+94"
-        keyboardType="phone-pad"
-        required
-      />
-      
-      <Text style={styles.phoneNote}>
-        A verification code will be sent to this email
-      </Text>
-    </CustomModal>
-  );
-
-  const ProfileFieldComponent = ({ label, value, field, showEdit = true }) => (
-    <ProfileField
-      label={label}
-      value={value}
-      field={field}
-      showEdit={showEdit}
-      isEditing={isEditing}
-      editingValue={editingValue}
-      onEdit={handleEdit}
-      onUpdate={handleUpdate}
-      onCancel={handleCancel}
-      onValueChange={setEditingValue}
-      placeholder={value}
-      multiline={field === 'homeAddress' || field === 'workPlace'}
-      keyboardType={field === 'contactNumber' ? 'phone-pad' : field === 'email' ? 'email-address' : 'default'}
-      onSpecialEdit={field === 'homeAddress' ? () => setShowAddressModal(true) : undefined}
-    />
-  );
+  // Refactor RecoveryPhoneModal to use local state
+  const RecoveryPhoneModal = () => {
+    const [recoveryPhone, setRecoveryPhone] = useState('+94 71 653 5');
+    const isRecoveryPhoneValid = () => {
+      const cleanPhone = recoveryPhone.replace(/\s/g, '');
+      return cleanPhone.length >= 12 && cleanPhone.startsWith('+94');
+    };
+    return (
+      <CustomModal
+        visible={showRecoveryPhoneModal}
+        onClose={() => setShowRecoveryPhoneModal(false)}
+        title="Recovery Phone"
+        subtitle="You'll use this number to recover your account"
+        footerContent={
+          <TouchableOpacity
+            style={[
+              styles.updatePhoneButton,
+              {
+                backgroundColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText,
+                opacity: isRecoveryPhoneValid() ? 1 : 0.8,
+              }
+            ]}
+            onPress={isRecoveryPhoneValid() ? () => {
+              setShowRecoveryPhoneModal(false);
+              Alert.alert('Success', 'Recovery phone number updated successfully');
+            } : null}
+            disabled={!isRecoveryPhoneValid()}
+            activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
+          >
+            <Text style={[
+              styles.updatePhoneButtonText,
+              { color: colors.background }
+            ]}>
+              Update
+            </Text>
+          </TouchableOpacity>
+        }
+      >
+        <InputField
+          label="Phone Number"
+          value={recoveryPhone}
+          onChangeText={setRecoveryPhone}
+          placeholder="+94"
+          keyboardType="phone-pad"
+          required
+        />
+        <Text style={styles.phoneNote}>
+          A verification code will be sent to this email
+        </Text>
+      </CustomModal>
+    );
+  };
 
   const AddressModal = () => (
     <CustomModal
@@ -412,16 +446,18 @@ const EmailModal = () => (
         value={addressForm.suite}
         onChangeText={(text) => setAddressForm(prev => ({ ...prev, suite: text }))}
         placeholder="25"
+        
       />
-      
+
       <InputField
         label="Street Name"
         value={addressForm.street}
         onChangeText={(text) => setAddressForm(prev => ({ ...prev, street: text }))}
         placeholder="Neelamahara Road"
         required
+        
       />
-      
+
       <InputField
         label="City"
         value={addressForm.city}
@@ -429,7 +465,7 @@ const EmailModal = () => (
         placeholder="Maharagama"
         required
       />
-      
+
       <InputField
         label="District"
         value={addressForm.district}
@@ -437,7 +473,7 @@ const EmailModal = () => (
         placeholder="Colombo"
         required
       />
-      
+
       <View style={styles.mapContainer}>
         <View style={styles.mapPlaceholder}>
           <View style={styles.mapBackground}>
@@ -464,11 +500,13 @@ const EmailModal = () => (
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.push('/')}>
-          <Text style={styles.backButtonText}>‹</Text>
+      <View >
+        <TouchableOpacity onPress={() => router.push('/')} style={styles.header}>
+          <View style={styles.backButton} onPress={() => router.push('/')}>
+            <Text style={styles.backButtonText}>‹</Text>
+          </View>
+          <Text style={styles.headerTitle}>Manage Account</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Manage Account</Text>
       </View>
 
       {/* Tabs */}
@@ -515,30 +553,77 @@ const EmailModal = () => (
                 label="Name"
                 value={userInfo.name}
                 field="name"
+                isEditingField={isEditing === 'name'}
+                editingValue={editingValues['name'] || ''}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={val => setEditingValues(prev => ({ ...prev, ['name']: val }))}
+                placeholder={userInfo.name}
+                multiline={false}
+                keyboardType="default"
+          
               />
-              
+
               <ProfileFieldComponent
                 label="Email Address"
                 value={userInfo.email}
                 field="email"
+                isEditingField={isEditing === 'email'}
+                editingValue={editingValues['email'] || ''}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={val => setEditingValues(prev => ({ ...prev, ['email']: val }))}
+                placeholder={userInfo.email}
+                multiline={false}
+                keyboardType="email-address"
               />
-              
+
               <ProfileFieldComponent
                 label="Contact Number"
                 value={userInfo.contactNumber}
                 field="contactNumber"
+                isEditingField={isEditing === 'contactNumber'}
+                editingValue={editingValues['contactNumber'] || ''}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={val => setEditingValues(prev => ({ ...prev, ['contactNumber']: val }))}
+                placeholder={userInfo.contactNumber}
+                multiline={false}
+                keyboardType="phone-pad"
               />
-              
+
               <ProfileFieldComponent
                 label="Home Address"
                 value={userInfo.homeAddress}
                 field="homeAddress"
+                isEditingField={isEditing === 'homeAddress'}
+                editingValue={editingValues['homeAddress'] || ''}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={val => setEditingValues(prev => ({ ...prev, ['homeAddress']: val }))}
+                placeholder={userInfo.homeAddress}
+                multiline={true}
+                keyboardType="default"
+                onSpecialEdit={() => setShowAddressModal(true)}
               />
-              
+
               <ProfileFieldComponent
                 label="Work Place"
                 value={userInfo.workPlace}
                 field="workPlace"
+                isEditingField={isEditing === 'workPlace'}
+                editingValue={editingValues['workPlace'] || ''}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={val => setEditingValues(prev => ({ ...prev, ['workPlace']: val }))}
+                placeholder={userInfo.workPlace}
+                multiline={true}
+                keyboardType="default"
               />
             </View>
           </>
@@ -546,42 +631,45 @@ const EmailModal = () => (
 
         {activeTab === 'Signin Info' && (
           <View style={styles.signinInfoContainer}>
-            <View style={styles.signinInfoItem}>
-              <Text style={styles.signinInfoLabel}>Email Address</Text>
-              <View style={styles.signinInfoRow}>
-                <Text style={styles.signinInfoValue}>{userInfo.email}</Text>
-                <TouchableOpacity onPress={handleEmailEdit}>
-                  <Text style={styles.signinInfoArrow}>›</Text>
-                </TouchableOpacity>
+            <TouchableOpacity onPress={handleEmailEdit}>
+              <View style={styles.signinInfoItem}>
+                <Text style={styles.signinInfoLabel}>Email Address</Text>
+                <View style={styles.signinInfoRow}>
+                  <Text style={styles.signinInfoValue}>{userInfo.email}</Text>
+                  <TouchableOpacity onPress={handleEmailEdit}>
+                    <Text style={styles.signinInfoArrow}>›</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
         )}
 
         {activeTab === 'Security' && (
           <View style={styles.securityContainer}>
-            <View style={styles.securityItem}>
-              <Text style={styles.securityLabel}>Password</Text>
-              <TouchableOpacity onPress={() => setShowPasswordModal(true)}>
+            <TouchableOpacity onPress={() => setShowPasswordModal(true)}>
+              <View style={styles.securityItem}>
+                <Text style={styles.securityLabel}>Password</Text>
                 <Text style={styles.securityArrow}>›</Text>
-              </TouchableOpacity>
-            </View>
-            
+              </View>
+            </TouchableOpacity>
+
             <View style={styles.securityDivider} />
-            
-            <View style={styles.securityItem}>
-              <Text style={styles.securityLabel}>Recovery Phone Number</Text>
-              <TouchableOpacity onPress={() => setShowRecoveryPhoneModal(true)}>
+
+            <TouchableOpacity onPress={() => setShowRecoveryPhoneModal(true)}>
+              <View style={styles.securityItem}>
+                <Text style={styles.securityLabel}>Recovery Phone Number</Text>
                 <Text style={styles.securityArrow}>›</Text>
-              </TouchableOpacity>
-            </View>
+              </View>
+            </TouchableOpacity>
+
           </View>
         )}
       </ScrollView>
 
       <AddressModal />
       <ProfilePictureModal />
-      <EmailModal />
+      <EmailModal value={emailValue} onChange={setEmailValue} />
       <VerifyEmailModal />
       <SuccessModal />
       <PasswordModal />
@@ -598,6 +686,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    textAlign: 'center',
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 20,
@@ -674,7 +763,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   editProfileButtonText: {
-    color:colors.background,
+    color: colors.background,
     fontSize: 14,
   },
   fieldsContainer: {
