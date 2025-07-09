@@ -10,6 +10,7 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+<<<<<<< HEAD:app/pages/Profile1.jsx
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CustomButton from '../../components/CustomButton';
@@ -17,6 +18,11 @@ import InputField from '../../components/InputField';
 import ProfileField from '../../components/ProfileField';
 import OTPInput from '../../components/OTPInput';
 import CustomModal from '../../components/CustomModal';
+=======
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
+import CustomButton from '../../../components/CustomButton';
+>>>>>>> 5ff19930d7311ebc0cda0f5ace73ccddbab58777:app/pages/Profile/Profile1.jsx
 
 const Profile1 = () => {
   const router = useRouter();
@@ -303,6 +309,7 @@ const EmailModal = () => (
         />
       }
     >
+<<<<<<< HEAD:app/pages/Profile1.jsx
       <InputField
         label="New Password"
         value={newPassword}
@@ -329,6 +336,92 @@ const EmailModal = () => (
         required
       />
     </CustomModal>
+=======
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
+            <Text style={styles.backButton}>‹</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.passwordModalContent}>
+          <Text style={styles.modalTitle}>Password</Text>
+          <Text style={styles.passwordSubtitle}>
+            Your password must be at least 8 characters long
+          </Text>
+          
+          <View style={styles.passwordInputContainer}>
+            <Text style={styles.passwordLabel}>New Password*</Text>
+            <View style={styles.passwordInputWrapper}>
+              <TextInput
+                style={[
+                  styles.passwordInput,
+                  (focusedPasswordField === 'newPassword' || newPassword !== '') && styles.passwordInputFocused
+                ]}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                onFocus={() => setFocusedPasswordField('newPassword')}
+                onBlur={() => setFocusedPasswordField(null)}
+                secureTextEntry={!showNewPassword}
+                placeholder=""
+                placeholderTextColor={colors.secondaryText}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowNewPassword(!showNewPassword)}
+              >
+                <Image 
+                  source={showNewPassword ? require('../../../assets/eye-open.png') : require('../../../assets/eye-closed.png')}
+                  style={styles.eyeIconImage}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <View style={styles.passwordInputContainer}>
+            <Text style={styles.passwordLabel}>Confirm New Password*</Text>
+            <View style={styles.passwordInputWrapper}>
+              <TextInput
+                style={[
+                  styles.passwordInput,
+                  (focusedPasswordField === 'confirmPassword' || confirmPassword !== '') && styles.passwordInputFocused
+                ]}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                onFocus={() => setFocusedPasswordField('confirmPassword')}
+                onBlur={() => setFocusedPasswordField(null)}
+                secureTextEntry={!showConfirmPassword}
+                placeholder=""
+                placeholderTextColor={colors.secondaryText}
+              />
+              <TouchableOpacity 
+                style={styles.eyeIcon}
+                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                <Image 
+                  source={showConfirmPassword ? require('../../../assets/eye-open.png') : require('../../../assets/eye-closed.png')}
+                  style={styles.eyeIconImage}
+                />
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <CustomButton
+            title="Update"
+            onPress={handlePasswordUpdate}
+            backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
+            disabled={!isPasswordValid()}
+            textStyle={{
+              color: isPasswordValid() ? colors.white : colors.darkGray,
+              fontSize: 16,
+              fontWeight: 'bold',
+            }}
+            style={styles.updatePasswordButton}
+          />
+        </View>
+      </View>
+    </Modal>
+>>>>>>> 5ff19930d7311ebc0cda0f5ace73ccddbab58777:app/pages/Profile/Profile1.jsx
   );
 
   const RecoveryPhoneModal = () => (
