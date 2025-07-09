@@ -793,21 +793,17 @@ const Profile1 = () => {
 
         {activeTab === 'Security' && (
           <View style={styles.securityContainer}>
-            <View style={styles.securityItem}>
+            <TouchableOpacity style={styles.securityItem} onPress={handleShowPasswordModal} activeOpacity={0.7}>
               <Text style={styles.securityLabel}>Password</Text>
-              <TouchableOpacity onPress={handleShowPasswordModal}>
-                <Text style={styles.securityArrow}>›</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={styles.securityArrow}>›</Text>
+            </TouchableOpacity>
             
             <View style={styles.securityDivider} />
             
-            <View style={styles.securityItem}>
+            <TouchableOpacity style={styles.securityItem} onPress={handleShowRecoveryPhoneModal} activeOpacity={0.7}>
               <Text style={styles.securityLabel}>Recovery Phone Number</Text>
-              <TouchableOpacity onPress={handleShowRecoveryPhoneModal}>
-                <Text style={styles.securityArrow}>›</Text>
-              </TouchableOpacity>
-            </View>
+              <Text style={styles.securityArrow}>›</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
