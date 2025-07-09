@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   Image,
-  TextInput,
   Alert,
   Modal,
 } from 'react-native';
@@ -14,6 +13,10 @@ import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CustomButton from '../../components/CustomButton';
+import InputField from '../../components/InputField';
+import ProfileField from '../../components/ProfileField';
+import OTPInput from '../../components/OTPInput';
+import CustomModal from '../../components/CustomModal';
 
 const Profile1 = () => {
   const router = useRouter();
@@ -26,8 +29,7 @@ const Profile1 = () => {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [emailValue, setEmailValue] = useState('');
-  const [otpValue, setOtpValue] = useState('');
-  const [otpDigits, setOtpDigits] = useState(['3', '5', '2', '9', '3', '5']);
+  const [otpValue, setOtpValue] = useState(['', '', '', '', '', '']);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [focusedOtpIndex, setFocusedOtpIndex] = useState(null);
@@ -105,19 +107,12 @@ const Profile1 = () => {
     setShowVerifyModal(true);
   };
 
-  const handleOtpDigitChange = (value, index) => {
-    const newOtpDigits = [...otpDigits];
-    newOtpDigits[index] = value;
-    setOtpDigits(newOtpDigits);
-    
-    // Auto focus next input
-    if (value && index < 5) {
-      // Focus next input (you'd need refs in a real implementation)
-    }
+  const handleOtpChange = (newOtpValue) => {
+    setOtpValue(newOtpValue);
   };
 
   const handleVerifyOtp = () => {
-    const otp = otpDigits.join('');
+    const otp = otpValue.join('');
     if (otp === '352935') { // Mock verification
       setShowVerifyModal(false);
       setShowSuccessModal(true);
@@ -125,7 +120,7 @@ const Profile1 = () => {
       setTimeout(() => {
         setShowSuccessModal(false);
         setUserInfo(prev => ({ ...prev, email: emailValue }));
-        setOtpDigits(['', '', '', '', '', '']);
+        setOtpValue(['', '', '', '', '', '']);
       }, 3000);
     }
   };
@@ -197,452 +192,273 @@ const Profile1 = () => {
   );
 
 const EmailModal = () => (
-    <Modal
-        visible={showEmailModal}
-        animationType="slide"
-        presentationStyle="fullScreen"
+    <CustomModal
+      visible={showEmailModal}
+      onClose={() => setShowEmailModal(false)}
+      title="Email"
+      subtitle="You'll use this email to get sign in and get notifications"
+      footerContent={
+        <CustomButton
+          title="Update"
+          onPress={handleEmailUpdate}
+        />
+      }
     >
-        <View style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-                <TouchableOpacity onPress={() => setShowEmailModal(false)}>
-                    <Text style={styles.backButton}>‹</Text>
-                </TouchableOpacity>
-            </View>
-            
-            <View style={styles.emailModalContent}>
-                <Text style={styles.modalTitle}>Email</Text>
-                <Text style={styles.emailSubtitle}>
-                    You'll use this email to get sign in and get notifications
-                </Text>
-                
-                <View style={styles.emailInputContainer}>
-                    <Text style={styles.emailLabel}>Email Address*</Text>
-                    <TextInput
-                        style={styles.emailInput}
-                        value={emailValue}
-                        onChangeText={setEmailValue}
-                        placeholder="vishwani2002@gmail.com"
-                        placeholderTextColor={colors.secondaryText}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                    />
-                </View>
-                
-                <Text style={styles.emailNote}>
-                    A verification code will be sent to this email
-                </Text>
-                
-                <View style={styles.emailModalFooter}>
-                    <CustomButton
-                        title="Update"
-                        onPress={handleEmailUpdate}
-                        style={styles.updateEmailButton}
-                    />
-                </View>
-            </View>
-        </View>
-    </Modal>
+      <InputField
+        label="Email Address"
+        value={emailValue}
+        onChangeText={setEmailValue}
+        keyboardType="email-address"
+        required
+      />
+      
+      <Text style={styles.emailNote}>
+        A verification code will be sent to this email
+      </Text>
+    </CustomModal>
 );
 
   const VerifyEmailModal = () => (
-    <Modal
+    <CustomModal
       visible={showVerifyModal}
-      animationType="slide"
-      presentationStyle="fullScreen"
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowVerifyModal(false)}>
-            <Text style={styles.backButton}>‹</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.verifyModalContent}>
-          <Text style={styles.modalTitle}>Verify Email</Text>
-          <Text style={styles.verifySubtitle}>
-            We've sent a 6-digit OTP to{'\n'}vishwani2002@gmail.com
-          </Text>
-          
-          <View style={styles.otpContainer}>
-            <Text style={styles.otpLabel}>OTP</Text>
-            <View style={styles.otpInputsContainer}>
-              {otpDigits.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  style={[
-                    styles.otpInput,
-                    digit && styles.otpInputFilled,
-                    focusedOtpIndex === index && styles.otpInputFocused
-                  ]}
-                  value={digit}
-                  onChangeText={(value) => handleOtpDigitChange(value, index)}
-                  onFocus={() => setFocusedOtpIndex(index)}
-                  onBlur={() => setFocusedOtpIndex(null)}
-                  maxLength={1}
-                  keyboardType="numeric"
-                />
-              ))}
-            </View>
-          </View>
-          
+      onClose={() => setShowVerifyModal(false)}
+      title="Verify Email"
+      subtitle="We've sent a 6-digit OTP to vishwani2002@gmail.com"
+      footerContent={
+        <View>
           <CustomButton
             title="Continue"
             onPress={handleVerifyOtp}
-            style={styles.continueButton}
           />
+          <View style={styles.resendContainer}>
+            <Text style={styles.resendText}>Don't you receive any code? </Text>
+            <TouchableOpacity onPress={handleResendCode}>
+              <Text style={styles.resendLink}>Resend Code</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        
-        <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Don't you receive any code? </Text>
-          <TouchableOpacity onPress={handleResendCode}>
-            <Text style={styles.resendLink}>Resend Code</Text>
-          </TouchableOpacity>
-        </View>
+      }
+    >
+      <View style={styles.otpContainer}>
+        <Text style={styles.otpLabel}>OTP</Text>
+        <OTPInput
+          length={6}
+          value={otpValue}
+          onChange={handleOtpChange}
+          focusedIndex={focusedOtpIndex}
+          onFocus={setFocusedOtpIndex}
+          onBlur={() => setFocusedOtpIndex(null)}
+        />
       </View>
-    </Modal>
+    </CustomModal>
   );
 
   const SuccessModal = () => (
-    <Modal
+    <CustomModal
       visible={showSuccessModal}
-      animationType="slide"
-      presentationStyle="fullScreen"
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowSuccessModal(false)}>
-            <Text style={styles.backButton}>‹</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.verifyModalContent}>
-          <Text style={styles.modalTitle}>Verify Email</Text>
-          <Text style={styles.verifySubtitle}>
-            We've sent a 6-digit OTP to{'\n'}vishwani2002@gmail.com
-          </Text>
-          
-          <View style={styles.otpContainer}>
-            <Text style={styles.otpLabel}>OTP</Text>
-            <View style={styles.otpInputsContainer}>
-              {otpDigits.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  style={[
-                    styles.otpInput,
-                    styles.otpInputFilled
-                  ]}
-                  value={digit}
-                  editable={false}
-                  maxLength={1}
-                />
-              ))}
-            </View>
-          </View>
-          
+      onClose={() => setShowSuccessModal(false)}
+      title="Verify Email"
+      subtitle="We've sent a 6-digit OTP to vishwani2002@gmail.com"
+      footerContent={
+        <View>
           <CustomButton
             title="Continue"
             onPress={() => setShowSuccessModal(false)}
-            style={styles.continueButton}
           />
+          <View style={styles.successContainer}>
+            <Text style={styles.successText}>✓ Verification successful!</Text>
+          </View>
         </View>
-        
-        <View style={styles.successContainer}>
-          <Text style={styles.successText}>✓ Verification successful!</Text>
-        </View>
+      }
+    >
+      <View style={styles.otpContainer}>
+        <Text style={styles.otpLabel}>OTP</Text>
+        <OTPInput
+          length={6}
+          value={['3', '5', '2', '9', '3', '5']}
+          onChange={() => {}}
+          editable={false}
+        />
       </View>
-    </Modal>
+    </CustomModal>
   );
 
   const PasswordModal = () => (
-    <Modal
+    <CustomModal
       visible={showPasswordModal}
-      animationType="slide"
-      presentationStyle="fullScreen"
+      onClose={() => setShowPasswordModal(false)}
+      title="Password"
+      subtitle="Your password must be at least 8 characters long"
+      footerContent={
+        <CustomButton
+          title="Update"
+          onPress={handlePasswordUpdate}
+          backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
+          disabled={!isPasswordValid()}
+          textStyle={{
+            color: isPasswordValid() ? colors.white : colors.darkGray,
+            fontSize: 16,
+            fontWeight: 'bold',
+          }}
+        />
+      }
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowPasswordModal(false)}>
-            <Text style={styles.backButton}>‹</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.passwordModalContent}>
-          <Text style={styles.modalTitle}>Password</Text>
-          <Text style={styles.passwordSubtitle}>
-            Your password must be at least 8 characters long
-          </Text>
-          
-          <View style={styles.passwordInputContainer}>
-            <Text style={styles.passwordLabel}>New Password*</Text>
-            <View style={styles.passwordInputWrapper}>
-              <TextInput
-                style={[
-                  styles.passwordInput,
-                  (focusedPasswordField === 'newPassword' || newPassword !== '') && styles.passwordInputFocused
-                ]}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                onFocus={() => setFocusedPasswordField('newPassword')}
-                onBlur={() => setFocusedPasswordField(null)}
-                secureTextEntry={!showNewPassword}
-                placeholder=""
-                placeholderTextColor={colors.secondaryText}
-              />
-              <TouchableOpacity 
-                style={styles.eyeIcon}
-                onPress={() => setShowNewPassword(!showNewPassword)}
-              >
-                <Image 
-                  source={showNewPassword ? require('../../assets/eye-open.png') : require('../../assets/eye-closed.png')}
-                  style={styles.eyeIconImage}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <View style={styles.passwordInputContainer}>
-            <Text style={styles.passwordLabel}>Confirm New Password*</Text>
-            <View style={styles.passwordInputWrapper}>
-              <TextInput
-                style={[
-                  styles.passwordInput,
-                  (focusedPasswordField === 'confirmPassword' || confirmPassword !== '') && styles.passwordInputFocused
-                ]}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                onFocus={() => setFocusedPasswordField('confirmPassword')}
-                onBlur={() => setFocusedPasswordField(null)}
-                secureTextEntry={!showConfirmPassword}
-                placeholder=""
-                placeholderTextColor={colors.secondaryText}
-              />
-              <TouchableOpacity 
-                style={styles.eyeIcon}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <Image 
-                  source={showConfirmPassword ? require('../../assets/eye-open.png') : require('../../assets/eye-closed.png')}
-                  style={styles.eyeIconImage}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          
-          <CustomButton
-            title="Update"
-            onPress={handlePasswordUpdate}
-            backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
-            disabled={!isPasswordValid()}
-            textStyle={{
-              color: isPasswordValid() ? colors.white : colors.darkGray,
-              fontSize: 16,
-              fontWeight: 'bold',
-            }}
-            style={styles.updatePasswordButton}
-          />
-        </View>
-      </View>
-    </Modal>
+      <InputField
+        label="New Password"
+        value={newPassword}
+        onChangeText={setNewPassword}
+        secureTextEntry={true}
+        showPasswordToggle={true}
+        showPassword={showNewPassword}
+        setShowPassword={setShowNewPassword}
+        onFocus={() => setFocusedPasswordField('newPassword')}
+        onBlur={() => setFocusedPasswordField(null)}
+        required
+      />
+      
+      <InputField
+        label="Confirm New Password"
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry={true}
+        showPasswordToggle={true}
+        showPassword={showConfirmPassword}
+        setShowPassword={setShowConfirmPassword}
+        onFocus={() => setFocusedPasswordField('confirmPassword')}
+        onBlur={() => setFocusedPasswordField(null)}
+        required
+      />
+    </CustomModal>
   );
 
   const RecoveryPhoneModal = () => (
-    <Modal
+    <CustomModal
       visible={showRecoveryPhoneModal}
-      animationType="slide"
-      presentationStyle="fullScreen"
+      onClose={() => setShowRecoveryPhoneModal(false)}
+      title="Recovery Phone"
+      subtitle="You'll use this number to recover your account"
+      footerContent={
+        <TouchableOpacity
+          style={[
+            styles.updatePhoneButton,
+            {
+              backgroundColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText,
+              opacity: isRecoveryPhoneValid() ? 1 : 0.8,
+            }
+          ]}
+          onPress={isRecoveryPhoneValid() ? handleRecoveryPhoneUpdate : null}
+          disabled={!isRecoveryPhoneValid()}
+          activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
+        >
+          <Text style={[
+            styles.updatePhoneButtonText,
+            { color: colors.background }
+          ]}>
+            Update
+          </Text>
+        </TouchableOpacity>
+      }
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowRecoveryPhoneModal(false)}>
-            <Text style={styles.backButton}>‹</Text>
-          </TouchableOpacity>
-        </View>
-        
-        <View style={styles.recoveryPhoneModalContent}>
-          <Text style={styles.modalTitle}>Recovery Phone</Text>
-          <Text style={styles.recoveryPhoneSubtitle}>
-            You'll use this number to recover your account
-          </Text>
-          
-          <View style={styles.phoneInputContainer}>
-            <Text style={styles.phoneLabel}>Phone Number*</Text>
-            <TextInput
-              style={[
-                styles.phoneInput,
-                recoveryPhone.length > 5 && styles.phoneInputFilled
-              ]}
-              value={recoveryPhone}
-              onChangeText={setRecoveryPhone}
-              placeholder="+94"
-              placeholderTextColor={colors.secondaryText}
-              keyboardType="phone-pad"
-            />
-          </View>
-          
-          <Text style={styles.phoneNote}>
-            A verification code will be sent to this email
-          </Text>
-          
-          <TouchableOpacity
-            style={[
-              styles.updatePhoneButton,
-              {
-                backgroundColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText,
-                opacity: isRecoveryPhoneValid() ? 1 : 0.8,
-              }
-            ]}
-            onPress={isRecoveryPhoneValid() ? handleRecoveryPhoneUpdate : null}
-            disabled={!isRecoveryPhoneValid()}
-            activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
-          >
-            <Text style={[
-              styles.updatePhoneButtonText,
-              {
-                color: colors.background,
-              }
-            ]}>
-              Update
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
+      <InputField
+        label="Phone Number"
+        value={recoveryPhone}
+        onChangeText={setRecoveryPhone}
+        placeholder="+94"
+        keyboardType="phone-pad"
+        required
+      />
+      
+      <Text style={styles.phoneNote}>
+        A verification code will be sent to this email
+      </Text>
+    </CustomModal>
   );
 
-  const ProfileField = ({ label, value, field, showEdit = true }) => (
-    <View style={styles.fieldContainer}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      {isEditing === field ? (
-        <View style={styles.editingContainer}>
-          <TextInput
-            style={styles.editInput}
-            value={editingValue}
-            onChangeText={setEditingValue}
-            autoFocus
-            multiline={field === 'homeAddress' || field === 'workPlace'}
-          />
-          <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-            <Text style={styles.updateButtonText}>Update</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View>
-          <View style={styles.fieldValueContainer}>
-            <Text style={[styles.fieldValue, field === 'homeAddress' && styles.placeholderText]}>
-              {value}
-            </Text>
-            {showEdit && (
-              <TouchableOpacity 
-                style={styles.editIcon} 
-                onPress={() => {
-                  if (field === 'homeAddress') {
-                    setShowAddressModal(true);
-                  } else {
-                    handleEdit(field, value);
-                  }
-                }}
-              >
-                <Text style={styles.editText}>Edit</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-        </View>
-      )}
-    </View>
+  const ProfileFieldComponent = ({ label, value, field, showEdit = true }) => (
+    <ProfileField
+      label={label}
+      value={value}
+      field={field}
+      showEdit={showEdit}
+      isEditing={isEditing}
+      editingValue={editingValue}
+      onEdit={handleEdit}
+      onUpdate={handleUpdate}
+      onCancel={handleCancel}
+      onValueChange={setEditingValue}
+      placeholder={value}
+      multiline={field === 'homeAddress' || field === 'workPlace'}
+      keyboardType={field === 'contactNumber' ? 'phone-pad' : field === 'email' ? 'email-address' : 'default'}
+      onSpecialEdit={field === 'homeAddress' ? () => setShowAddressModal(true) : undefined}
+    />
   );
 
   const AddressModal = () => (
-    <Modal
+    <CustomModal
       visible={showAddressModal}
-      animationType="slide"
-      presentationStyle="fullScreen"
+      onClose={() => setShowAddressModal(false)}
+      title="Complete your address"
+      subtitle="Setup your address below"
+      scrollable={true}
+      footerContent={
+        <CustomButton
+          title="Done"
+          onPress={handleAddressUpdate}
+        />
+      }
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setShowAddressModal(false)}>
-            <Text style={styles.backButton}>‹</Text>
-          </TouchableOpacity>
-          <Text style={styles.modalTitle}>Complete your address</Text>
-        </View>
-        
-        <Text style={styles.modalSubtitle}>Setup your address below</Text>
-        
-        <ScrollView style={styles.modalContent}>
-          <View style={styles.addressInputContainer}>
-            <Text style={styles.addressLabel}>Suit/Apartment(Optional)</Text>
-            <TextInput
-              style={styles.addressInput}
-              value={addressForm.suite}
-              onChangeText={(text) => setAddressForm(prev => ({ ...prev, suite: text }))}
-              placeholder="25"
-            />
-          </View>
-          
-          <View style={styles.addressInputContainer}>
-            <Text style={styles.addressLabel}>Street Name*</Text>
-            <TextInput
-              style={styles.addressInput}
-              value={addressForm.street}
-              onChangeText={(text) => setAddressForm(prev => ({ ...prev, street: text }))}
-              placeholder="Neelamahara Road"
-            />
-          </View>
-          
-          <View style={styles.addressInputContainer}>
-            <Text style={styles.addressLabel}>City*</Text>
-            <TextInput
-              style={styles.addressInput}
-              value={addressForm.city}
-              onChangeText={(text) => setAddressForm(prev => ({ ...prev, city: text }))}
-              placeholder="Maharagama"
-            />
-          </View>
-          
-          <View style={styles.addressInputContainer}>
-            <Text style={styles.addressLabel}>District*</Text>
-            <View style={styles.dropdownContainer}>
-              <TextInput
-                style={styles.addressInput}
-                value={addressForm.district}
-                onChangeText={(text) => setAddressForm(prev => ({ ...prev, district: text }))}
-                placeholder="Colombo"
-              />
-              <Text style={styles.dropdownArrow}>▼</Text>
+      <InputField
+        label="Suit/Apartment (Optional)"
+        value={addressForm.suite}
+        onChangeText={(text) => setAddressForm(prev => ({ ...prev, suite: text }))}
+        placeholder="25"
+      />
+      
+      <InputField
+        label="Street Name"
+        value={addressForm.street}
+        onChangeText={(text) => setAddressForm(prev => ({ ...prev, street: text }))}
+        placeholder="Neelamahara Road"
+        required
+      />
+      
+      <InputField
+        label="City"
+        value={addressForm.city}
+        onChangeText={(text) => setAddressForm(prev => ({ ...prev, city: text }))}
+        placeholder="Maharagama"
+        required
+      />
+      
+      <InputField
+        label="District"
+        value={addressForm.district}
+        onChangeText={(text) => setAddressForm(prev => ({ ...prev, district: text }))}
+        placeholder="Colombo"
+        required
+      />
+      
+      <View style={styles.mapContainer}>
+        <View style={styles.mapPlaceholder}>
+          <View style={styles.mapBackground}>
+            <View style={styles.roadLine} />
+            <View style={styles.roadLine2} />
+            <View style={styles.roadLine3} />
+            <View style={styles.locationPin}>
+              <View style={styles.pinDot} />
             </View>
+            <Text style={styles.locationLabel}>Maharagama</Text>
           </View>
-          
-          <View style={styles.mapContainer}>
-            <View style={styles.mapPlaceholder}>
-              <View style={styles.mapBackground}>
-                <View style={styles.roadLine} />
-                <View style={styles.roadLine2} />
-                <View style={styles.roadLine3} />
-                <View style={styles.locationPin}>
-                  <View style={styles.pinDot} />
-                </View>
-                <Text style={styles.locationLabel}>Maharagama</Text>
-              </View>
-              <View style={styles.mapOverlay}>
-                <TouchableOpacity style={styles.mapButton}>
-                  <Text style={styles.mapButtonIcon}>📍</Text>
-                  <Text style={styles.mapButtonText}>Update location on map</Text>
-                </TouchableOpacity>
-                <Text style={styles.mapSubtext}>or Manually update the address</Text>
-              </View>
-            </View>
+          <View style={styles.mapOverlay}>
+            <TouchableOpacity style={styles.mapButton}>
+              <Text style={styles.mapButtonIcon}>📍</Text>
+              <Text style={styles.mapButtonText}>Update location on map</Text>
+            </TouchableOpacity>
+            <Text style={styles.mapSubtext}>or Manually update the address</Text>
           </View>
-        </ScrollView>
-        
-        <View style={styles.modalFooter}>
-          <CustomButton
-            title="Done"
-            onPress={handleAddressUpdate}
-            style={styles.doneButton}
-          />
         </View>
       </View>
-    </Modal>
+    </CustomModal>
   );
 
   return (
@@ -695,31 +511,31 @@ const EmailModal = () => (
 
             {/* Profile Fields */}
             <View style={styles.fieldsContainer}>
-              <ProfileField
+              <ProfileFieldComponent
                 label="Name"
                 value={userInfo.name}
                 field="name"
               />
               
-              <ProfileField
+              <ProfileFieldComponent
                 label="Email Address"
                 value={userInfo.email}
                 field="email"
               />
               
-              <ProfileField
+              <ProfileFieldComponent
                 label="Contact Number"
                 value={userInfo.contactNumber}
                 field="contactNumber"
               />
               
-              <ProfileField
+              <ProfileFieldComponent
                 label="Home Address"
                 value={userInfo.homeAddress}
                 field="homeAddress"
               />
               
-              <ProfileField
+              <ProfileFieldComponent
                 label="Work Place"
                 value={userInfo.workPlace}
                 field="workPlace"
@@ -864,127 +680,69 @@ const styles = StyleSheet.create({
   fieldsContainer: {
     flex: 1,
   },
-  fieldContainer: {
-    marginBottom: 20,
+  // Modal styles
+  otpContainer: {
+    marginBottom: 40,
   },
-  fieldLabel: {
+  otpLabel: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
-    marginBottom: 8,
+    marginBottom: 16,
   },
-  fieldValueContainer: {
+  emailNote: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginTop: 8,
+  },
+  phoneNote: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    marginTop: 8,
+  },
+  resendContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.stroke,
+    marginTop: 20,
+    paddingVertical: 10,
   },
-  fieldValue: {
+  resendText: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
-    flex: 1,
   },
-  placeholderText: {
-    color: colors.secondaryText,
-  },
-  editIcon: {
-    padding: 4,
-  },
-  editText: {
+  resendLink: {
     fontSize: 14,
-    color: colors.secondaryText,
-    fontFamily: fonts.PlusJakartaSans,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
   },
-  editingContainer: {
-    backgroundColor: colors.background,
+  successContainer: {
+    backgroundColor: colors.bgGreen,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    overflow: 'hidden',
-  },
-  editInput: {
     paddingVertical: 12,
     paddingHorizontal: 16,
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.stroke,
+    alignItems: 'center',
+    marginTop: 20,
   },
-  updateButton: {
+  successText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
+  },
+  updatePhoneButton: {
     backgroundColor: colors.primary,
     paddingVertical: 12,
-    alignItems: 'center',
-  },
-  updateButtonText: {
-    color: colors.background,
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-  },
-  // Modal styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.mainTextColor,
-    marginLeft: 0,
-    textAlign: 'left',
-  },
-  modalSubtitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  addressInputContainer: {
-    marginBottom: 20,
-  },
-  addressLabel: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 8,
-  },
-  addressInput: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: colors.background,
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.border,
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  dropdownContainer: {
-    position: 'relative',
-  },
-  dropdownArrow: {
-    position: 'absolute',
-    right: 16,
-    top: 12,
-    color: colors.secondaryText,
+  updatePhoneButtonText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    textAlign: 'center',
   },
   mapContainer: {
     marginVertical: 20,
@@ -1022,27 +780,6 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },
-  modalFooter: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  doneButton: {
-    backgroundColor: colors.primary,
-  },
-  // Inline map styles for home address
-  inlineMapContainer: {
-    marginTop: 10,
-  },
-  inlineMapPlaceholder: {
-    height: 120,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
-    position: 'relative',
-    overflow: 'hidden',
-  },
   mapBackground: {
     position: 'absolute',
     top: 0,
@@ -1073,8 +810,8 @@ const styles = StyleSheet.create({
     left: 10,
     right: 30,
     height: 1,
-    backgroundColor:colors.background,
-    },
+    backgroundColor: colors.background,
+  },
   locationPin: {
     position: 'absolute',
     top: 25,
@@ -1112,29 +849,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 1,
   },
-  inlineMapButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginBottom: 4,
-  },
-  inlineMapButtonIcon: {
-    marginRight: 6,
-    fontSize: 12,
-  },
-  inlineMapButtonText: {
-    color:colors.background,
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSansMedium,
-  },
-  inlineMapSubtext: {
-    fontSize: 11,
-    color: colors.secondaryText,
-    fontFamily: fonts.PlusJakartaSans,
-  },
   // Profile picture modal styles
   profileModalOverlay: {
     flex: 1,
@@ -1143,7 +857,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   profileModalContainer: {
-    backgroundColor:colors.background,
+    backgroundColor: colors.background,
     borderRadius: 10,
     padding: 20,
     margin: 20,
@@ -1211,149 +925,6 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
     fontFamily: fonts.PlusJakartaSans,
   },
-  // Email Modal styles
-  emailModalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  emailSubtitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    marginBottom: 30,
-    lineHeight: 20,
-  },
-  emailInputContainer: {
-    marginBottom: 20,
-  },
-  emailLabel: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 8,
-  },
-  emailInput: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-  },
-  emailNote: {
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-    marginBottom: 40,
-    marginTop: 8,
-  },
-  emailModalFooter: {
-    paddingBottom: 40,
-  },
-  updateEmailButton: {
-    backgroundColor: colors.primary,
-  },
-  // Verify Email Modal styles
-  verifyModalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  verifySubtitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    marginBottom: 40,
-    lineHeight: 20,
-    textAlign: 'left',
-  },
-  otpContainer: {
-    marginBottom: 40,
-  },
-  otpLabel: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 16,
-  },
-  otpInputsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  otpInput: {
-    width: 45,
-    height: 45,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    borderRadius: 8,
-    textAlign: 'center',
-    fontSize: 18,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    backgroundColor: colors.background,
-  },
-  otpInputFilled: {
-    borderColor: colors.primary,
-    backgroundColor: colors.bgGreen,
-  },
-  otpInputFocused: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  continueButton: {
-    backgroundColor: colors.primary,
-    marginBottom: 40,
-  },
-  resendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingBottom: 10,
-    backgroundColor: colors.background,
-  },
-  resendText: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-  },
-  resendLink: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.primary,
-  },
-  successContainer: {
-    backgroundColor: colors.bgGreen,
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    position: 'absolute',
-    bottom: 0,
-    left: 20,
-    right: 20,
-    marginBottom: 20,
-  },
-  successText: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.primary,
-  },
-  successModalContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
   // Security styles
   securityContainer: {
     paddingTop: 20,
@@ -1380,134 +951,6 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.stroke,
     marginHorizontal: 0,
-  },
-  securityPlaceholder: {
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-  },
-  
-  // Password Modal styles
-  passwordModalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  passwordSubtitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    marginBottom: 40,
-    lineHeight: 20,
-  },
-  passwordInputContainer: {
-    marginBottom: 24,
-  },
-  passwordLabel: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 8,
-  },
-  passwordInputWrapper: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    paddingRight: 50,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-  },
-  passwordInputFocused: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 16,
-    top: 12,
-    padding: 4,
-  },
-  eyeIconImage: {
-    width: 20,
-    height: 20,
-    tintColor: colors.secondaryText,
-  },
-  eyeIconText: {
-    fontSize: 16,
-    color: colors.secondaryText,
-  },
-  updatePasswordButton: {
-    backgroundColor: colors.primary,
-    marginTop: 40,
-  },
-  updatePasswordButtonDisabled: {
-    backgroundColor: colors.secondaryText,
-    opacity: 0.5,
-  },
-  
-  // Recovery Phone Modal styles
-  recoveryPhoneModalContent: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  recoveryPhoneSubtitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    marginBottom: 40,
-    lineHeight: 20,
-  },
-  phoneInputContainer: {
-    marginBottom: 20,
-  },
-  phoneLabel: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 8,
-  },
-  phoneInput: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-  },
-  phoneInputFilled: {
-    borderColor: colors.primary,
-    borderWidth: 2,
-  },
-  phoneNote: {
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-    marginBottom: 40,
-    marginTop: 8,
-  },
-  updatePhoneButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  updatePhoneButtonText: {
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansBold,
-    textAlign: 'center',
   },
 
 });
