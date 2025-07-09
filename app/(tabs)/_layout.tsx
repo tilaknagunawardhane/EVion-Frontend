@@ -4,7 +4,9 @@ import colors from '../../constants/color';
 
 export default function TabLayout() {
   return (
+
     <Tabs screenOptions={{ tabBarActiveTintColor: colors.primary , headerShown: false }}>
+
       <Tabs.Screen
         name="index"
         options={{
@@ -33,6 +35,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="bookings"
+        options={{
+          title: 'Bookings',
+          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+        }}
+      />
+      
     </Tabs>
   );
 }
