@@ -1,12 +1,12 @@
-import React from 'react';
-import { TouchableOpacity, Text, Image, StyleSheet, View } from 'react-native';
-import colors from '../constants/color';
-import fonts from '../constants/fonts';
+import React from "react";
+import { TouchableOpacity, Text, Image, StyleSheet, View } from "react-native";
+import colors from "../constants/color";
+import fonts from "../constants/fonts";
 
 const CustomButton = ({
   title,
   onPress,
-  type = 'primary',
+  type = "primary",
   icon,
   style,
   textStyle,
@@ -29,12 +29,12 @@ const CustomButton = ({
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {icon && <Image source={icon} style={styles.buttonIcon} />}
-      <Text style={[textStyles[type], textStyle]}>{title}</Text>
+      <View style={styles.buttonContent}>
+        {icon && <Image source={icon} style={styles.buttonIcon} />}
+        <Text style={[textStyles[type], textStyle]}>{title}</Text>
+      </View>
     </TouchableOpacity>
   );
-
-
 };
 
 const styles = StyleSheet.create({
@@ -42,11 +42,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary, // Use imported color
     paddingVertical: 10,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
     marginTop: 10,
-    justifyContent: 'center'
-
+    justifyContent: "center",
   },
   primaryButtonText: {
     color: colors.background, // Use imported color
@@ -54,10 +53,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     paddingVertical: 2,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     borderColor: colors.secondaryText, // Use imported color if available
     borderWidth: 0,
-    textAlign: 'center',
+    textAlign: "center",
   },
   secondaryButtonText: {
     color: colors.secondaryText, // Use imported color if available
@@ -65,9 +64,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansMedium,
   },
   googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.background, // Use imported color
     paddingVertical: 14,
     borderRadius: 8,
@@ -81,9 +80,15 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansMedium,
   },
   buttonIcon: {
-    width: 32,
-    height: 32,
+    width: 16,
+    height: 16,
     marginRight: 8,
+    tintColor: colors.background, // Use imported color
+  },
+  buttonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

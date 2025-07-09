@@ -1,208 +1,50 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Modal,
-  Pressable,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import colors from '../../constants/color.js';
-import fonts from '../../constants/fonts.js';
-import { useRouter } from 'expo-router';
-import { useNavigation, useRoute } from '@react-navigation/native';
 
-const BookingDetailsScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const router = useRouter();
+import { View, Text, StyleSheet } from 'react-native';
+import CustomButton from '../../components/CustomButton';
+import colors from '../../constants/color';
+import {router} from 'expo-router';
 
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [infoVisible, setInfoVisible] = useState(false);
-  const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
-
-  const {
-    stationName = 'Genso Charging Station',
-    stationLocation = 'Southern Highway, Welipenna, Matugama',
-    date = 'Jun 11, 2025',
-    duration = '1 Hr 30 Mins',
-    timeRange = '9:30 AM - 11:00 AM',
-    chargerType = 'CCS 2',
-    chargerId = '#E0299',
-    batteryGain = '~35% in 30 mins',
-    estTimeTo80 = '~45 mins',
-    power = '50kW (DC)',
-    rate = 'LKR 55.00 /kW',
-    estEnergy = '75kWh',
-    estBattery = '+40%',
-    estCost = 'LKR 4125',
-  } = route?.params || {};
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color={colors.black} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Booking Details</Text>
-        <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Icon name="ellipsis-vertical" size={24} color={colors.black} />
-        </TouchableOpacity>
-      </View>
 
-      {/* Popup Menu */}
-      <Modal transparent visible={menuVisible} animationType="fade" onRequestClose={() => setMenuVisible(false)}>
-        <Pressable style={styles.modalOverlay} onPress={() => setMenuVisible(false)}>
-          <View style={styles.menuContainer}>
-            <TouchableOpacity onPress={() => { setMenuVisible(false); setInfoVisible(true); }}>
-              <Text style={styles.menuItem}>Info</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => {
-              setMenuVisible(false);
-              router.push('../pages/bookings/ReportIssue');
-            }}>
-              <Text style={styles.menuItem}>Report</Text>
-            </TouchableOpacity>
-          </View>
-        </Pressable>
-      </Modal>
+    <View style={styles.container}>
+      <Text>Tab [Settings]</Text>
 
-      {/* Info Modal */}
-      <Modal visible={infoVisible} transparent animationType="slide">
-        <View style={styles.infoOverlay}>
-          <View style={styles.infoModal}>
-            <TouchableOpacity style={{ alignSelf: 'flex-end' }} onPress={() => setInfoVisible(false)}>
-              <Icon name="close" size={24} color={colors.black} />
-            </TouchableOpacity>
-            <Text style={styles.infoTitle}>Need to know..</Text>
-            <Text style={styles.infoItem}>• You can cancel your booking anytime — but only <Text style={styles.bold}>up to 30 minutes</Text> before the scheduled start time.</Text>
-            <Text style={styles.infoItem}>• You can reschedule your booking (change date or time) <Text style={styles.bold}>up to 30 minutes</Text> before the slot begins.</Text>
-            <Text style={styles.infoItem}>• Cancellations made within 30 minutes of the slot will incur a <Text style={styles.bold}>late cancellation fee</Text> to compensate the station’s lost opportunity.</Text>
-            <Text style={styles.infoItem}>• If you arrive late <Text style={styles.bold}>(after the 15–minute buffer)</Text>, an extra fee will be charged for each minute delayed.</Text>
-            <Text style={styles.infoItem}>• If you miss your booking and don’t show up, the <Text style={styles.bold}>full estimated charging cost will be charged.</Text></Text>
-            <Text style={styles.infoItem}>• Note: A <Text style={styles.bold}>3% service fee</Text> will be added to your charging cost as a booking fee.</Text>
-            <Text style={[styles.infoItem, { marginTop: 10 }]}>Please plan ahead and manage your bookings responsibly to avoid unnecessary charges. Thank you for supporting a smooth EV charging experience!</Text>
-          </View>
-        </View>
-      </Modal>
+      <CustomButton
+        title="Add vehicle profile"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/addedvprofile')}
+        />
 
-      {/* Cancel Booking Confirmation Modal */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={cancelConfirmVisible}
-        onRequestClose={() => setCancelConfirmVisible(false)}
-      >
-        <View style={styles.cancelOverlay}>
-          <View style={styles.cancelModal}>
-            <TouchableOpacity
-              style={{ position: 'absolute', top: 10, right: 10 }}
-              onPress={() => setCancelConfirmVisible(false)}
-            >
-              <Icon name="close" size={20} color={colors.black} />
-            </TouchableOpacity>
-            <Text style={styles.cancelTitle}>Cancel Booking</Text>
-            <Text style={styles.cancelMsg}>
-              Cancelling now will result in a{' '}
-              <Text style={{ color: colors.secondary, fontFamily: fonts.PlusJakartaSansBold }}>
-                late cancellation fee
-              </Text>, as it's past the allowed cancellation window.
-            </Text>
-            <Text style={styles.cancelMsg}>Do you still want to proceed?</Text>
+        <CustomButton
+        title="Station profile"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/StationProfile')}
+        />
 
-            <View style={styles.cancelActions}>
-              <TouchableOpacity
-                style={styles.cancelCloseBtn}
-                onPress={() => setCancelConfirmVisible(false)}
-              >
-                <Text style={styles.cancelCloseText}>Close</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.cancelConfirmBtn}
-                onPress={() => {
-                  setCancelConfirmVisible(false);
-                  console.log("Booking cancelled"); // Add logic here
-                }}
-              >
-                <Text style={styles.cancelConfirmText}>Cancel Booking</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        <CustomButton
+        title="Start Charging"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/StartCharging')}
+        />
 
-      {/* Station Info */}
-      <View style={styles.stationBox}>
-        <Image source={{ uri: 'https://i.ibb.co/SKQ5ZBk/station.png' }} style={styles.stationImage} />
-        <View style={styles.stationText}>
-          <Text style={styles.stationName}>{stationName}</Text>
-          <Text style={styles.stationLocation}>{stationLocation}</Text>
-        </View>
-        <TouchableOpacity>
-          <Icon name="arrow-forward-circle" size={28} color={colors.primary} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Date & Time */}
-      <View style={styles.dateTimeBox}>
-        <Text style={styles.dateText}>{date}</Text>
-        <View style={styles.timeTag}>
-          <Text style={styles.timeTagText}>{duration}</Text>
-        </View>
-        <Text style={styles.timeRange}>{timeRange}</Text>
-      </View>
-
-      {/* Charger Info */}
-      <View style={styles.chargerCard}>
-        <View style={styles.row}>
-          <MaterialCommunityIcons name="ev-station" size={24} color={colors.primary} />
-          <Text style={styles.chargerType}>{chargerType}</Text>
-          <Text style={styles.chargerId}>ID: {chargerId}</Text>
-        </View>
-        <Text style={styles.label}>Battery Gain:</Text>
-        <Text style={styles.value}>{batteryGain}</Text>
-        <Text style={styles.label}>Est. Time to 80%:</Text>
-        <Text style={styles.value}>{estTimeTo80}</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.iconText}><Icon name="flash" size={20} /> {power}</Text>
-          <Text style={styles.iconText}><Icon name="cash" size={20} /> {rate}</Text>
-        </View>
-      </View>
-
-      {/* Estimations */}
-      <View style={styles.estimations}>
-        <View style={styles.estimateRow}>
-          <Text style={styles.estimateLabel}>Estimated Energy Delivered:</Text>
-          <Text style={styles.estimateValue}>{estEnergy}</Text>
-        </View>
-        <View style={styles.estimateRow}>
-          <Text style={styles.estimateLabel}>Estimated Battery % Increase:</Text>
-          <Text style={styles.estimateValue}>{estBattery}</Text>
-        </View>
-        <View style={styles.estimateRow}>
-          <Text style={styles.estimateLabel}>Estimated Cost:</Text>
-          <Text style={styles.estimateValue}>{estCost}</Text>
-        </View>
-      </View>
-
-      {/* Action Buttons */}
-      <TouchableOpacity style={styles.startButton}>
-        <Text style={styles.startText}>Start Charging</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.rescheduleButton}>
-        <Text style={styles.rescheduleText}>Reschedule</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity onPress={() => setCancelConfirmVisible(true)}>
-        <Text style={styles.cancelText}>Cancel Booking</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <CustomButton
+        title="Waiting Connection"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/WaitingConnection')}
+        />
+<CustomButton
+        title="Waiting Connection"
+        type="primary"
+        textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/FullCharged')}
+        />
+        
+    </View>
   );
 };
 
