@@ -276,17 +276,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     shadowColor: colors.background,
     shadowOffset: {
-      width: 0,
+      width: 4,
       height: 4,
     },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 7,
   },
   fabText: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: fonts.PlusJakartaSansBold,
-    color:colors.background,
+    color: colors.background,
+    textAlignVertical: 'center', // Add this
+    includeFontPadding: false,   // Add this to remove extra padding
+    lineHeight: 30,
+    marginTop: -6,
+
   },
   modalContainer: {
     flex: 1,
@@ -319,6 +324,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
+    textAlignVertical: 'center', // Add this
+    includeFontPadding: false,   // Add this to remove extra padding
+    lineHeight: 18,              // Match lineHeight with fontSize
+    marginTop: -6,
   },
   modalContent: {
     flex: 1,
