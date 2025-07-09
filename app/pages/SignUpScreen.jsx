@@ -59,16 +59,16 @@ const SignUpScreen = () => {
       const data = await response.json();
 
       if (!response.ok) {
-       Toast.show({
-                 type: ALERT_TYPE.DANGER,
-                 title: 'Error',
-                 textBody: data.message || 'Failed to sign in. Please try again.',
-               });
-               return;
+        Toast.show({
+          type: ALERT_TYPE.DANGER,
+          title: 'Error',
+          textBody: data.message || 'Failed to sign in. Please try again.',
+        });
+        return;
       }
- await AsyncStorage.setItem('user', JSON.stringify(data));
-  const user = JSON.parse(await AsyncStorage.getItem('user'));
-  console.log('User saved in AsyncStorage:', user);
+      await AsyncStorage.setItem('user', JSON.stringify(data));
+      const user = JSON.parse(await AsyncStorage.getItem('user'));
+      console.log('User saved in AsyncStorage:', user);
 
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
@@ -77,7 +77,7 @@ const SignUpScreen = () => {
       });
 
       setTimeout(() => {
-        router.replace('/(tabs)');
+        router.replace('/pages/AddVehicle1');
       }, 1500);
     } catch (error) {
       console.error('Error during sign-up:', error);
@@ -92,7 +92,7 @@ const SignUpScreen = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar buttonVisibility={false}/>
+      <AppBar buttonVisibility={false} />
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"

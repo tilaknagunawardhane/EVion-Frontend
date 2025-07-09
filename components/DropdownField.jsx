@@ -20,6 +20,7 @@ const DropdownField = ({
   onValueChange,
   placeholder,
   options = [],
+  displayProperty = 'label', // property to display in the dropdown
   style,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,6 +33,15 @@ const DropdownField = ({
       setDropdownTop(pageY + height - 20);
       setIsOpen(true);
     });
+  };
+
+  // Get display value for selected item
+  const getDisplayValue = () => {
+    if (!selectedValue) return placeholder;
+    if (typeof selectedValue === 'object') {
+      return selectedValue[displayProperty] || placeholder;
+    }
+    return selectedValue;
   };
 
   return (
@@ -50,7 +60,7 @@ const DropdownField = ({
             { color: selectedValue ? colors.mainTextColor : colors.secondaryText },
           ]}
         >
-          {selectedValue || placeholder}
+          {getDisplayValue()}
         </Text>
 
         <Image
@@ -69,22 +79,26 @@ const DropdownField = ({
           <View style={[styles.dropdownModal, { top: dropdownTop }]}>
             <FlatList
               data={options}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.option}
-                  onPress={() => {
-                    onValueChange(item);
-                    setIsOpen(false);
-                  }}
-                >
-                  <Text style={styles.optionText}>{item}</Text>
-                </TouchableOpacity>
-              )}
-              style={{ maxHeight: 250 }} // You can adjust this height as needed
+              keyExtractor={(item, index) =>
+                typeof item === 'object' ? item.id || index.toString() : index.toString()
+              }
+              renderItem={({ item }) => {
+                const displayText = typeof item === 'object' ? item[displayProperty] : item;
+                return (
+                  <TouchableOpacity
+                    style={styles.option}
+                    onPress={() => {
+                      onValueChange(item);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <Text style={styles.optionText}>{displayText}</Text>
+                  </TouchableOpacity>
+                );
+              }}
+              style={{ maxHeight: 250 }}
               scrollEnabled={true}
             />
-
           </View>
         </TouchableOpacity>
       </Modal>
@@ -149,6 +163,5 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
   },
 });
-
 
 export default DropdownField;
