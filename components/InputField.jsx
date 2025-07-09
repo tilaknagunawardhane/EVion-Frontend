@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const InputField = ({
+const InputField = React.memo(({
   label,
   value,
   onChangeText,
@@ -30,21 +30,21 @@ const InputField = ({
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
-  const handleFocus = () => {
+  const handleFocus = useCallback(() => {
     setIsFocused(true);
     onFocus && onFocus();
-  };
+  }, [onFocus]);
 
-  const handleBlur = () => {
+  const handleBlur = useCallback(() => {
     setIsFocused(false);
     onBlur && onBlur();
-  };
+  }, [onBlur]);
 
-  const togglePasswordVisibility = () => {
+  const togglePasswordVisibility = useCallback(() => {
     if (setShowPassword) {
       setShowPassword(!showPassword);
     }
-  };
+  }, [setShowPassword, showPassword]);
 
   return (
     <View style={[styles.inputContainer, containerStyle]}>
@@ -102,7 +102,7 @@ const InputField = ({
       )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   inputContainer: {

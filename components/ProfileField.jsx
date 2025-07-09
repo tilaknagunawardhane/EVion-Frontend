@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import colors from '../constants/color';
 import fonts from '../constants/fonts';
 import InputField from './InputField';
 
-const ProfileField = ({ 
+const ProfileField = React.memo(({ 
   label, 
   value, 
   field, 
@@ -25,6 +25,13 @@ const ProfileField = ({
   keyboardType = 'default',
   onSpecialEdit // for special fields like address
 }) => {
+  const handleEditPress = useCallback(() => {
+    if (onSpecialEdit) {
+      onSpecialEdit();
+    } else {
+      onEdit(field, value);
+    }
+  }, [onSpecialEdit, onEdit, field, value]);
   if (isEditing === field) {
     return (
       <View style={styles.container}>
@@ -62,13 +69,7 @@ const ProfileField = ({
         {showEdit && (
           <TouchableOpacity 
             style={styles.editButton} 
-            onPress={() => {
-              if (onSpecialEdit) {
-                onSpecialEdit();
-              } else {
-                onEdit(field, value);
-              }
-            }}
+            onPress={handleEditPress}
           >
             <Text style={styles.editText}>Edit</Text>
           </TouchableOpacity>
@@ -76,7 +77,7 @@ const ProfileField = ({
       </View>
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {

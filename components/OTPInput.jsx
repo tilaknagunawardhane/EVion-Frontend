@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,17 +8,18 @@ import {
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const OTPInput = ({ 
+const OTPInput = React.memo(({ 
   length = 6, 
   value = [], 
   onChange, 
   focusedIndex,
   onFocus,
-  onBlur 
+  onBlur,
+  editable = true 
 }) => {
   const inputRefs = useRef([]);
 
-  const handleChange = (text, index) => {
+  const handleChange = useCallback((text, index) => {
     const newValue = [...value];
     newValue[index] = text;
     onChange(newValue);
@@ -27,13 +28,21 @@ const OTPInput = ({
     if (text && index < length - 1) {
       inputRefs.current[index + 1]?.focus();
     }
-  };
+  }, [value, onChange, length]);
 
-  const handleKeyPress = (e, index) => {
+  const handleKeyPress = useCallback((e, index) => {
     if (e.nativeEvent.key === 'Backspace' && !value[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
-  };
+  }, [value]);
+
+  const handleFocus = useCallback((index) => {
+    onFocus && onFocus(index);
+  }, [onFocus]);
+
+  const handleBlur = useCallback(() => {
+    onBlur && onBlur();
+  }, [onBlur]);
 
   return (
     <View style={styles.container}>
@@ -48,18 +57,19 @@ const OTPInput = ({
           ]}
           value={value[index] || ''}
           onChangeText={(text) => handleChange(text, index)}
-          onFocus={() => onFocus && onFocus(index)}
-          onBlur={() => onBlur && onBlur()}
+          onFocus={() => handleFocus(index)}
+          onBlur={handleBlur}
           onKeyPress={(e) => handleKeyPress(e, index)}
           maxLength={1}
           keyboardType="numeric"
           textAlign="center"
           selectTextOnFocus
+          editable={editable}
         />
       ))}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   container: {
