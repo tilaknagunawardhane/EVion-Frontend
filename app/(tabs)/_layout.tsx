@@ -15,11 +15,11 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="Community"
+        name="community"
         options={{
           title: 'Community',
           tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="comments" color={color} />
+            <FontAwesome size={28} name="comments-o" color={color} />
           ),
         }}
       />

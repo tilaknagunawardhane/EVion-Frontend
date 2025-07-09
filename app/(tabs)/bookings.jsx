@@ -10,12 +10,14 @@ import BookingCard from '../../components/BookingCard';
 import CompletedBookingCard from '../../components/CompletedBookingCard';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
-import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '@env';
+import { useRouter , useLocalSearchParams} from 'expo-router';
 
 const BookingsScreen = () => {
   const [activeTab, setActiveTab] = useState('Upcoming');
   const router = useRouter();
+    const params = useLocalSearchParams();
+  
 
   const [bookingsData, setBookingsData] = useState({
     Upcoming: [],

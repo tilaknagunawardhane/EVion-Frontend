@@ -32,7 +32,7 @@ export default function Tab() {
         title="Filters"
         type="primary"
         textStyle={{ color: colors.black }}
-        onPress={() => router.push('/pages/Filters')}
+        onPress={() => router.push('/pages')}
       />
       <CustomButton
         title="Planning a Route"

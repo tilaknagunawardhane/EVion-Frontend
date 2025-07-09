@@ -1,46 +1,54 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, Touchable, TouchableOpacity } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, batteryGain, estimatedTime, powerInfo, price }) => {
+const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, batteryGain, estimatedTime, powerInfo, price, onPress, index }) => {
   return (
+     <View style={styles.wrapper}>
+      {/* 👇 Index label above the card */}
+      <Text style={styles.indexTitle}>Charger {index}</Text>
     <View style={styles.connectorCard}>
-      <View style={styles.connectorHeader}>
-        <Text style={[status === 'Available' ? styles.availableText : styles.busyText]}>
-          {status === 'Available' ? 'Available' : 'Charger Busy'}
-        </Text>
-        <Text style={styles.connectorID}>ID: {connectorID}</Text>
-      </View>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-        {/* ✅ Correct image rendering for local image */}
-        <Image source={connectorImage} style={[styles.chargerIcon, { tintColor: colors.primary, marginRight: 8 }]} />
-        <Text style={styles.connectorType}>{connectorType}</Text>
-      </View>
-
-      <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
-
-      <View style={styles.batteryInfo}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={styles.batteryText}>Battery Gain:</Text>
-          <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{batteryGain}</Text>
-        </View>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Text style={styles.batteryText}>Est. Time to 80%:</Text>
-          <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{estimatedTime}</Text>
-        </View>
-      </View>
-
-      <View style={[styles.powerRow, { gap: 4 }]}>
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>⚡ {powerInfo}</Text>
+      <TouchableOpacity
+        onPress={onPress}
+      >
+        <View style={styles.connectorHeader}>
+          <Text style={[status === 'Available' ? styles.availableText : styles.busyText]}>
+            {status === 'Available' ? 'Available' : 'Charger Busy'}
+          </Text>
+          <Text style={styles.connectorID}>ID: {connectorID}</Text>
         </View>
 
-        <View style={styles.infoBox}>
-          <Text style={styles.infoText}>LKR {price} /kW</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+          {/* ✅ Correct image rendering for local image */}
+          <Image source={connectorImage} style={[styles.chargerIcon, { tintColor: colors.primary, marginRight: 8 }]} />
+          <Text style={styles.connectorType}>{connectorType}</Text>
         </View>
-      </View>
+
+        <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
+
+        <View style={styles.batteryInfo}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.batteryText}>Battery Gain:</Text>
+            <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{batteryGain}</Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.batteryText}>Est. Time to 80%:</Text>
+            <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{estimatedTime}</Text>
+          </View>
+        </View>
+
+        <View style={[styles.powerRow, { gap: 4 }]}>
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>⚡ {powerInfo}</Text>
+          </View>
+
+          <View style={styles.infoBox}>
+            <Text style={styles.infoText}>LKR {price} /kW</Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+    </View>
     </View>
   );
 };
@@ -60,6 +68,16 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2
   },
+  wrapper: {
+  marginBottom: 6,
+},
+indexTitle: {
+  fontSize: 16,
+  fontFamily: fonts.PlusJakartaSansBold,
+  color: colors.mainTextColor,
+  marginLeft: 24,
+  marginBottom: 8,
+},
   connectorHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   availableText: { color: colors.primary, fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
   busyText: { color: colors.danger, fontFamily: fonts.PlusJakartaSansBold, fontSize: 14 },
@@ -80,7 +98,8 @@ const styles = StyleSheet.create({
     minWidth: 32
   },
   infoText: { color: colors.mainTextColor, fontSize: 12, fontFamily: fonts.PlusJakartaSansBold, fontWeight: 'bold' },
-  chargerIcon: { width: 24, height: 24 }
+  chargerIcon: { width: 24, height: 24 },
+  
 });
 
 export default ConnectorCard;

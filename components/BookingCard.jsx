@@ -17,24 +17,23 @@ const BookingCard = ({
   connectorType,
   iconColor = colors.primary
 }) => {
-  const navigation = useNavigation(); // 👈 Use navigation hook
+  // const navigation = useNavigation(); // 👈 Use navigation hook
 
-  const handlePress = () => {
-    navigation.navigate('BookingDetails', {
-      dateLabel,
-      duration,
-      startTime,
-      endTime,
-      stationName,
-      address,
-      carImage,
-      carName,
-      connectorType,
-    });
-  };
+  // const handlePress = () => {
+  //   navigation.navigate('BookingDetails', {
+  //     dateLabel,
+  //     duration,
+  //     time,
+  //     stationName,
+  //     address,
+  //     carImage,
+  //     carName,
+  //     connectorType,
+  //   });
+  // };
 
   return (
-    <TouchableOpacity onPress={handlePress} style={styles.card}>
+    <View style={styles.card}>
       <View style={styles.topRow}>
         <Text style={styles.dateText}>{dateLabel}</Text>
         <View style={styles.duration}>
@@ -67,7 +66,7 @@ const BookingCard = ({
           <Text style={styles.connector}>{connectorType}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 

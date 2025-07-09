@@ -24,13 +24,14 @@ const BookingDetailsScreen = () => {
   const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
 
   const {
-    dateLabel,
-    duration,
-    time,
-    stationName,
-    address,
-    carName,
-    connectorType,
+    stationName = 'Genso Charging Station',
+    address = 'Southern Highway, Welipenna, Matugama',
+    dateLabel = 'Jun 11, 2025',
+    duration = '1 Hr 30 Mins',
+    timeRange = '9:30 AM - 11:00 AM',
+    connectorType = 'CCS 2',
+    carName = 'Nissan Leaf 2020',
+    carImage = null,
   } = params || {};
 
   return (
@@ -137,7 +138,7 @@ const BookingDetailsScreen = () => {
         <View style={styles.timeTag}>
           <Text style={styles.timeTagText}>{duration}</Text>
         </View>
-        <Text style={styles.timeRange}>{time}</Text>
+        <Text style={styles.timeRange}>{timeRange}</Text>
       </View>
 
       {/* Charger Info */}
@@ -191,7 +192,7 @@ const BookingDetailsScreen = () => {
 
 
 const styles = StyleSheet.create({
-  container: { padding: 20, backgroundColor: colors.white },
+  container: { padding: 20, backgroundColor: colors.white, paddingTop: 60 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
