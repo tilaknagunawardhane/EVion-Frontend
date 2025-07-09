@@ -33,6 +33,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="bookings"
+        options={{
+          title: 'Bookings',
+          tabBarIcon: ({ color }) => <FontAwesome size={28} name="cog" color={color} />,
+        }}
+      />
+      
     </Tabs>
   );
 }
