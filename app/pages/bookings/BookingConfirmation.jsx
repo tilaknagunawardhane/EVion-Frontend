@@ -2,8 +2,15 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
+import { useNavigation } from "@react-navigation/native";
+import { useRouter, useLocalSearchParams } from 'expo-router';
+
 
 const BookingConfirmationModal = ({ visible, onClose, onConfirm }) => {
+    const navigation = useNavigation();
+      const router = useRouter();
+    
+  
   // Sample data - replace with your actual data
   const bookingDetails = {
     station: {
@@ -24,41 +31,40 @@ const BookingConfirmationModal = ({ visible, onClose, onConfirm }) => {
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
-          
-          
           {/* Booking Details */}
           <Text style={styles.sectionTitle}>Confirm Booking</Text>
-          
+
           <View style={styles.detailsRow}>
-  {/* Energy Delivered */}
-  <View style={styles.detailItem}>
-    <Text style={styles.detailLabel}>Estimated Energy Delivered:</Text>
-    <Text style={styles.energyValue}>{bookingDetails.energy}</Text>
-  </View>
+            {/* Energy Delivered */}
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Estimated Energy Delivered:</Text>
+              <Text style={styles.energyValue}>{bookingDetails.energy}</Text>
+            </View>
 
-  {/* Battery Increase */}
-  <View style={styles.detailItem}>
-    <Text style={styles.detailLabel}>Estimated Battery % Increase:</Text>
-    <Text style={styles.energyValue}>+40%</Text>
-  </View>
+            {/* Battery Increase */}
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Estimated Battery % Increase:</Text>
+              <Text style={styles.energyValue}>+40%</Text>
+            </View>
 
-  {/* Cost */}
-  <View style={styles.detailItem}>
-    <Text style={styles.detailLabel}>Estimated Cost:</Text>
-    <Text style={styles.costValue}>{bookingDetails.cost}</Text>
-  </View>
-</View>
+            {/* Cost */}
+            <View style={styles.detailItem}>
+              <Text style={styles.detailLabel}>Estimated Cost:</Text>
+              <Text style={styles.costValue}>{bookingDetails.cost}</Text>
+            </View>
+          </View>
+          
           {/* Note */}
           <Text style={styles.note}>
             Note: A 3% service fee will be added to your charging cost as a booking fee.
           </Text>
-          
+
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
+            <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
               <Text style={styles.secondaryButtonText}>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton} onPress={onConfirm}>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/(tabs)/StartCharging')}>
               <Text style={styles.primaryButtonText}>Confirm Booking</Text>
             </TouchableOpacity>
           </View>
@@ -74,51 +80,47 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 10, // Add some padding to prevent edge touching
   },
   modalContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 20,
-    width: '85%',
+    width: '90%', // Slightly increased width
     maxWidth: 400,
   },
-  header: {
-    fontSize: 18,
-    fontFamily: fonts.PlusJakartaSansBold,
+  sectionTitle: {
+    fontSize: 20, // Slightly reduced size
+    fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
     marginBottom: 16,
     textAlign: 'center',
   },
-  section: {
-    marginBottom: 12,
+  detailsRow: {
+    marginBottom: 16,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
+  detailItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 12,
-  },
-  detailsContainer: {
-    marginBottom: 8,
+    flexWrap: 'wrap', // Allow wrapping if needed
   },
   detailLabel: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    marginBottom: 4,
-  },
-  valuesContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
+    flexShrink: 1, // Allow text to shrink
+    marginRight: 8, // Add some spacing
   },
   energyValue: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.primary,
+    flexShrink: 0, // Prevent value from shrinking
   },
   costValue: {
-    fontSize: 18,
+    fontSize: 16, // Slightly reduced size
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
@@ -128,15 +130,14 @@ const styles = StyleSheet.create({
     color: colors.HighlightText,
     fontStyle: 'italic',
     marginBottom: 20,
+    lineHeight: 16, // Add line height for better readability
   },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 12,
   },
-  
   primaryButton: {
     backgroundColor: colors.primary,
     paddingVertical: 12,
@@ -163,30 +164,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans,
     fontSize: 14,
   },
-    detailsRow: {
-      marginBottom: 16,
-    },
-    detailItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    detailLabel: {
-      fontSize: 14,
-      fontFamily: fonts.PlusJakartaSans,
-      color: colors.secondaryText,
-    },
-    energyValue: {
-      fontSize: 16,
-      fontFamily: fonts.PlusJakartaSansBold,
-      color: colors.primary,
-    },
-    costValue: {
-      fontSize: 18,
-      fontFamily: fonts.PlusJakartaSansBold,
-      color: colors.mainTextColor,
-    },
 });
 
 export default BookingConfirmationModal;

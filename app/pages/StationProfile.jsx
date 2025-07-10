@@ -47,10 +47,13 @@ const ChargingStationScreen = () => {
 
   const handleReport = () => console.log('Report pressed');
   const handleBookNow = () => {
+    router.push('/pages/bookings/AddBooking');
     console.log('Book Now pressed');
     setShowBottomPopup(false);
   };
   const handleCheckAvailability = () => {
+    router.push('/pages/CheckAvailability');
+
     console.log('Check Availability pressed');
     setShowBottomPopup(false);
   };

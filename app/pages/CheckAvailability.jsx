@@ -94,7 +94,7 @@ const SelectDateTimeScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.replace('/StationProfile')}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="chevron-back-outline" size={22} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Select Date & Time</Text>
@@ -225,7 +225,7 @@ const SelectDateTimeScreen = () => {
         </View>
         <CustomButton
           title="Book Now"
-          onPress={() => router.push('/pages/StartCharging')}
+          onPress={() => router.push('/pages/bookings/AddBooking')}
           type="primary"
           style={{ width: '100%' }} // Increased width to 100%
         />

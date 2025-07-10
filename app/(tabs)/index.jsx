@@ -25,6 +25,13 @@ export default function Tab() {
         title="Add EV"
         type="primary"
         textStyle={{ color: colors.black }}
+        onPress={() => router.push('/pages/StationProfile')}
+        />
+
+      <CustomButton
+        title="Add EV"
+        type="primary"
+        textStyle={{ color: colors.black }}
         onPress={() => router.push('/pages/AddVehicle/AddVehicle1')}
         />
 

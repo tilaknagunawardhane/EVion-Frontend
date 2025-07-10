@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  Dimensions, 
-  Animated, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Animated,
   Easing,
-  PanResponder 
+  PanResponder,
+  Alert 
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,14 +20,14 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const StartChargeWalkInScreen = () => {
   const router = useRouter();
-  
+
   const [chargingData, setChargingData] = useState({
     batteryPercentage: 17,
     chargingPower: '0 kW',
     chargingTime: '00:00:00',
     cost: '00.00'
   });
-  
+
   const [isCharging, setIsCharging] = useState(false);
   const vehicleName = 'Kia EV6';
   const [seconds, setSeconds] = useState(0);
@@ -41,14 +42,14 @@ const StartChargeWalkInScreen = () => {
           const hours = Math.floor(newSeconds / 3600);
           const minutes = Math.floor((newSeconds % 3600) / 60);
           const secs = newSeconds % 60;
-          
+
           setChargingData(prev => ({
             batteryPercentage: Math.min(prev.batteryPercentage + (100 / 3600), 100),
             chargingPower: `${Math.floor(Math.random() * 5) + 5} kW`,
             chargingTime: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
             cost: (parseFloat(prev.cost) + (100 / 3600)).toFixed(2)
           }));
-          
+
           return newSeconds;
         });
       }, 900);
@@ -60,12 +61,30 @@ const StartChargeWalkInScreen = () => {
   }, [isCharging]);
 
   const handleSwipeComplete = (direction) => {
+    console.log('handleSwipeComplete called with direction:', direction);
     if (direction === 'right') {
+      console.log('Starting charging...');
       setIsCharging(true);
       setSwipeDirection('left');
     } else {
+      console.log('Stopping charging...');
       setIsCharging(false);
       setSwipeDirection('right');
+      Alert.alert(
+      'Charging Stopped',
+      'Your charging session has been ended.',
+      [
+        {
+          text: 'View Summary',
+          onPress: () => router.push('/pages/ChargingStoped')
+        },
+        {
+          text: 'OK',
+          style: 'cancel'
+        }
+      ],
+      { cancelable: false }
+    );
     }
   };
 
@@ -97,7 +116,7 @@ const StartChargeWalkInScreen = () => {
 
       <View style={styles.content}>
         <View style={styles.batteryContainer}>
-          <CircularProgress 
+          <CircularProgress
             percentage={Math.floor(chargingData.batteryPercentage)}
             size={SCREEN_WIDTH * 0.5}
             additionalText={`${Math.floor(chargingData.batteryPercentage)}%`}
@@ -121,11 +140,14 @@ const StartChargeWalkInScreen = () => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <SwipeButton 
+        <SwipeButton
           direction={swipeDirection}
           isCharging={isCharging}
           onSwipeComplete={handleSwipeComplete}
         />
+        <Text style={{color: 'red', fontSize: 12, textAlign: 'center', marginTop: 10}}>
+          Debug: Direction = {swipeDirection}, isCharging = {isCharging.toString()}
+        </Text>
       </View>
     </View>
   );
@@ -135,27 +157,54 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
   const buttonWidth = SCREEN_WIDTH * 0.8;
   const thumbWidth = SCREEN_HEIGHT * 0.08;
   const pan = useRef(new Animated.Value(isCharging ? buttonWidth - thumbWidth - 10 : 0)).current;
+  const currentDirectionRef = useRef(direction);
+
+  // Update current direction ref when direction changes
+  useEffect(() => {
+    console.log('Direction changed to:', direction);
+    currentDirectionRef.current = direction;
+    if (direction === 'right') {
+      pan.setValue(0);
+    } else {
+      pan.setValue(buttonWidth - thumbWidth - 10);
+    }
+  }, [direction, buttonWidth, thumbWidth]);
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: () => {
+        console.log('PanResponder Start');
+        return true;
+      },
+      onMoveShouldSetPanResponder: () => {
+        console.log('PanResponder Move Start');
+        return true;
+      },
       onPanResponderMove: (_, gestureState) => {
-        if (direction === 'right' && gestureState.dx >= 0) {
+        // Get current direction from the ref
+        const currentDirection = currentDirectionRef.current;
+        console.log('PanResponder Move - dx:', gestureState.dx, 'direction:', currentDirection);
+        if (currentDirection === 'right' && gestureState.dx >= 0) {
           pan.setValue(Math.min(gestureState.dx, buttonWidth - thumbWidth - 10));
-        } else if (direction === 'left' && gestureState.dx <= 0) {
+        } else if (currentDirection === 'left' && gestureState.dx <= 0) {
           pan.setValue(Math.max(buttonWidth - thumbWidth - 10 + gestureState.dx, 0));
         }
       },
       onPanResponderRelease: (_, gestureState) => {
-        if (direction === 'right' && gestureState.dx > buttonWidth - thumbWidth - 20) {
+        // Get current direction from the ref
+        const currentDirection = currentDirectionRef.current;
+        console.log('PanResponder Release - direction:', currentDirection, 'dx:', gestureState.dx);
+        
+        if (currentDirection === 'right' && gestureState.dx > 50) {
+          console.log('Right swipe threshold met');
           Animated.timing(pan, {
             toValue: buttonWidth - thumbWidth - 10,
             duration: 200,
             easing: Easing.out(Easing.quad),
             useNativeDriver: true,
           }).start(() => onSwipeComplete('right'));
-        } else if (direction === 'left' && gestureState.dx < -(buttonWidth - thumbWidth - 20)) {
+        } else if (currentDirection === 'left' && gestureState.dx < -50) {
+          console.log('Left swipe threshold met');
           Animated.timing(pan, {
             toValue: 0,
             duration: 200,
@@ -163,8 +212,9 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
             useNativeDriver: true,
           }).start(() => onSwipeComplete('left'));
         } else {
+          console.log('Swipe threshold not met, springing back');
           Animated.spring(pan, {
-            toValue: direction === 'right' ? 0 : buttonWidth - thumbWidth - 10,
+            toValue: currentDirection === 'right' ? 0 : buttonWidth - thumbWidth - 10,
             useNativeDriver: true,
           }).start();
         }
@@ -178,7 +228,7 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
         {...panResponder.panHandlers}
         style={[
           styles.swipeThumb,
-          { 
+          {
             transform: [{ translateX: pan }],
             width: thumbWidth,
             height: thumbWidth,
@@ -186,10 +236,10 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
           }
         ]}
       >
-        <Ionicons 
-          name={direction === 'right' ? "arrow-forward" : "arrow-back"} 
-          size={24} 
-          color="white" 
+        <Ionicons
+          name={direction === 'right' ? "arrow-forward" : "arrow-back"}
+          size={24}
+          color="white"
         />
       </Animated.View>
       <Text style={styles.swipeText}>
