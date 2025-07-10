@@ -23,11 +23,14 @@ import SearchContainer from '../../components/maps/SearchContainer';
 import StationInfoCard from '../../components/maps/StationInfoCard';
 import SuggestionsDropdown from '../../components/maps/SuggestionsDropdown';
 import chargingStations from '../../utils/ChargingStations';
+import { useRouter } from 'expo-router';
 
 const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
 
 
 export default function MapScreen() {
+        const router = useRouter();
+  
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -298,7 +301,7 @@ export default function MapScreen() {
           fetchSuggestions && fetchSuggestions(text);
         }}
         handleSearch={() => handleSearch()}
-        onFilterPress={() => console.log('Filter pressed')}
+        onFilterPress={() => router.push('/pages/Filters')}
         fetchSuggestions={fetchSuggestions}
         onFocus={() => fetchSuggestions && searchQuery && fetchSuggestions(searchQuery)}
       />

@@ -20,6 +20,8 @@ import { GOOGLE_MAPS_API_KEY } from '@env';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
+import { router } from 'expo-router'; // Ensure you have this import for navigation
+
 
 export default function DirectionsScreen() {
   const params = useLocalSearchParams();
@@ -342,7 +344,7 @@ export default function DirectionsScreen() {
                       <TouchableOpacity style={styles.viewButton}>
                         <Text style={styles.viewButtonText}>View Station</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.bookButton}>
+                      <TouchableOpacity style={styles.bookButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
                         <Text style={styles.bookButtonText}>Book Now</Text>
                       </TouchableOpacity>
                     </View>
