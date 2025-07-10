@@ -11,7 +11,7 @@ const ChargingStopedScreen = () => {
   const router = useRouter();
   
   // Battery and charging data
-  const batteryPercentage = 65;
+  const batteryPercentage = 18;
   const capacity = '24kWh';
   const chargingPower = '120kW';
   const chargingTime = '00:12:34';
@@ -26,6 +26,8 @@ const ChargingStopedScreen = () => {
   };
 
   const handleFinishChargingPress = () => {
+    router.push('/pages/bookings/ReceiptScreen');
+
     // Navigate to home or completion screen
     // router.push('/');
   };

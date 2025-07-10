@@ -56,7 +56,7 @@ const BookingDetailsScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
               setMenuVisible(false);
-              router.push('../pages/bookings/ReportIssue');
+              router.push('/pages/bookings/ReportIssue');
             }}>
               <Text style={styles.menuItem}>Report</Text>
             </TouchableOpacity>
@@ -175,11 +175,11 @@ const BookingDetailsScreen = () => {
       </View>
 
       {/* Action Buttons */}
-      <TouchableOpacity style={styles.startButton}>
+      <TouchableOpacity style={styles.startButton} onPress={() => router.push('/(tabs)/StartCharging')}>
         <Text style={styles.startText}>Start Charging</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.rescheduleButton}>
+      <TouchableOpacity style={styles.rescheduleButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
         <Text style={styles.rescheduleText}>Reschedule</Text>
       </TouchableOpacity>
 

@@ -23,7 +23,7 @@ const StartChargingModal = ({ visible, onClose, onReserve }) => {
   const handleReserve = () => {
     onReserve?.(selectedSlot);     // pass slot up if parent cares
     onClose?.();                   // hide this modal
-    router.push('/pages/BookingReceipt');
+    router.push('/(tabs)/bookings');
   };
 
   return (

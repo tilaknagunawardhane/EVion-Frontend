@@ -12,6 +12,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -35,6 +36,15 @@ const ProfileScreen1 = ({ route }) => {
   const cardSize = isSmallScreen ? SCREEN_WIDTH / 3.5 : SCREEN_WIDTH / 3.8;
   const cardMargin = isSmallScreen ? 4 : 6;
   const avatarSize = isSmallScreen ? 60 : 72;
+
+  const removeUser = async () => {
+    try {
+      await AsyncStorage.removeItem('user');
+      console.log('User removed from AsyncStorage');
+    } catch (e) {
+      console.log('Error removing user:', e);
+    }
+  };
 
   return (
     <ScrollView 
@@ -163,7 +173,7 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => navigation.navigate('FaultReports')}
+          onPress={() => navigation.navigate('pages/FaultReport')}
         >
           <Image 
             source={require('../../assets/fault.png')} 
@@ -202,7 +212,7 @@ const ProfileScreen1 = ({ route }) => {
       {/* Sign Out Button */}
       <TouchableOpacity 
         style={styles.signOut}
-        onPress={() => console.log('Sign out pressed')}
+        onPress={removeUser}
       >
         <View style={styles.signOutRow}>
           <Image

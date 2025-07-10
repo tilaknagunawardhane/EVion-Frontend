@@ -1,23 +1,38 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import InputField from '../../../components/InputField';
 import CustomButton from '../../../components/CustomButton';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import AppBar from '../../../components/AppBar';
+import { router, useRouter } from 'expo-router';
+
 
 const AddPaymentMethodScreen = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardholderName, setCardholderName] = useState('');
+  const router = useRouter();
+
 
   const handleSave = () => {
-    // handle save logic
+    Alert.alert(
+      'Success',
+      'Card details added successfully!',
+      [
+        {
+          text: 'OK',
+          onPress: () => router.push('/(tabs)/Profile') // Navigate after OK is pressed
+        }
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleSkip = () => {
+    router.push('/(tabs)/Profile')
     // handle skip logic
   };
 
@@ -77,7 +92,7 @@ const AddPaymentMethodScreen = () => {
               <Text style={styles.skipText}>Skip for now</Text>
             </TouchableOpacity>
           </View>
-            <CustomButton title="Save" type="primary" onPress={handleSave} />
+          <CustomButton title="Save" type="primary" onPress={handleSave} />
 
         </View>
       </ScrollView>

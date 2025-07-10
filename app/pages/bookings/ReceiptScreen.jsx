@@ -6,17 +6,36 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
+import { useRouter } from 'expo-router';
+import CustomButton from '../../../components/CustomButton';
+
 
 const { width } = Dimensions.get('window');
 
 const ReceiptScreen = () => {
   const navigation = useNavigation();
-
+      const router = useRouter();
+  
+const handleDownload = () => {
+    Alert.alert(
+      'Download Complete',
+      'Your billing summary has been downloaded successfully.',
+      [
+        {
+          text: 'OK',
+          onPress: () => router.push('/(tabs)'), // Navigate to home after alert
+          style: 'default'
+        }
+      ],
+      { cancelable: false }
+    );
+  };
   return (
     <View style={styles.container}>
       {/* Green Top Oval */}
@@ -83,9 +102,14 @@ const ReceiptScreen = () => {
       </View>
 
       {/* Download Button */}
-      <TouchableOpacity style={styles.downloadButton}>
-        <Text style={styles.downloadText}>Download</Text>
-      </TouchableOpacity>
+     
+      <CustomButton
+        title="Download"
+        type="primary"
+        onPress={handleDownload} // Updated to use the new handler
+        style={styles.downloadButton}
+        textStyle={styles.downloadText}
+      />
     </View>
   );
 };

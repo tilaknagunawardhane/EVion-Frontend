@@ -3,6 +3,8 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '../constants/color.js';
 import fonts from '../constants/fonts.js';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
 
 const CompletedBookingCard = ({ 
   dateLabel, 
@@ -15,6 +17,8 @@ const CompletedBookingCard = ({
   connectorType,
   iconColor = colors.primary // Use primary color from constants as default
 }) => {
+    const router = useRouter();
+  
   return (
     <View style={styles.card}>
       <View style={styles.topRow}>
@@ -22,7 +26,7 @@ const CompletedBookingCard = ({
           <View style={styles.costContainer}>
             <Text style={styles.costText}>LKR {cost}</Text>
           </View>
-          <TouchableOpacity style={styles.bookAgainButton}>
+          <TouchableOpacity style={styles.bookAgainButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
             <Text style={styles.bookAgainText}>Book Again</Text>
           </TouchableOpacity>
         </View>

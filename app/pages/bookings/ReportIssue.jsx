@@ -53,7 +53,7 @@ export default function ReportIssue() {
         numberOfLines={6}
       />
 
-      <TouchableOpacity style={styles.submitButton}>
+      <TouchableOpacity style={styles.submitButton} >
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
     </View>
@@ -66,6 +66,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: colors.background,
     paddingTop: 50,
+    fontFamily: fonts.PlusJakartaSans
   },
   header: {
     flexDirection: 'row',

@@ -5,10 +5,14 @@ import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import BarcodeScanner from '../../components/BarcodeScanner';
+import { useNavigation } from "@react-navigation/native";
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const StartChargingScreen = () => {
+      const navigation = useNavigation();
+    
     const router = useRouter();
     const [isCameraActive, setIsCameraActive] = useState(false);
 
@@ -23,7 +27,7 @@ const StartChargingScreen = () => {
             {/* Header Group */}
             <View style={styles.headerGroup}>
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.push('/(tabs)')}>
+                    <TouchableOpacity  onPress={() => navigation.goBack()}>
                         <Ionicons name="close" size={24} color={colors.mainTextColor} />
                     </TouchableOpacity>
                     <Text style={styles.headerTitle}>Start Charging</Text>

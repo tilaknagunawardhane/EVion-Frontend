@@ -65,7 +65,7 @@ const CompletedBookingDetailsScreen = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
               setMenuVisible(false);
-              router.push('../pages/bookings/ReportIssue');
+              router.push('/pages/bookings/ReportIssue');
             }}>
               <Text style={styles.menuItem}>Report</Text>
             </TouchableOpacity>
@@ -147,7 +147,7 @@ const CompletedBookingDetailsScreen = () => {
       </View>
 
       {/* Action Buttons */}
-      <TouchableOpacity style={styles.startButton} onPress={() => console.log("Book again pressed")}>
+      <TouchableOpacity style={styles.startButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
         <Text style={styles.startText}>Book Again</Text>
       </TouchableOpacity>
 

@@ -69,7 +69,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
         <View style={{ marginBottom: -40 }} />
         <Text
           style={styles.addAnotherLink}
-         onPress={() => router.push('/pages/AddVehicle/addedvprofile')}
+         onPress={() => router.push('/pages/AddVehicle/AddVehicle1')}
         >
           
           Add Another Vehicle

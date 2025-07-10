@@ -87,7 +87,7 @@ const VehicleProfileScreen = () => {
 
 
         <TouchableOpacity style={styles.chargeNowButton}>
-          <Text style={styles.chargeNowText} onPress={() => router.push('pages/StartChargingModal')}>Charge Now</Text>
+          <Text style={styles.chargeNowText} onPress={() => router.push('/pages/StartChargingModal')}>Charge Now</Text>
         </TouchableOpacity>
 
         <TouchableOpacity>

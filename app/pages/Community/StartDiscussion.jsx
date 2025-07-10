@@ -123,7 +123,7 @@ const YourThoughts = () => {
             setTitle("");
             setDescription("");
             setSelectedImages([]);
-            router.push("/(tabs)/community");
+            router.push("/(tabs)/Community");
           }
         }
       ]);

@@ -1,13 +1,32 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CustomButton from '../../components/CustomButton';
+import { useRouter } from 'expo-router';
+
 
 const BillingSummaryScreen = () => {
+    const router = useRouter();
+  
   const navigation = useNavigation();
+
+  const handleDownload = () => {
+    Alert.alert(
+      'Download Complete',
+      'Your billing summary has been downloaded successfully.',
+      [
+        {
+          text: 'OK',
+          onPress: () => router.push('/(tabs)'), // Navigate to home after alert
+          style: 'default'
+        }
+      ],
+      { cancelable: false }
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -53,14 +72,12 @@ const BillingSummaryScreen = () => {
         </View>
 
         <CustomButton
-          title="Download"
-          type="primary"
-          onPress={() => {
-            // Download functionality here
-          }}
-          style={styles.downloadButton}
-          textStyle={styles.downloadText}
-        />
+        title="Download"
+        type="primary"
+        onPress={handleDownload} // Updated to use the new handler
+        style={styles.downloadButton}
+        textStyle={styles.downloadText}
+      />
       </View>
     </View>
   );

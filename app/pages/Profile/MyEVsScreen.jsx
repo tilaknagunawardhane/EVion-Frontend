@@ -39,7 +39,7 @@ const MyEVsScreen = () => {
           <Ionicons name="arrow-back" size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.title}>My EVs</Text>
-        <TouchableOpacity onPress={() => router.push('pages/AddVehicle1')}>
+        <TouchableOpacity onPress={() => router.push('pages/AddVehicle/AddVehicle1')}>
           <Ionicons name="add-circle-outline" size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
       </View>
