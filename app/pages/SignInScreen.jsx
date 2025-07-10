@@ -24,6 +24,7 @@ const SignInScreen = () => {
 
 
   const handleSignIn = async () => {
+    router.replace('/(tabs)');
     if (!email) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
