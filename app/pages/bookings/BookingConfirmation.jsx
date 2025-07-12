@@ -64,7 +64,7 @@ const BookingConfirmationModal = ({ visible, onClose, onConfirm }) => {
             <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.goBack()}>
               <Text style={styles.secondaryButtonText}>Close</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/(tabs)/StartCharging')}>
+            <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/(tabs)/bookings')}>
               <Text style={styles.primaryButtonText}>Confirm Booking</Text>
             </TouchableOpacity>
           </View>

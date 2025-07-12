@@ -344,7 +344,7 @@ export default function DirectionsScreen() {
                       <TouchableOpacity style={styles.viewButton}>
                         <Text style={styles.viewButtonText}>View Station</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.bookButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
+                      <TouchableOpacity style={styles.bookButton} onPress={() => router.push('/pages/StationProfile')}>
                         <Text style={styles.bookButtonText}>Book Now</Text>
                       </TouchableOpacity>
                     </View>

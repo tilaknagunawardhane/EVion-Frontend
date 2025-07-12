@@ -87,6 +87,7 @@ const Ratings1 = () => {
   };
 
   const handleSubmit = () => {
+    router.push('/(tabs)/bookings')
     console.log('Rating:', selectedRating);
     console.log('Feedback:', selectedFeedback);
   };

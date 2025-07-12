@@ -29,7 +29,7 @@ const handleDownload = () => {
       [
         {
           text: 'OK',
-          onPress: () => router.push('/(tabs)'), // Navigate to home after alert
+          onPress: () => router.push('/pages/Ratings1'), // Navigate to home after alert
           style: 'default'
         }
       ],

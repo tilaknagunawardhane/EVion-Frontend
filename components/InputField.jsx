@@ -25,7 +25,7 @@ const InputField = React.memo(({
   editable = true,
   onFocus,
   onBlur,
-  error,
+
   required = false,
   showPasswordToggle = false,
 }) => {
