@@ -71,14 +71,14 @@ const AddYourEVScreen = () => {
     setIsLoading(true);
     try {
 
-      if (user && user._id) {
-        const userId = user._id;
+      if (user && user.user._id) {
+        const userId = user.user._id;
         console.log(userId);
 
         const formData = new FormData();
 
-         formData.append('ownerId', userId);
-         
+        formData.append('ownerId', userId);
+
         // Add all vehicle data from previous screens
         Object.entries(params).forEach(([key, value]) => {
           if (value) formData.append(key, value);
@@ -111,11 +111,26 @@ const AddYourEVScreen = () => {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || 'Failed to add vehicle');
+          Toast.show({
+            type: ALERT_TYPE.DANGER,
+            textBody: data.message || 'Failed to add vehicle',
+            title: 'Error',
+
+          });
+          return;
+          // throw new Error(data.message || 'Failed to add vehicle');
         }
 
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          textBody: 'Vehicle added successfully',
+          title: 'success',
+        });
+
+        setTimeout(() => {
+          router.replace('/pages/AddVehicle/addedvprofile2');
+        }, 1500);
         // Navigate to success screen
-        router.replace('/pages/AddVehicle/addedvprofile2');
       }
       else {
         Toast.show({
