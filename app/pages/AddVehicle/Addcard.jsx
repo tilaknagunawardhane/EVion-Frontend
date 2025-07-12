@@ -1,48 +1,87 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import InputField from '../../../components/InputField';
 import CustomButton from '../../../components/CustomButton';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
-import { useNavigation } from '@react-navigation/native';
 import AppBar from '../../../components/AppBar';
-import { router, useRouter } from 'expo-router';
-
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 
 const AddPaymentMethodScreen = () => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardholderName, setCardholderName] = useState('');
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
+  const handleSave = async () => {
+    if (!cardNumber || !expiry || !cvv) {
+      Toast.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Missing Fields',
+        textBody: 'Please fill in all required fields',
+        autoClose: 2000
+      });
+      return;
+    }
 
-  const handleSave = () => {
-    Alert.alert(
-      'Success',
-      'Card details added successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => router.push('/(tabs)/Profile') // Navigate after OK is pressed
-        }
-      ],
-      { cancelable: false }
-    );
+    // if (cardNumber.length < 16 || cvv.length < 2) {
+    //   Toast.show({
+    //     type: ALERT_TYPE.WARNING,
+    //     title: 'Invalid Card',
+    //     textBody: 'Please enter valid card details',
+    //     autoClose: 2000
+    //   });
+    //   return;
+    // }
+
+    setIsLoading(true);
+
+    try {
+      const cardData = {
+        cardNum: cardNumber,
+        expiry,
+        cardholderName,
+        addedAt: new Date().toISOString()
+      };
+
+      await AsyncStorage.setItem('paymentCard', JSON.stringify(cardData));
+
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Success',
+        textBody: 'Card details saved successfully!',
+        autoClose: 1500,
+        onHide: () => router.push('/(tabs)/Profile')
+      });
+
+    } catch (error) {
+      console.error('Save error:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Failed to save card details',
+        autoClose: 2000
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSkip = () => {
-    router.push('/(tabs)/Profile')
-    // handle skip logic
+    router.push('/(tabs)/Profile');
   };
 
   return (
     <View style={styles.container}>
       <AppBar />
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled">
-
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.mainContent}>
           <Text style={styles.title}>Add Payment Method</Text>
           <Text style={styles.subText}>
@@ -56,6 +95,11 @@ const AddPaymentMethodScreen = () => {
             onChangeText={setCardNumber}
             placeholder="•••• •••• •••• ••••"
             keyboardType="number-pad"
+            maxLength={19}
+            formatText={(text) => {
+              // Add spaces every 4 digits for better readability
+              return text.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim();
+            }}
           />
 
           <View style={styles.row}>
@@ -63,9 +107,17 @@ const AddPaymentMethodScreen = () => {
               <InputField
                 label="Expires*"
                 value={expiry}
-                onChangeText={setExpiry}
-                placeholder="mm/yy"
+                onChangeText={(text) => {
+                  // Auto-insert slash after 2 digits
+                  if (text.length === 2 && !text.includes('/')) {
+                    setExpiry(text + '/');
+                  } else {
+                    setExpiry(text);
+                  }
+                }}
+                placeholder="MM/YY"
                 keyboardType="number-pad"
+                maxLength={5}
               />
             </View>
             <View style={styles.halfWidth}>
@@ -75,6 +127,8 @@ const AddPaymentMethodScreen = () => {
                 onChangeText={setCvv}
                 placeholder="•••"
                 keyboardType="number-pad"
+                maxLength={4}
+                secureTextEntry
               />
             </View>
           </View>
@@ -85,6 +139,7 @@ const AddPaymentMethodScreen = () => {
             onChangeText={setCardholderName}
             placeholder="John Doe"
             keyboardType="default"
+            autoCapitalize="words"
           />
 
           <View style={styles.footerButtons}>
@@ -92,8 +147,14 @@ const AddPaymentMethodScreen = () => {
               <Text style={styles.skipText}>Skip for now</Text>
             </TouchableOpacity>
           </View>
-          <CustomButton title="Save" type="primary" onPress={handleSave} />
-
+          
+          <CustomButton 
+            title={isLoading ? "Saving..." : "Save"} 
+            type="primary" 
+            onPress={handleSave} 
+            disabled={isLoading}
+            loading={isLoading}
+          />
         </View>
       </ScrollView>
     </View>

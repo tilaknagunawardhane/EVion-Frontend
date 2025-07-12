@@ -25,8 +25,10 @@ const VehicleAddedScreen = ({ navigation, route }) => {
   useEffect(() => {
     async function getUser() {
       const user = await AsyncStorage.getItem('user');
+      const card = await AsyncStorage.getItem('paymentCard');
       if (user) {
         console.log(user);
+        console.log(card);
         setUser(JSON.parse(user));
       }
     }
