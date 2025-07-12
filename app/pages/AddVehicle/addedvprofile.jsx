@@ -128,7 +128,13 @@ const AddYourEVScreen = () => {
         });
 
         setTimeout(() => {
-          router.replace('/pages/AddVehicle/addedvprofile2');
+          router.push({
+            pathname: '/pages/AddVehicle/addedvprofile2',
+            params: {
+              userID: data.data.userID,
+              newVehicleID: data.data.newVehicleID
+            }
+          });
         }, 1500);
         // Navigate to success screen
       }

@@ -1,30 +1,41 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
+const { width } = Dimensions.get('window');
+
 const VehicleProfile = ({ image, name }) => {
   return (
-    <View style={styles.vehicleSection}>
-      <View style={styles.vehicleIconCircle}>
-        <Image
-          source={image}
-          style={styles.vehicleIcon}
-          resizeMode="contain"
-        />
+    <View style={styles.container}>
+      <View style={styles.vehicleCard}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={image}
+            style={styles.vehicleImage}
+            resizeMode="contain"
+          />
+        </View>
+        <Text style={styles.vehicleName} numberOfLines={2}>
+          {name}
+        </Text>
       </View>
-      <Text style={styles.vehicleName}>{name}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  vehicleSection: {
-    alignItems: 'flex-start',
-    marginBottom: 3,
-    marginLeft: 0,
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 8,
   },
-  vehicleIconCircle: {
+  vehicleCard: {
+    alignItems: 'center',
+    width: width * 0.23, // 25% of screen width
+    maxWidth: 120, // Maximum size for larger screens
+  },
+  imageContainer: {
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -32,18 +43,21 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 6,
+    backgroundColor: 'white', // Add background if needed
+    marginBottom: 8,
   },
-  vehicleIcon: {
-    height: 28,
+  vehicleImage: {
+    width: '70%', // Relative to container
+    height: '70%',
     tintColor: colors.primary,
   },
   vehicleName: {
     fontFamily: fonts.PlusJakartaSans,
     fontSize: 12,
     color: colors.mainTextColor,
-    lineHeight: 20,
     textAlign: 'center',
+    lineHeight: 16,
+    width: '100%', // Ensure text container takes full width
   },
 });
 

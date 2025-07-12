@@ -76,6 +76,8 @@ const SignUpScreen = () => {
         textBody: 'You have signed up successfully!',
       });
 
+      await AsyncStorage.setItem('isSignupFlow', 'true');
+
       setTimeout(() => {
         router.replace('/pages/AddVehicle/AddVehicle1');
       }, 1500);
