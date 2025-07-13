@@ -76,8 +76,10 @@ const SignUpScreen = () => {
         textBody: 'You have signed up successfully!',
       });
 
+      await AsyncStorage.setItem('isSignupFlow', 'true');
+
       setTimeout(() => {
-        router.replace('/pages/AddVehicle1');
+        router.replace('/pages/AddVehicle/AddVehicle1');
       }, 1500);
     } catch (error) {
       console.error('Error during sign-up:', error);
