@@ -131,25 +131,17 @@ const MyEVsScreen = () => {
             <TouchableOpacity
               key={vehicle._id || index}
               style={styles.card}
+              // In your MyEVsScreen where you navigate:
               onPress={() =>
                 router.push({
                   pathname: '/pages/Profile/VehicleProfile',
                   params: {
-                    vehicleId: vehicle._id,
-                    brand: vehicle.make_info?.make,
-                    model: vehicle.model_info?.model,
-                    year: vehicle.manufactured_year,
-                    batteryCapacity: `${vehicle.battery_capacity}kWh`,
-                    batteryHealth: `${vehicle.battery_health}%`,
-                    acConnector: { type: vehicle.connector_type_AC_info.type_name,
-                    image: vehicle.connector_type_AC_info.image, power: vehicle.max_power_AC
-                    },
-                    dcConnector: { type: vehicle.connector_type_DC_info.type_name, 
-                    image: vehicle.connector_type_DC_info.image, power: vehicle.max_power_DC
-                    }
+                    vehicleID: vehicle._id,
+                    userID: user._id,
                   },
                 })
               }
+
             >
               <Image
                 source={
