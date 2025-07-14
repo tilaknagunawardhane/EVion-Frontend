@@ -39,13 +39,13 @@ const VehicleAddedScreen = ({ navigation, route }) => {
     const fetchVehicles = async () => {
       try {
         setLoading(true);
-        if (user?.user?._id) {
+        if (user?._id) {
           const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userID: user.user._id }),
+            body: JSON.stringify({ userID: user._id }),
           });
 
           const result = await response.json();
@@ -78,7 +78,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
       }
     };
 
-    if (user?.user?._id) {
+    if (user?._id) {
       fetchVehicles();
     }
   }, [user, newVehicleID]);
