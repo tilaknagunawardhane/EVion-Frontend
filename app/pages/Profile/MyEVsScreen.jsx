@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { API_BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import CustomButton from '../../../components/CustomButton';
 
 const MyEVsScreen = () => {
   const router = useRouter();
@@ -51,7 +52,7 @@ const MyEVsScreen = () => {
       });
 
       const result = await response.json();
-      console.log('API response:', result);
+      // console.log('API response:', result);
 
       if (!response.ok) {
         Toast.show({
@@ -74,6 +75,12 @@ const MyEVsScreen = () => {
       setRefreshing(false);
     }
   };
+
+  const handleAddVehicle = async () => {
+      await AsyncStorage.setItem('isProfileFlow', 'true');
+    
+      router.push('/pages/AddVehicle/AddVehicle1');
+  }
 
   useEffect(() => {
     if (user?._id) {
@@ -102,7 +109,7 @@ const MyEVsScreen = () => {
           <Ionicons name="arrow-back" size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.title}>My EVs</Text>
-        <TouchableOpacity onPress={() => router.push('/pages/AddVehicle/AddVehicle1')}>
+        <TouchableOpacity onPress={handleAddVehicle}>
           <Ionicons name="add-circle-outline" size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
       </View>
@@ -123,7 +130,7 @@ const MyEVsScreen = () => {
             <Text style={styles.emptyText}>No vehicles found</Text>
             <CustomButton
               title="Add Your First Vehicle"
-              onPress={() => router.push('/pages/AddVehicle/AddVehicle1')}
+              onPress={handleAddVehicle}
             />
           </View>
         ) : (
