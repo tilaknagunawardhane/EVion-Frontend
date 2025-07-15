@@ -21,7 +21,7 @@
     "dayjs": "^1.11.13",
 
     "expo": "^53.0.12",
-    "expo-barcode-scanner": "^13.0.1",
+    
     "expo-camera": "~16.1.10",
 
     "expo-constants": "~17.1.6",
