@@ -100,6 +100,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
       await AsyncStorage.removeItem('isSignupFlow');
     } else if (isProfileFlow === 'true') {
       router.push('/pages/Profile/MyEVsScreen');
+      await AsyncStorage.removeItem('isProfileFlow');
     }
     else {
       router.push('/(tabs)');

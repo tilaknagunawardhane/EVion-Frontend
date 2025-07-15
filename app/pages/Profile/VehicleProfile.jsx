@@ -8,6 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
   RefreshControl,
+  Alert
 } from 'react-native';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
@@ -24,6 +25,7 @@ const VehicleProfileScreen = () => {
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isDeactivating, setIsDeactivating] = useState(false);
 
   const fetchVehicle = async () => {
     try {
@@ -61,6 +63,46 @@ const VehicleProfileScreen = () => {
     }
   };
 
+  const handleRemoveVehicle = async () => {
+    try {
+      setIsDeactivating(true);
+
+      const response = await fetch(`${API_BASE_URL}/api/vehicles/deactivateVehicle`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userID: params.userID,
+          vehicleID: params.vehicleID
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        Toast.show({
+          type: ALERT_TYPE.ERROR,
+          title: 'Error',
+          textBody: result.message || 'Failed to remove vehicle',
+        });
+        return;
+      }
+
+      router.replace('/pages/Profile/MyEVsScreen');
+
+
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message || 'Failed to remove vehicle',
+      });
+    } finally {
+      setIsDeactivating(false);
+    }
+  };
+
   useEffect(() => {
     if (userID && vehicleID) {
       fetchVehicle();
@@ -85,7 +127,7 @@ const VehicleProfileScreen = () => {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>Vehicle not found</Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
@@ -115,8 +157,8 @@ const VehicleProfileScreen = () => {
         {vehicle.model_info?.model || 'Model'}  |  {vehicle.manufactured_year || 'Year'}
       </Text>
 
-      <ScrollView 
-        contentContainerStyle={styles.scrollContainer} 
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -127,11 +169,11 @@ const VehicleProfileScreen = () => {
         }
       >
         <View style={styles.imageAndStatsRow}>
-          <Image 
+          <Image
             source={
-             require('../../../assets/Ford.png')
-            } 
-            style={styles.image} 
+              require('../../../assets/Ford.png')
+            }
+            style={styles.image}
             defaultSource={require('../../../assets/Ford.png')}
           />
 
@@ -151,12 +193,12 @@ const VehicleProfileScreen = () => {
           <View style={styles.connectorWrapper}>
             <Text style={styles.connectorLabel}>AC Connectors</Text>
             <View style={styles.connectorCard}>
-              <Image 
-                source={vehicle.connectorImages?.AC ? 
-                  { uri: `${API_BASE_URL}${vehicle.connectorImages.AC}` } : 
+              <Image
+                source={vehicle.connectorImages?.AC ?
+                  { uri: `${API_BASE_URL}${vehicle.connectorImages.AC}` } :
                   require('../../../assets/type2.png')
-                } 
-                style={styles.connectorIcon} 
+                }
+                style={styles.connectorIcon}
               />
               <Text style={styles.connectorType}>
                 {vehicle.connector_type_AC_info?.type_name || 'N/A'}
@@ -170,12 +212,12 @@ const VehicleProfileScreen = () => {
           <View style={styles.connectorWrapper}>
             <Text style={styles.connectorLabel}>DC Connectors</Text>
             <View style={styles.connectorCard}>
-              <Image 
-                source={vehicle.connectorImages?.DC ? 
-                  { uri: `${API_BASE_URL}${vehicle.connectorImages.DC}` } : 
+              <Image
+                source={vehicle.connectorImages?.DC ?
+                  { uri: `${API_BASE_URL}${vehicle.connectorImages.DC}` } :
                   require('../../../assets/type2.png')
-                } 
-                style={styles.connectorIcon} 
+                }
+                style={styles.connectorIcon}
               />
               <Text style={styles.connectorType}>
                 {vehicle.connector_type_DC_info?.type_name || 'N/A'}
@@ -187,15 +229,39 @@ const VehicleProfileScreen = () => {
           </View>
         </View>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.chargeNowButton}
           onPress={() => router.push('/pages/StartChargingModal')}
         >
           <Text style={styles.chargeNowText}>Charge Now</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Text style={styles.removeVehicleText}>Remove Vehicle</Text>
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+      'Remove Vehicle',
+      'Are you sure you want to remove this vehicle?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Remove',
+          onPress: handleRemoveVehicle,
+          style: 'destructive',
+        },
+      ]
+    );
+          }}
+          disabled={isDeactivating}
+          style={styles.removeButton}
+        >
+          {isDeactivating ? (
+            <ActivityIndicator color="#E53935" />
+          ) : (
+            <Text style={styles.removeText}>Remove Vehicle</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -362,6 +428,16 @@ const styles = StyleSheet.create({
     color: '#E53935',
     textAlign: 'center',
     marginTop: 8,
+  },
+  removeButton: {
+    marginTop: 0,
+    padding: 12,
+    alignItems: 'center',
+  },
+  removeText: {
+    color: '#E53935',
+    fontFamily: fonts.PlusJakartaSansMedium,
+    fontSize: 16,
   },
 });
 
