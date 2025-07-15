@@ -39,13 +39,13 @@ const VehicleAddedScreen = ({ navigation, route }) => {
     const fetchVehicles = async () => {
       try {
         setLoading(true);
-        if (user?.user?._id) {
+        if (user?._id) {
           const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userID: user.user._id }),
+            body: JSON.stringify({ userID: user._id }),
           });
 
           const result = await response.json();
@@ -78,7 +78,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
       }
     };
 
-    if (user?.user?._id) {
+    if (user?._id) {
       fetchVehicles();
     }
   }, [user, newVehicleID]);
@@ -93,11 +93,16 @@ const VehicleAddedScreen = ({ navigation, route }) => {
 
   const handleAddVehicle = async () => {
     const isSignupFlow = await AsyncStorage.getItem('isSignupFlow');
+    const isProfileFlow = await AsyncStorage.getItem('isProfileFlow');
 
     if (isSignupFlow === 'true') {
       router.push('/pages/AddVehicle/Addcard');
       await AsyncStorage.removeItem('isSignupFlow');
-    } else {
+    } else if (isProfileFlow === 'true') {
+      router.push('/pages/Profile/MyEVsScreen');
+      await AsyncStorage.removeItem('isProfileFlow');
+    }
+    else {
       router.push('/(tabs)');
     }
   };

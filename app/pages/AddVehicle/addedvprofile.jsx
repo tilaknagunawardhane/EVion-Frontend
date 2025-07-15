@@ -71,8 +71,8 @@ const AddYourEVScreen = () => {
     setIsLoading(true);
     try {
 
-      if (user && user.user._id) {
-        const userId = user.user._id;
+      if (user && user._id) {
+        const userId = user._id;
         console.log(userId);
 
         const formData = new FormData();
