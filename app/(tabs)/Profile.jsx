@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -59,7 +60,7 @@ const ProfileScreen1 = ({ route }) => {
       {/* User Info Card */}
       <TouchableOpacity 
         style={styles.userCard}
-        onPress={() => navigation.navigate('EditProfile', { userData })}
+        onPress={() => router.push('/pages/Profile/Profile1')}
       >
         <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}>
           {userData.profileImage ? (

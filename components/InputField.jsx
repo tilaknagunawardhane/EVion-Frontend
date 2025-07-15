@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
-const InputField = ({
+const InputField = React.memo(({
   label,
   value,
   onChangeText,
@@ -17,40 +17,79 @@ const InputField = ({
   isPassword = false,
   error,
   style,
+  inputStyle,
+  labelStyle,
+  containerStyle,
+  multiline = false,
+  maxLength,
+  editable = true,
+  onFocus,
+  onBlur,
+
+  required = false,
+  showPasswordToggle = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
+  const handleFocus = useCallback(() => {
+    setIsFocused(true);
+    onFocus && onFocus();
+  }, [onFocus]);
+
+  const handleBlur = useCallback(() => {
+    setIsFocused(false);
+    onBlur && onBlur();
+  }, [onBlur]);
+
+  const togglePasswordVisibility = useCallback(() => {
+    if (setShowPassword) {
+      setShowPassword(!showPassword);
+    }
+  }, [setShowPassword, showPassword]);
+
   return (
-    <View style={styles.inputContainer}>
-      <Text style={styles.inputLabel}>{label}</Text>
-      <View style={isPassword ? styles.passwordContainer : null}>
+    <View style={[styles.inputContainer, containerStyle]}>
+      {label && (
+        <Text style={[styles.inputLabel, labelStyle]}>
+          {label}
+          {required && <Text style={styles.required}>*</Text>}
+        </Text>
+      )}
+      <View style={[isPassword || showPasswordToggle ? styles.passwordContainer : null]}>
         <TextInput
           style={[
             styles.input,
             style,
-            isPassword && styles.passwordInput,
-            isFocused && { borderColor: colors.primary },
-            { color: value ? 'black' : colors.mainTextColor }, //  change text color based on value
+            inputStyle,
+            (isPassword || showPasswordToggle) && styles.passwordInput,
+            isFocused && styles.inputFocused,
+            error && styles.inputError,
+            !editable && styles.inputDisabled,
+            multiline && styles.inputMultiline,
+            { color: value ? colors.mainTextColor : colors.secondaryText },
           ]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={placeholderTextColor}
-          secureTextEntry={isPassword ? !showPassword : false}
+          secureTextEntry={isPassword ? !showPassword : (secureTextEntry && showPassword !== undefined ? !showPassword : secureTextEntry)}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          multiline={multiline}
+          maxLength={maxLength}
+          editable={editable}
         />
-        {isPassword && (
+        {(isPassword || showPasswordToggle) && (
           <TouchableOpacity
             style={styles.eyeIcon}
-            onPress={() => setShowPassword(!showPassword)}
+            onPress={togglePasswordVisibility}
             activeOpacity={0.7}
           >
             <Image
               source={
-                showPassword
+                (showPassword !== undefined ? showPassword : false)
                   ? require('../assets/eye-open.png')
                   : require('../assets/eye-closed.png')
               }
@@ -60,10 +99,12 @@ const InputField = ({
         )}
 
       </View>
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
+      {error && (
+        <Text style={styles.errorText}>{error}</Text>
+      )}
     </View>
   );
-};
+});
 
 const styles = StyleSheet.create({
   inputContainer: {
@@ -75,8 +116,11 @@ const styles = StyleSheet.create({
     color: colors.mainTextColor,
     marginBottom: 8,
   },
+  required: {
+    color: colors.error || '#FF3B30',
+  },
   input: {
-    height: 50,
+    minHeight: 48,
     backgroundColor: colors.background,
     borderColor: colors.stroke,
     borderWidth: 1,
@@ -86,22 +130,38 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
   },
+  inputFocused: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+  },
+  inputError: {
+    borderColor: colors.error || '#FF3B30',
+  },
+  inputDisabled: {
+    backgroundColor: colors.background,
+    opacity: 0.6,
+  },
+  inputMultiline: {
+    textAlignVertical: 'top',
+    minHeight: 80,
+  },
   passwordContainer: {
     position: 'relative',
     justifyContent: 'center',
   },
   passwordInput: {
-    paddingRight: 40,
+    paddingRight: 50,
   },
   eyeIcon: {
     position: 'absolute',
-    right: 12,
-    top: 14,
+    right: 16,
+    top: 12,
+    padding: 4,
     zIndex: 1,
   },
   eyeIconImage: {
-    width: 22,
-    height: 22,
+    width: 20,
+    height: 20,
     tintColor: colors.secondaryText,
   },
   errorText: {

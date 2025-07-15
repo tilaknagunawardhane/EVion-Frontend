@@ -25,11 +25,11 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           };
 
           const iconName = {
-            'index': 'home',
             'bookings': 'calendar',
             'Community': 'comments',
             'Profile': 'user',
-            'StartCharging': 'play'
+            'StartCharging': 'play',
+            'map': 'map-o'
           }[route.name];
 
           return (
@@ -67,15 +67,15 @@ export default function TabLayout() {
         headerShown: false,
       }}
     >
-      <Tabs.Screen
-        name="index"
+    <Tabs.Screen
+        name="map"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="home" color={color} />
-          ),
+          title: 'Explore',
+          headerShown: false,
+          tabBarIcon: ({ color }) => <FontAwesome size={20} name="map-o" color={color} />,
         }}
       />
+      
       <Tabs.Screen
         name="bookings"
         options={{

@@ -1,340 +1,886 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  SafeAreaView, 
-  StatusBar, 
+import React, { useState, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
   ScrollView,
-  ActivityIndicator,
+  Image,
   Alert,
-   TextInput, // Added this import
-  Image // Added this import
+  Modal,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
+import CustomButton from '../../components/CustomButton';
+import InputField from '../../components/InputField';
+import ProfileField from '../../components/ProfileField';
+import OTPInputOriginal from '../../components/OTPInput';
+const OTPInput = React.memo(OTPInputOriginal);
+import CustomModal from '../../components/CustomModal';
 
-// Mock API service (replace with your actual API calls)
-const ProfileService = {
-  getProfile: async () => {
-    // Replace with actual API call
-    return {
-      name: 'Vishwam Vilochana',
-      email: 'vishwam2002@gmail.com',
-      phone: '+94 71 597 1236',
-      homeAddress: 'Your home address',
-      workAddress: 'Your work place address',
-      avatar: null
-    };
-  },
-  updateProfile: async (data) => {
-    // Replace with actual API call
-    console.log('Updating profile with:', data);
-    return { success: true };
-  },
-  changePassword: async (currentPassword, newPassword) => {
-    // Replace with actual API call
-    return { success: true };
-  }
-};
+// Move ProfileFieldComponent outside to prevent re-creation on every render
+const ProfileFieldComponent = React.memo(({ 
+  label, 
+  value, 
+  field, 
+  showEdit = true, 
+  isEditingField, 
+  editingValue, 
+  onEdit, 
+  onUpdate, 
+  onCancel, 
+  onValueChange, 
+  onSpecialEdit
+}) => (
+  <ProfileField
+    label={label}
+    value={value}
+    field={field}
+    showEdit={showEdit}
+    isEditingField={isEditingField}
+    editingValue={editingValue}
+    onEdit={onEdit}
+    onUpdate={onUpdate}
+    onCancel={onCancel}
+    onValueChange={onValueChange}
+    placeholder={value}
+    multiline={field === 'homeAddress' || field === 'workPlace'}
+    keyboardType={field === 'contactNumber' ? 'phone-pad' : field === 'email' ? 'email-address' : 'default'}
+    onSpecialEdit={onSpecialEdit}
+  />
+));
 
-const ProfileScreen = () => {
+// Memoize ProfilePictureModal to prevent unnecessary re-renders
+const ProfilePictureModal = React.memo(({ showProfileModal, setShowProfileModal, handleProfileModalClose }) => (
+  <Modal
+    visible={showProfileModal}
+    transparent={true}
+    animationType="fade"
+  >
+    <View style={styles.profileModalOverlay}>
+      <View style={styles.profileModalContainer}>
+        <Text style={styles.profileModalTitle}>Change Profile Picture</Text>
+        <TouchableOpacity style={styles.profileModalOption} onPress={handleProfileModalClose}>
+          <Text style={styles.profileModalOptionText}>Take Photo</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.profileModalOption} onPress={handleProfileModalClose}>
+          <Text style={styles.profileModalOptionText}>Choose from Gallery</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.profileModalCancel} onPress={handleProfileModalClose}>
+          <Text style={styles.profileModalCancelText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+));
+
+// Memoize all modal close handlers
+const EmailModal = React.memo(({ 
+  showEmailModal, 
+  setShowEmailModal, 
+  emailValue, 
+  handleEmailValueChange, 
+  handleEmailUpdate,
+  handleEmailModalClose
+}) => (
+  <CustomModal
+    visible={showEmailModal}
+    onClose={handleEmailModalClose}
+    title="Email"
+    subtitle="You'll use this email to get sign in and get notifications"
+    footerContent={
+      <CustomButton
+        title="Update"
+        onPress={handleEmailUpdate}
+      />
+    }
+  >
+    <InputField
+      label="Email Address"
+      value={emailValue}
+      onChangeText={handleEmailValueChange}
+      keyboardType="email-address"
+      required
+    />
+    
+    <Text style={styles.emailNote}>
+      A verification code will be sent to this email
+    </Text>
+  </CustomModal>
+));
+
+const VerifyEmailModal = React.memo(({ 
+  showVerifyModal, 
+  setShowVerifyModal, 
+  otpValue, 
+  handleOtpChange, 
+  focusedOtpIndex, 
+  handleFocusedOtpIndexChange, 
+  handleOtpBlur,
+  handleVerifyOtp, 
+  handleResendCode,
+  handleVerifyModalClose
+}) => (
+  <CustomModal
+    visible={showVerifyModal}
+    onClose={handleVerifyModalClose}
+    title="Verify Email"
+    subtitle="We've sent a 6-digit OTP to vishwani2002@gmail.com"
+    footerContent={
+      <View>
+        <CustomButton
+          title="Continue"
+          onPress={handleVerifyOtp}
+        />
+        <View style={styles.resendContainer}>
+          <Text style={styles.resendText}>Don't you receive any code? </Text>
+          <TouchableOpacity onPress={handleResendCode}>
+            <Text style={styles.resendLink}>Resend Code</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    }
+  >
+    <View style={styles.otpContainer}>
+      <Text style={styles.otpLabel}>OTP</Text>
+      <OTPInput
+        length={6}
+        value={otpValue}
+        onChange={handleOtpChange}
+        focusedIndex={focusedOtpIndex}
+        onFocus={handleFocusedOtpIndexChange}
+        onBlur={handleOtpBlur}
+      />
+    </View>
+  </CustomModal>
+));
+
+const SuccessModal = React.memo(({ showSuccessModal, setShowSuccessModal, handleSuccessModalClose }) => (
+  <CustomModal
+    visible={showSuccessModal}
+    onClose={handleSuccessModalClose}
+    title="Verify Email"
+    subtitle="We've sent a 6-digit OTP to vishwani2002@gmail.com"
+    footerContent={
+      <View>
+        <CustomButton
+          title="Continue"
+          onPress={handleSuccessModalClose}
+        />
+        <View style={styles.successContainer}>
+          <Text style={styles.successText}>✓ Verification successful!</Text>
+        </View>
+      </View>
+    }
+  >
+    <View style={styles.otpContainer}>
+      <Text style={styles.otpLabel}>OTP</Text>
+      <OTPInput
+        length={6}
+        value={['3', '5', '2', '9', '3', '5']}
+        onChange={() => {}}
+        editable={false}
+      />
+    </View>
+  </CustomModal>
+));
+
+const PasswordModal = React.memo(({ 
+  showPasswordModal, 
+  setShowPasswordModal, 
+  newPassword, 
+  handleNewPasswordChange, 
+  confirmPassword, 
+  handleConfirmPasswordChange, 
+  showNewPassword, 
+  setShowNewPassword, 
+  showConfirmPassword, 
+  setShowConfirmPassword, 
+  handleNewPasswordFocus,
+  handleNewPasswordBlur,
+  handleConfirmPasswordFocus,
+  handleConfirmPasswordBlur,
+  handlePasswordUpdate, 
+  isPasswordValid,
+  handlePasswordModalClose,
+  passwordButtonStyle
+}) => (
+  <CustomModal
+    visible={showPasswordModal}
+    onClose={handlePasswordModalClose}
+    title="Password"
+    subtitle="Your password must be at least 8 characters long"
+    footerContent={
+      <CustomButton
+        title="Update"
+        onPress={handlePasswordUpdate}
+        backgroundColor={isPasswordValid() ? colors.primary : colors.gray}
+        disabled={!isPasswordValid()}
+        textStyle={passwordButtonStyle}
+      />
+    }
+  >
+    <InputField
+      label="New Password"
+      value={newPassword}
+      onChangeText={handleNewPasswordChange}
+      secureTextEntry={true}
+      showPasswordToggle={true}
+      showPassword={showNewPassword}
+      setShowPassword={setShowNewPassword}
+      onFocus={handleNewPasswordFocus}
+      onBlur={handleNewPasswordBlur}
+      required
+    />
+    
+    <InputField
+      label="Confirm New Password"
+      value={confirmPassword}
+      onChangeText={handleConfirmPasswordChange}
+      secureTextEntry={true}
+      showPasswordToggle={true}
+      showPassword={showConfirmPassword}
+      setShowPassword={setShowConfirmPassword}
+      onFocus={handleConfirmPasswordFocus}
+      onBlur={handleConfirmPasswordBlur}
+      required
+    />
+  </CustomModal>
+));
+
+const RecoveryPhoneModal = React.memo(({ 
+  showRecoveryPhoneModal, 
+  setShowRecoveryPhoneModal, 
+  recoveryPhone, 
+  handleRecoveryPhoneChange, 
+  isRecoveryPhoneValid, 
+  handleRecoveryPhoneUpdate,
+  handleRecoveryPhoneModalClose,
+  recoveryPhoneButtonTextStyle,
+  recoveryPhoneButtonStyle
+}) => (
+  <CustomModal
+    visible={showRecoveryPhoneModal}
+    onClose={handleRecoveryPhoneModalClose}
+    title="Recovery Phone"
+    subtitle="You'll use this number to recover your account"
+    footerContent={
+      <TouchableOpacity
+        style={recoveryPhoneButtonStyle(isRecoveryPhoneValid())}
+        onPress={isRecoveryPhoneValid() ? handleRecoveryPhoneUpdate : null}
+        disabled={!isRecoveryPhoneValid()}
+        activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
+      >
+        <Text style={recoveryPhoneButtonTextStyle}>
+          Update
+        </Text>
+      </TouchableOpacity>
+    }
+  >
+    <InputField
+      label="Phone Number"
+      value={recoveryPhone}
+      onChangeText={handleRecoveryPhoneChange}
+      placeholder="+94"
+      keyboardType="phone-pad"
+      required
+    />
+    
+    <Text style={styles.phoneNote}>
+      A verification code will be sent to this email
+    </Text>
+  </CustomModal>
+));
+
+const AddressModal = React.memo(({ 
+  showAddressModal, 
+  setShowAddressModal, 
+  addressForm, 
+  handleSuiteChange,
+  handleStreetChange,
+  handleCityChange,
+  handleDistrictChange,
+  handleAddressUpdate,
+  handleAddressModalClose
+}) => (
+  <CustomModal
+    visible={showAddressModal}
+    onClose={handleAddressModalClose}
+    title="Complete your address"
+    subtitle="Setup your address below"
+    scrollable={true}
+    footerContent={
+      <CustomButton
+        title="Done"
+        onPress={handleAddressUpdate}
+      />
+    }
+  >
+    <InputField
+      label="Suit/Apartment (Optional)"
+      value={addressForm.suite}
+      onChangeText={handleSuiteChange}
+      placeholder="25"
+    />
+    
+    <InputField
+      label="Street Name"
+      value={addressForm.street}
+      onChangeText={handleStreetChange}
+      placeholder="Neelamahara Road"
+      required
+    />
+    
+    <InputField
+      label="City"
+      value={addressForm.city}
+      onChangeText={handleCityChange}
+      placeholder="Maharagama"
+      required
+    />
+    
+    <InputField
+      label="District"
+      value={addressForm.district}
+      onChangeText={handleDistrictChange}
+      placeholder="Colombo"
+      required
+    />
+    
+    <View style={styles.mapContainer}>
+      <View style={styles.mapPlaceholder}>
+        <View style={styles.mapBackground}>
+          <View style={styles.roadLine} />
+          <View style={styles.roadLine2} />
+          <View style={styles.roadLine3} />
+          <View style={styles.locationPin}>
+            <View style={styles.pinDot} />
+          </View>
+          <Text style={styles.locationLabel}>Maharagama</Text>
+        </View>
+        <View style={styles.mapOverlay}>
+          <TouchableOpacity style={styles.mapButton}>
+            <Text style={styles.mapButtonIcon}>📍</Text>
+            <Text style={styles.mapButtonText}>Update location on map</Text>
+          </TouchableOpacity>
+          <Text style={styles.mapSubtext}>or Manually update the address</Text>
+        </View>
+      </View>
+    </View>
+  </CustomModal>
+));
+
+const Profile1 = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('Basic Info');
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [editingField, setEditingField] = useState(null);
-  const [tempValue, setTempValue] = useState('');
+  const [isEditing, setIsEditing] = useState(null);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  
+  // Signin Info states
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [emailValue, setEmailValue] = useState('');
+  const [otpValue, setOtpValue] = useState(['', '', '', '', '', '']);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [focusedOtpIndex, setFocusedOtpIndex] = useState(null);
+  
+  // Security states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showRecoveryPhoneModal, setShowRecoveryPhoneModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [recoveryPhone, setRecoveryPhone] = useState('+94 71 653 5');
+  const [focusedPasswordField, setFocusedPasswordField] = useState(null);
+  
+  const [userInfo, setUserInfo] = useState({
+    name: 'Vishwani Vilochana',
+    email: 'vishwani2002@gmail.com',
+    contactNumber: '+94 71 597 1236',
+    homeAddress: 'Your home address',
+    workPlace: 'Your work place address',
+  });
 
-  const tabs = ['Basic Info', 'Signin Info', 'Security'];
+  const [editingValue, setEditingValue] = useState('');
+  const [addressForm, setAddressForm] = useState({
+    suite: '25',
+    street: 'Neelamahara Road',
+    city: 'Maharagama',
+    district: 'Colombo',
+  });
 
-  useEffect(() => {
-    fetchProfile();
+  const tabs = useMemo(() => ['Basic Info', 'Signin Info', 'Security'], []);
+
+  // Memoize text input handlers to prevent re-creation
+  const handleEditingValueChange = useCallback((value) => {
+    setEditingValue(value);
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      setLoading(true);
-      const profileData = await ProfileService.getProfile();
-      setProfile(profileData);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to fetch profile data');
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleAddressFormChange = useCallback((field, value) => {
+    setAddressForm(prev => ({ ...prev, [field]: value }));
+  }, []);
 
-  const handleBackPress = () => {
-    router.back();
-  };
+  const handleEmailValueChange = useCallback((value) => {
+    setEmailValue(value);
+  }, []);
 
-  const handleTabPress = (tab) => {
+  const handleNewPasswordChange = useCallback((value) => {
+    setNewPassword(value);
+  }, []);
+
+  const handleConfirmPasswordChange = useCallback((value) => {
+    setConfirmPassword(value);
+  }, []);
+
+  const handleRecoveryPhoneChange = useCallback((value) => {
+    setRecoveryPhone(value);
+  }, []);
+
+  const handleFocusedPasswordFieldChange = useCallback((field) => {
+    setFocusedPasswordField(field);
+  }, []);
+
+  const handleOtpBlur = useCallback(() => {
+    setFocusedOtpIndex(null);
+  }, []);
+
+  const handleFocusedOtpIndexChange = useCallback((index) => {
+    setFocusedOtpIndex(index);
+  }, []);
+
+  // Modal close handlers - memoized to prevent re-renders
+  const handleEmailModalClose = useCallback(() => {
+    setShowEmailModal(false);
+  }, []);
+
+  const handleVerifyModalClose = useCallback(() => {
+    setShowVerifyModal(false);
+  }, []);
+
+  const handleSuccessModalClose = useCallback(() => {
+    setShowSuccessModal(false);
+  }, []);
+
+  const handlePasswordModalClose = useCallback(() => {
+    setShowPasswordModal(false);
+  }, []);
+
+  const handleRecoveryPhoneModalClose = useCallback(() => {
+    setShowRecoveryPhoneModal(false);
+  }, []);
+
+  const handleAddressModalClose = useCallback(() => {
+    setShowAddressModal(false);
+  }, []);
+
+  const handleProfileModalClose = useCallback(() => {
+    setShowProfileModal(false);
+  }, []);
+
+  // Password field focus handlers - memoized
+  const handleNewPasswordFocus = useCallback(() => {
+    handleFocusedPasswordFieldChange('newPassword');
+  }, [handleFocusedPasswordFieldChange]);
+
+  const handleNewPasswordBlur = useCallback(() => {
+    handleFocusedPasswordFieldChange(null);
+  }, [handleFocusedPasswordFieldChange]);
+
+  const handleConfirmPasswordFocus = useCallback(() => {
+    handleFocusedPasswordFieldChange('confirmPassword');
+  }, [handleFocusedPasswordFieldChange]);
+
+  const handleConfirmPasswordBlur = useCallback(() => {
+    handleFocusedPasswordFieldChange(null);
+  }, [handleFocusedPasswordFieldChange]);
+
+  // Address form field handlers - memoized
+  const handleSuiteChange = useCallback((text) => {
+    handleAddressFormChange('suite', text);
+  }, [handleAddressFormChange]);
+
+  const handleStreetChange = useCallback((text) => {
+    handleAddressFormChange('street', text);
+  }, [handleAddressFormChange]);
+
+  const handleCityChange = useCallback((text) => {
+    handleAddressFormChange('city', text);
+  }, [handleAddressFormChange]);
+
+  const handleDistrictChange = useCallback((text) => {
+    handleAddressFormChange('district', text);
+  }, [handleAddressFormChange]);
+
+  // Address modal show handler - memoized
+  const handleShowAddressModal = useCallback(() => {
+    setShowAddressModal(true);
+  }, []);
+
+  // Tab change handler
+  const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
-    setEditingField(null);
-  };
+  }, []);
 
-  const startEditing = (field) => {
-    setEditingField(field);
-    setTempValue(profile[field] || '');
-  };
+  const handleEdit = useCallback((field, value) => {
+    setIsEditing(field);
+    setEditingValue(value);
+  }, []);
 
-  const cancelEditing = () => {
-    setEditingField(null);
-  };
-
-  const saveChanges = async () => {
-    try {
-      if (!tempValue.trim()) {
-        Alert.alert('Error', 'Field cannot be empty');
-        return;
-      }
-
-      const updatedProfile = { ...profile, [editingField]: tempValue };
-      const result = await ProfileService.updateProfile(updatedProfile);
-      
-      if (result.success) {
-        setProfile(updatedProfile);
-        setEditingField(null);
-      } else {
-        throw new Error('Update failed');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to update profile');
-      console.error(error);
+  const handleUpdate = useCallback(() => {
+    if (isEditing) {
+      setUserInfo(prev => ({
+        ...prev,
+        [isEditing]: editingValue
+      }));
+      setIsEditing(null);
+      setEditingValue('');
     }
-  };
+  }, [isEditing, editingValue]);
 
-  const renderEditControls = (field) => {
-    if (editingField === field) {
-      return (
-        <View style={styles.editControls}>
-          <TouchableOpacity onPress={cancelEditing}>
-            <Text style={styles.cancelButton}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={saveChanges}>
-            <Text style={styles.saveButton}>Save</Text>
-          </TouchableOpacity>
-        </View>
-      );
+  const handleCancel = useCallback(() => {
+    setIsEditing(null);
+    setEditingValue('');
+  }, []);
+
+  const handleAddressUpdate = useCallback(() => {
+    const fullAddress = `${addressForm.suite}, ${addressForm.street}, ${addressForm.city}, ${addressForm.district}`;
+    setUserInfo(prev => ({
+      ...prev,
+      homeAddress: fullAddress
+    }));
+    setShowAddressModal(false);
+  }, [addressForm]);
+
+  const handleProfilePictureChange = useCallback(() => {
+    setShowProfileModal(true);
+  }, []);
+
+  // Signin Info handlers
+  const handleEmailEdit = useCallback(() => {
+    setEmailValue(userInfo.email);
+    setShowEmailModal(true);
+  }, [userInfo.email]);
+
+  const handleEmailUpdate = useCallback(() => {
+    setShowEmailModal(false);
+    setShowVerifyModal(true);
+  }, []);
+
+  const handleOtpChange = useCallback((newOtpValue) => {
+    setOtpValue(newOtpValue);
+  }, []);
+
+  const handleVerifyOtp = useCallback(() => {
+    const otp = otpValue.join('');
+    if (otp === '352935') { // Mock verification
+      setShowVerifyModal(false);
+      setShowSuccessModal(true);
+      // Update email after success
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        setUserInfo(prev => ({ ...prev, email: emailValue }));
+        setOtpValue(['', '', '', '', '', '']);
+      }, 3000);
     }
-    return (
-      <TouchableOpacity 
-        style={styles.editButton}
-        onPress={() => startEditing(field)}
-      >
-        <Ionicons name="pencil" size={16} color={colors.secondaryText} />
-        <Text style={styles.editText}>Edit</Text>
-      </TouchableOpacity>
-    );
-  };
+  }, [otpValue, emailValue]);
 
-  const renderBasicInfo = () => {
-    if (!profile) return null;
+  const handleResendCode = useCallback(() => {
+    // Mock resend functionality
+    Alert.alert('Code Resent', 'A new verification code has been sent to your email.');
+  }, []);
 
-    return (
-      <View style={styles.contentContainer}>
-        {/* Profile Avatar */}
-        <View style={styles.avatarContainer}>
-          <View style={styles.avatar}>
-            {profile.avatar ? (
-              <Image source={{ uri: profile.avatar }} style={styles.avatarImage} />
-            ) : (
-              <Ionicons name="person" size={30} color={colors.secondaryText} />
-            )}
-          </View>
-          <TouchableOpacity style={styles.editIconContainer}>
-            <Ionicons name="pencil" size={12} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Profile Fields */}
-        <View style={styles.fieldsContainer}>
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Name</Text>
-            <View style={styles.fieldContent}>
-              {editingField === 'name' ? (
-                <TextInput
-                  style={styles.input}
-                  value={tempValue}
-                  onChangeText={setTempValue}
-                  autoFocus
-                />
-              ) : (
-                <Text style={styles.fieldValue}>{profile.name}</Text>
-              )}
-              {renderEditControls('name')}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Email Address</Text>
-            <View style={styles.fieldContent}>
-              <Text style={styles.fieldValue}>{profile.email}</Text>
-              <TouchableOpacity style={styles.editButton} disabled>
-                <Text style={styles.editTextDisabled}>Verified</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Contact Number</Text>
-            <View style={styles.fieldContent}>
-              {editingField === 'phone' ? (
-                <TextInput
-                  style={styles.input}
-                  value={tempValue}
-                  onChangeText={setTempValue}
-                  keyboardType="phone-pad"
-                  autoFocus
-                />
-              ) : (
-                <Text style={styles.fieldValue}>{profile.phone}</Text>
-              )}
-              {renderEditControls('phone')}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Home Address</Text>
-            <View style={styles.fieldContent}>
-              {editingField === 'homeAddress' ? (
-                <TextInput
-                  style={styles.input}
-                  value={tempValue}
-                  onChangeText={setTempValue}
-                  autoFocus
-                  multiline
-                />
-              ) : (
-                <Text style={styles.fieldValue}>{profile.homeAddress}</Text>
-              )}
-              {renderEditControls('homeAddress')}
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Work Place</Text>
-            <View style={styles.fieldContent}>
-              {editingField === 'workAddress' ? (
-                <TextInput
-                  style={styles.input}
-                  value={tempValue}
-                  onChangeText={setTempValue}
-                  autoFocus
-                  multiline
-                />
-              ) : (
-                <Text style={styles.fieldValue}>{profile.workAddress}</Text>
-              )}
-              {renderEditControls('workAddress')}
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const renderSigninInfo = () => (
-    <View style={styles.contentContainer}>
-      <TouchableOpacity 
-        style={styles.listItem}
-        onPress={() => router.push('/profile/change-email')}
-      >
-        <Text style={styles.listItemText}>Email Address</Text>
-        <View style={styles.listItemRight}>
-          <Text style={styles.listItemValue}>{profile?.email || ''}</Text>
-          <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderSecurity = () => (
-    <View style={styles.contentContainer}>
-      <TouchableOpacity 
-        style={styles.listItem}
-        onPress={() => router.push('/profile/change-password')}
-      >
-        <Text style={styles.listItemText}>Change Password</Text>
-        <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={styles.listItem}
-        onPress={() => router.push('/profile/recovery-phone')}
-      >
-        <Text style={styles.listItemText}>Recovery Phone Number</Text>
-        <Ionicons name="chevron-forward" size={20} color={colors.secondaryText} />
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      );
+  // Security handlers
+  const handlePasswordUpdate = useCallback(() => {
+    if (newPassword.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters long');
+      return;
     }
-
-    switch (activeTab) {
-      case 'Basic Info':
-        return renderBasicInfo();
-      case 'Signin Info':
-        return renderSigninInfo();
-      case 'Security':
-        return renderSecurity();
-      default:
-        return renderBasicInfo();
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
     }
-  };
+    // Mock password update
+    setShowPasswordModal(false);
+    setNewPassword('');
+    setConfirmPassword('');
+    Alert.alert('Success', 'Password updated successfully');
+  }, [newPassword, confirmPassword]);
+
+  const isPasswordValid = useCallback(() => {
+    return newPassword.length >= 8 && newPassword === confirmPassword && newPassword !== '' && confirmPassword !== '';
+  }, [newPassword, confirmPassword]);
+
+  const handleRecoveryPhoneUpdate = useCallback(() => {
+    if (recoveryPhone.length < 10) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return;
+    }
+    // Mock phone update
+    setShowRecoveryPhoneModal(false);
+    Alert.alert('Success', 'Recovery phone number updated successfully');
+  }, [recoveryPhone]);
+
+  const isRecoveryPhoneValid = useCallback(() => {
+    // Check if phone number is fully typed (should be at least 12 characters including country code and spaces)
+    // For Sri Lankan numbers: +94 71 123 4567 (minimum 12-13 characters)
+    const cleanPhone = recoveryPhone.replace(/\s/g, '');
+    return cleanPhone.length >= 12 && cleanPhone.startsWith('+94');
+  }, [recoveryPhone]);
+
+  // Memoize navigation handler
+  const handleBackPress = useCallback(() => {
+    router.push('/');
+  }, [router]);
+
+  // Memoize modal show handlers
+  const handleShowPasswordModal = useCallback(() => {
+    setShowPasswordModal(true);
+  }, []);
+
+  const handleShowRecoveryPhoneModal = useCallback(() => {
+    setShowRecoveryPhoneModal(true);
+  }, []);
+
+  // Memoized styles to prevent re-creation
+  const passwordButtonStyle = useMemo(() => ({
+    color: isPasswordValid() ? colors.white : colors.darkGray,
+    fontSize: 16,
+    fontWeight: 'bold',
+  }), [isPasswordValid, colors.white, colors.darkGray]);
+
+  const recoveryPhoneButtonTextStyle = useMemo(() => [
+    styles.updatePhoneButtonText,
+    { color: colors.background }
+  ], [colors.background]);
+
+  const recoveryPhoneButtonStyle = useCallback((isValid) => [
+    styles.updatePhoneButton,
+    {
+      backgroundColor: isValid ? colors.primary : colors.secondaryText,
+      opacity: isValid ? 1 : 0.8,
+    }
+  ], [colors.primary, colors.secondaryText]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-      
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={colors.mainTextColor} />
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <Text style={styles.backButtonText}>‹</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Manage Account</Text>
-        <View style={styles.placeholder} />
       </View>
 
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
+      {/* Tabs */}
+      <View style={styles.tabsContainer}>
         {tabs.map((tab) => (
           <TouchableOpacity
             key={tab}
             style={[
               styles.tab,
-              activeTab === tab && styles.activeTab
+              activeTab === tab && styles.activeTab,
             ]}
-            onPress={() => handleTabPress(tab)}
+            onPress={() => handleTabChange(tab)}
           >
             <Text
               style={[
                 styles.tabText,
-                activeTab === tab && styles.activeTabText
+                activeTab === tab && styles.activeTabText,
               ]}
             >
               {tab}
             </Text>
-            {activeTab === tab && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Content */}
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {renderContent()}
+      <ScrollView style={styles.content}>
+        {activeTab === 'Basic Info' && (
+          <>
+            {/* Profile Picture */}
+            <View style={styles.profileSection}>
+              <View style={styles.profileImageContainer}>
+                <View style={styles.profileImage}>
+                  <Text style={styles.profileImageText}>👤</Text>
+                </View>
+                <TouchableOpacity style={styles.editProfileButton} onPress={handleProfilePictureChange}>
+                  <Text style={styles.editProfileButtonText}>✏️</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Profile Fields */}
+            <View style={styles.fieldsContainer}>
+              <ProfileFieldComponent
+                label="Name"
+                value={userInfo.name}
+                field="name"
+                isEditingField={isEditing === 'name'}
+                editingValue={editingValue}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={handleEditingValueChange}
+              />
+              
+              <ProfileFieldComponent
+                label="Email Address"
+                value={userInfo.email}
+                field="email"
+                isEditingField={isEditing === 'email'}
+                editingValue={editingValue}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={handleEditingValueChange}
+              />
+              
+              <ProfileFieldComponent
+                label="Contact Number"
+                value={userInfo.contactNumber}
+                field="contactNumber"
+                isEditingField={isEditing === 'contactNumber'}
+                editingValue={editingValue}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={handleEditingValueChange}
+              />
+              
+              <ProfileFieldComponent
+                label="Home Address"
+                value={userInfo.homeAddress}
+                field="homeAddress"
+                isEditingField={isEditing === 'homeAddress'}
+                editingValue={editingValue}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={handleEditingValueChange}
+                onSpecialEdit={handleShowAddressModal}
+              />
+              
+              <ProfileFieldComponent
+                label="Work Place"
+                value={userInfo.workPlace}
+                field="workPlace"
+                isEditingField={isEditing === 'workPlace'}
+                editingValue={editingValue}
+                onEdit={handleEdit}
+                onUpdate={handleUpdate}
+                onCancel={handleCancel}
+                onValueChange={handleEditingValueChange}
+              />
+            </View>
+          </>
+        )}
+
+        {activeTab === 'Signin Info' && (
+          <View style={styles.signinInfoContainer}>
+            <TouchableOpacity style={styles.signinInfoItem} onPress={handleEmailEdit} activeOpacity={0.7}>
+              <Text style={styles.signinInfoLabel}>Email Address</Text>
+              <View style={styles.signinInfoRow}>
+                <Text style={styles.signinInfoValue}>{userInfo.email}</Text>
+                <Text style={styles.signinInfoArrow}>›</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {activeTab === 'Security' && (
+          <View style={styles.securityContainer}>
+            <TouchableOpacity style={styles.securityItem} onPress={handleShowPasswordModal} activeOpacity={0.7}>
+              <Text style={styles.securityLabel}>Password</Text>
+              <Text style={styles.securityArrow}>›</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.securityDivider} />
+            
+            <TouchableOpacity style={styles.securityItem} onPress={handleShowRecoveryPhoneModal} activeOpacity={0.7}>
+              <Text style={styles.securityLabel}>Recovery Phone Number</Text>
+              <Text style={styles.securityArrow}>›</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
-    </SafeAreaView>
+
+      <AddressModal 
+        showAddressModal={showAddressModal}
+        setShowAddressModal={setShowAddressModal}
+        addressForm={addressForm}
+        handleSuiteChange={handleSuiteChange}
+        handleStreetChange={handleStreetChange}
+        handleCityChange={handleCityChange}
+        handleDistrictChange={handleDistrictChange}
+        handleAddressUpdate={handleAddressUpdate}
+        handleAddressModalClose={handleAddressModalClose}
+      />
+      <ProfilePictureModal 
+        showProfileModal={showProfileModal} 
+        setShowProfileModal={setShowProfileModal}
+        handleProfileModalClose={handleProfileModalClose}
+      />
+      <EmailModal 
+        showEmailModal={showEmailModal}
+        setShowEmailModal={setShowEmailModal}
+        emailValue={emailValue}
+        handleEmailValueChange={handleEmailValueChange}
+        handleEmailUpdate={handleEmailUpdate}
+        handleEmailModalClose={handleEmailModalClose}
+      />
+      <VerifyEmailModal 
+        showVerifyModal={showVerifyModal}
+        setShowVerifyModal={setShowVerifyModal}
+        otpValue={otpValue}
+        handleOtpChange={handleOtpChange}
+        focusedOtpIndex={focusedOtpIndex}
+        handleFocusedOtpIndexChange={handleFocusedOtpIndexChange}
+        handleOtpBlur={handleOtpBlur}
+        handleVerifyOtp={handleVerifyOtp}
+        handleResendCode={handleResendCode}
+        handleVerifyModalClose={handleVerifyModalClose}
+      />
+      <SuccessModal 
+        showSuccessModal={showSuccessModal}
+        setShowSuccessModal={setShowSuccessModal}
+        handleSuccessModalClose={handleSuccessModalClose}
+      />
+      <PasswordModal 
+        showPasswordModal={showPasswordModal}
+        setShowPasswordModal={setShowPasswordModal}
+        newPassword={newPassword}
+        handleNewPasswordChange={handleNewPasswordChange}
+        confirmPassword={confirmPassword}
+        handleConfirmPasswordChange={handleConfirmPasswordChange}
+        showNewPassword={showNewPassword}
+        setShowNewPassword={setShowNewPassword}
+        showConfirmPassword={showConfirmPassword}
+        setShowConfirmPassword={setShowConfirmPassword}
+        handleNewPasswordFocus={handleNewPasswordFocus}
+        handleNewPasswordBlur={handleNewPasswordBlur}
+        handleConfirmPasswordFocus={handleConfirmPasswordFocus}
+        handleConfirmPasswordBlur={handleConfirmPasswordBlur}
+        handlePasswordUpdate={handlePasswordUpdate}
+        isPasswordValid={isPasswordValid}
+        handlePasswordModalClose={handlePasswordModalClose}
+        passwordButtonStyle={passwordButtonStyle}
+      />
+      <RecoveryPhoneModal 
+        showRecoveryPhoneModal={showRecoveryPhoneModal}
+        setShowRecoveryPhoneModal={setShowRecoveryPhoneModal}
+        recoveryPhone={recoveryPhone}
+        handleRecoveryPhoneChange={handleRecoveryPhoneChange}
+        isRecoveryPhoneValid={isRecoveryPhoneValid}
+        handleRecoveryPhoneUpdate={handleRecoveryPhoneUpdate}
+        handleRecoveryPhoneModalClose={handleRecoveryPhoneModalClose}
+        recoveryPhoneButtonTextStyle={recoveryPhoneButtonTextStyle}
+        recoveryPhoneButtonStyle={recoveryPhoneButtonStyle}
+      />
+    </View>
   );
 };
 
@@ -346,38 +892,37 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
     backgroundColor: colors.background,
   },
   backButton: {
-    padding: 8,
-    marginLeft: -8,
+    marginRight: 15,
+  },
+  backButtonText: {
+    fontSize: 30,
+    color: colors.mainTextColor,
+    fontFamily: fonts.PlusJakartaSans,
   },
   headerTitle: {
     fontSize: 18,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
-    textAlign: 'center',
-    flex: 1,
   },
-  placeholder: {
-    width: 40,
-  },
-  tabContainer: {
+  tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     marginBottom: 20,
   },
   tab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    position: 'relative',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginRight: 20,
   },
   activeTab: {
-    // Active tab styling handled by indicator
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
   },
   tabText: {
     fontSize: 14,
@@ -388,141 +933,320 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: colors.primary,
-  },
-  scrollView: {
+  content: {
     flex: 1,
+    paddingHorizontal: 20,
   },
-  contentContainer: {
-    paddingHorizontal: 24,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  profileSection: {
     alignItems: 'center',
-    padding: 50,
+    marginBottom: 30,
   },
-  avatarContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
+  profileImageContainer: {
     position: 'relative',
   },
-  avatar: {
+  profileImage: {
     width: 80,
     height: 80,
     borderRadius: 40,
     backgroundColor: colors.stroke,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
   },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
+  profileImageText: {
+    fontSize: 30,
+    color: colors.secondaryText,
   },
-  editIconContainer: {
+  editProfileButton: {
     position: 'absolute',
     bottom: 0,
-    right: '35%',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    right: 0,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  editProfileButtonText: {
+    color:colors.background,
+    fontSize: 14,
+  },
   fieldsContainer: {
-    gap: 24,
+    flex: 1,
   },
-  field: {
-    gap: 8,
+  // Modal styles
+  otpContainer: {
+    marginBottom: 40,
   },
-  fieldLabel: {
+  otpLabel: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.mainTextColor,
+    marginBottom: 16,
   },
-  fieldContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.stroke,
-  },
-  fieldValue: {
-    fontSize: 16,
+  emailNote: {
+    fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
-    flex: 1,
+    marginTop: 8,
   },
-  input: {
-    fontSize: 16,
+  phoneNote: {
+    fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
-    flex: 1,
-    padding: 0,
+    marginTop: 8,
   },
-  editButton: {
+  resendContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 4,
-    padding: 4,
+    marginTop: 20,
+    paddingVertical: 10,
   },
-  editControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  resendText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
   },
-  saveButton: {
+  resendLink: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.primary,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    fontSize: 14,
   },
-  cancelButton: {
-    color: colors.secondaryText,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    fontSize: 14,
-  },
-  editText: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-  },
-  editTextDisabled: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.success,
-  },
-  listItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  successContainer: {
+    backgroundColor: colors.bgGreen,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    paddingVertical: 16,
+    marginTop: 20,
+  },
+  successText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
+  },
+  updatePhoneButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  updatePhoneButtonText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    textAlign: 'center',
+  },
+  mapContainer: {
+    marginVertical: 20,
+  },
+  mapPlaceholder: {
+    height: 200,
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderStyle: 'dashed',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  mapButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 8,
+  },
+  mapButtonIcon: {
+    marginRight: 8,
+    fontSize: 12,
+  },
+  mapButtonText: {
+    color: colors.background,
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+  },
+  mapSubtext: {
+    fontSize: 12,
+    color: colors.secondaryText,
+    fontFamily: fonts.PlusJakartaSans,
+  },
+  mapBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.bgGreen,
+  },
+  roadLine: {
+    position: 'absolute',
+    top: 30,
+    left: 0,
+    right: 0,
+    height: 2,
+    backgroundColor: colors.background,
+  },
+  roadLine2: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    right: 20,
+    height: 1,
+    backgroundColor: colors.background,
+  },
+  roadLine3: {
+    position: 'absolute',
+    top: 90,
+    left: 10,
+    right: 30,
+    height: 1,
+    backgroundColor: colors.background,
+  },
+  locationPin: {
+    position: 'absolute',
+    top: 25,
+    left: 60,
+    width: 12,
+    height: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pinDot: {
+    width: 6,
+    height: 6,
+    backgroundColor: colors.background,
+    borderRadius: 3,
+  },
+  locationLabel: {
+    position: 'absolute',
+    top: 40,
+    left: 45,
+    fontSize: 9,
+    color: colors.mainTextColor,
+    fontFamily: fonts.PlusJakartaSans,
+    backgroundColor: colors.background,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 2,
+  },
+  mapOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  // Profile picture modal styles
+  profileModalOverlay: {
+    flex: 1,
+    backgroundColor: colors.mainTextColor,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileModalContainer: {
+    backgroundColor: colors.background,
+    borderRadius: 10,
+    padding: 20,
+    margin: 20,
+    width: '80%',
+  },
+  profileModalTitle: {
+    fontSize: 18,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  profileModalOption: {
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: colors.stroke,
   },
-  listItemText: {
+  profileModalOptionText: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
+    textAlign: 'center',
   },
-  listItemRight: {
+  profileModalCancel: {
+    paddingVertical: 15,
+    marginTop: 10,
+  },
+  profileModalCancelText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.primary,
+    textAlign: 'center',
+  },
+  // Signin Info styles
+  signinInfoContainer: {
+    paddingTop: 20,
+  },
+  signinInfoItem: {
+    backgroundColor: colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  signinInfoLabel: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+    marginBottom: 4,
+  },
+  signinInfoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
   },
-  listItemValue: {
+  signinInfoValue: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
+    color: colors.mainTextColor,
   },
+  signinInfoArrow: {
+    fontSize: 20,
+    color: colors.mainTextColor,
+    fontFamily: fonts.PlusJakartaSans,
+  },
+  // Security styles
+  securityContainer: {
+    paddingTop: 20,
+    backgroundColor: colors.background,
+  },
+  securityItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 0,
+  },
+  securityLabel: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+  },
+  securityArrow: {
+    fontSize: 20,
+    color: colors.mainTextColor,
+    fontFamily: fonts.PlusJakartaSans,
+  },
+  securityDivider: {
+    height: 1,
+    backgroundColor: colors.stroke,
+    marginHorizontal: 0,
+  },
+
 });
 
-export default ProfileScreen;
+export default Profile1;
