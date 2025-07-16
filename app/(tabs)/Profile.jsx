@@ -108,7 +108,7 @@ const ProfileScreen1 = ({ route }) => {
             marginRight: cardMargin,
             height: cardSize * 0.9 
           }]} 
-          onPress={() => navigation.navigate('Wallet', { balance: userData.walletBalance })}
+          onPress={() => navigation.navigate('pages/Profile/Wallet/walletScreen')}
         >
           <Image 
             source={require('../../assets/wallet.png')} 
