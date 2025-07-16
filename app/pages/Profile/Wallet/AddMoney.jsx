@@ -11,6 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../../../constants/color';
 import fonts from '../../../../constants/fonts';
+import { useNavigation } from "@react-navigation/native";
+
 
 const visaLogo = require('../../../../assets/visa.png');
 const mastercardLogo = require('../../../../assets/mastercard.png');
@@ -18,6 +20,8 @@ const mastercardLogo = require('../../../../assets/mastercard.png');
 const AddMoneyScreen = () => {
   const [amount, setAmount] = useState('');
   const [selectedCardId, setSelectedCardId] = useState(1);
+    const navigation = useNavigation();
+  
 
   const cards = [
     {
@@ -55,7 +59,7 @@ const AddMoneyScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Money</Text>
