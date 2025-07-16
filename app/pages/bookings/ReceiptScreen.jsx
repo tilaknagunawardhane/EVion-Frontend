@@ -203,6 +203,6 @@ const styles = StyleSheet.create({
   downloadText: {
     color: colors.white,
     fontFamily: fonts.PlusJakartaSansBold,
-    fontSize: 16,
+    fontSize: 14,
   },
 });

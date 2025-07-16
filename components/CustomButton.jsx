@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: colors.secondaryText, // Use imported color if available
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
   googleButton: {

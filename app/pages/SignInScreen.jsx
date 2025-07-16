@@ -24,7 +24,7 @@ const SignInScreen = () => {
 
 
   const handleSignIn = async () => {
-    router.replace('/(tabs)');
+    router.push('/(tabs)/map');
     if (!email) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -79,7 +79,7 @@ const SignInScreen = () => {
       });
       console.log('User signed in successfully:', data);
       setTimeout(() => {
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/maps');
       }, 1500);
 
     }
