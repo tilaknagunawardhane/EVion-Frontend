@@ -18,12 +18,15 @@ const AddYourEVScreen = () => {
 
   useEffect(() => {
     async function getUser() {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        console.log(user);
-        setUser(JSON.parse(user));
+      let user1 = await AsyncStorage.getItem('user');
+      if (user1) {
+        const userObj = JSON.parse(user1); // Parse FIRST
+        setUser(userObj);
+        console.log('user is: ',user);
+        console.log('typeee: ', typeof(user)); 
+        console.log('userID is: ', user.user._id);
       }
-    }
+    } 
     getUser();
   }, []);
 
@@ -71,9 +74,14 @@ const AddYourEVScreen = () => {
     setIsLoading(true);
     try {
 
-      if (user && user._id) {
-        const userId = user._id;
-        console.log(userId);
+      console.log(user);
+      console.log('type eka:', typeof(user));
+      // const userObj = JSON.parse(user); // Parse FIRST
+      // setUser(userObj);
+
+      if (user && user.user._id) {
+        const userId = user.user._id;
+        console.log('id;;' ,userId);
 
         const formData = new FormData();
 

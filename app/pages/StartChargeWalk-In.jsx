@@ -145,9 +145,9 @@ const StartChargeWalkInScreen = () => {
           isCharging={isCharging}
           onSwipeComplete={handleSwipeComplete}
         />
-        <Text style={{color: 'red', fontSize: 12, textAlign: 'center', marginTop: 10}}>
+        {/* <Text style={{color: 'red', fontSize: 12, textAlign: 'center', marginTop: 10}}>
           Debug: Direction = {swipeDirection}, isCharging = {isCharging.toString()}
-        </Text>
+        </Text> */}
       </View>
     </View>
   );

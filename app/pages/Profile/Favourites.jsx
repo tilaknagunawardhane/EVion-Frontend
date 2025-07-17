@@ -11,12 +11,16 @@ import {
 import AppBar from '../../../components/AppBar';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
+import { useNavigation } from '@react-navigation/native';
+import { router, useLocalSearchParams } from 'expo-router';
+
 
 import BookmarkIcon from '../../../assets/favourite.png';
 import BookmarkFilledIcon from '../../../assets/bookmark.png';
 import MaintenanceIcon from '../../../assets/favourite.png';
 
 const FavouritesScreen = () => {
+
   const [favourites, setFavourites] = useState([
     {
       id: 1,
@@ -57,8 +61,8 @@ const FavouritesScreen = () => {
   ]);
 
   const toggleFavourite = (id) => {
-    setFavourites(prev => 
-      prev.map(item => 
+    setFavourites(prev =>
+      prev.map(item =>
         item.id === id ? { ...item, isFavourite: !item.isFavourite } : item
       )
     );
@@ -66,70 +70,88 @@ const FavouritesScreen = () => {
 
   const renderStationCard = (station) => {
     return (
-      <View key={station.id} style={styles.card}>
-        <View style={styles.cardContent}>
-          <Image source={station.image} style={styles.stationImage} />
-          <View style={styles.stationInfo}>
-            <Text style={styles.stationName}>{station.name}</Text>
-            <Text style={styles.stationAddress}>{station.address}</Text>
+      <TouchableOpacity
+        key={station.id}
+        // style={styles.card}
+        onPress={() => router.push({
+          pathname: '/pages/StationProfile',
+          params: { id: station.id }
+        })}
+      >
+        <View key={station.id} style={styles.card}>
+          <View style={styles.cardContent}>
+            <Image source={station.image} style={styles.stationImage} />
+            <View style={styles.stationInfo}>
+              <Text style={styles.stationName}>{station.name}</Text>
+              <Text style={styles.stationAddress}>{station.address}</Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => toggleFavourite(station.id)}
+              style={[
+                styles.bookmarkWrapper,
+                station.isFavourite && styles.bookmarkWrapperActive
+              ]}
+            >
+              <Image
+                source={station.isFavourite ? BookmarkFilledIcon : BookmarkIcon}
+                style={styles.bookmarkIcon}
+              />
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity 
-            onPress={() => toggleFavourite(station.id)}
-            style={[
-              styles.bookmarkWrapper,
-              station.isFavourite && styles.bookmarkWrapperActive
-            ]}
-          >
-            <Image 
-              source={station.isFavourite ? BookmarkFilledIcon : BookmarkIcon} 
-              style={styles.bookmarkIcon} 
-            />
-          </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
   const renderMaintenanceCard = (station) => {
     return (
-      <View key={station.id} style={styles.card}>
-        <View style={styles.cardContent}>
-          <Image source={station.image} style={styles.stationImage} />
-          <View style={styles.stationInfo}>
-            <Text style={styles.stationName}>{station.name}</Text>
-            <Text style={styles.stationAddress}>{station.address}</Text>
-          </View>
-          <View style={styles.maintenanceIconWrapper}>
-            <Image source={MaintenanceIcon} style={styles.maintenanceIcon} />
+      <TouchableOpacity
+        key={station.id}
+        // style={styles.card}
+        onPress={() => router.push({
+          pathname: '/pages/StationProfile',
+          params: { id: station.id }
+        })}
+      >
+        <View key={station.id} style={styles.card}>
+          <View style={styles.cardContent}>
+            <Image source={station.image} style={styles.stationImage} />
+            <View style={styles.stationInfo}>
+              <Text style={styles.stationName}>{station.name}</Text>
+              <Text style={styles.stationAddress}>{station.address}</Text>
+            </View>
+            <View style={styles.maintenanceIconWrapper}>
+              <Image source={MaintenanceIcon} style={styles.maintenanceIcon} />
+            </View>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
-  const activeFavourites = favourites.filter(station => 
+  const activeFavourites = favourites.filter(station =>
     station.category === 'favourites' && station.isFavourite
   );
-  
-  const maintenanceStations = favourites.filter(station => 
+
+  const maintenanceStations = favourites.filter(station =>
     station.category === 'maintenance'
   );
-  
-  const reportedStations = favourites.filter(station => 
+
+  const reportedStations = favourites.filter(station =>
     station.category === 'reported'
   );
 
   return (
     <View style={styles.container}>
       <AppBar title="Favourites" showBackButton />
-      
-      <ScrollView 
+
+      <ScrollView
         contentContainerStyle={styles.scrollView}
         showsVerticalScrollIndicator={false}
       >
         {/* Active Favourites */}
         {activeFavourites.map(station => renderStationCard(station))}
-        
+
         {/* Under Maintenance Section */}
         {maintenanceStations.length > 0 && (
           <>
@@ -137,7 +159,7 @@ const FavouritesScreen = () => {
             {maintenanceStations.map(station => renderMaintenanceCard(station))}
           </>
         )}
-        
+
         {/* With Reported Chargers Section */}
         {reportedStations.length > 0 && (
           <>

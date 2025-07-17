@@ -27,11 +27,11 @@ const MyEVsScreen = () => {
 
   useEffect(() => {
     const getUser = async () => {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        console.log(user);
-
-        setUser(JSON.parse(user));
+      const user1 = await AsyncStorage.getItem('user');
+      if (user1) {
+        const userObj = JSON.parse(user1); // Parse FIRST
+        setUser(userObj);
+        console.log('user: ', user);
       }
     };
     getUser();
@@ -40,7 +40,7 @@ const MyEVsScreen = () => {
   const fetchVehicles = async () => {
     try {
       setLoading(true);
-      if (!user?._id) return;
+      if (!user?.user?._id) return;
       // console.log('Fetching vehicles for user:', user._id);
 
       const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
@@ -48,7 +48,7 @@ const MyEVsScreen = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userID: user._id }),
+        body: JSON.stringify({ userID: user.user._id }),
       });
 
       const result = await response.json();
@@ -83,7 +83,7 @@ const MyEVsScreen = () => {
   }
 
   useEffect(() => {
-    if (user?._id) {
+    if (user?.user?._id) {
       fetchVehicles();
     }
   }, [user]);
@@ -144,7 +144,7 @@ const MyEVsScreen = () => {
                   pathname: '/pages/Profile/VehicleProfile',
                   params: {
                     vehicleID: vehicle._id,
-                    userID: user._id,
+                    userID: user.user._id,
                   },
                 })
               }

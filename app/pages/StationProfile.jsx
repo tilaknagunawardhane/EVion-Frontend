@@ -7,8 +7,11 @@ import fonts from '../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 
 const ChargingStationScreen = () => {
+    const params = useLocalSearchParams();
+  
   const navigation = useNavigation();
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [showBottomPopup, setShowBottomPopup] = useState(false);

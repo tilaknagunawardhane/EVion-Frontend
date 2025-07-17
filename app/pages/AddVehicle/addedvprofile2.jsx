@@ -24,12 +24,16 @@ const VehicleAddedScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     async function getUser() {
-      const user = await AsyncStorage.getItem('user');
+      const user1 = await AsyncStorage.getItem('user');
+      const userObj = JSON.parse(user1);
+      // setUser(userObj);
+
       const card = await AsyncStorage.getItem('paymentCard');
-      if (user) {
-        console.log(user);
+      if (userObj) {
+        setUser(userObj);
+        console.log(user.user._id);
         console.log(card);
-        setUser(JSON.parse(user));
+        
       }
     }
     getUser();
@@ -39,13 +43,14 @@ const VehicleAddedScreen = ({ navigation, route }) => {
     const fetchVehicles = async () => {
       try {
         setLoading(true);
-        if (user?._id) {
+        if (user.user._id) {
+          console.log(user.user._id)
           const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ userID: user._id }),
+            body: JSON.stringify({ userID: user.user._id }),
           });
 
           const result = await response.json();
@@ -78,7 +83,7 @@ const VehicleAddedScreen = ({ navigation, route }) => {
       }
     };
 
-    if (user?._id) {
+    if (user?.user?._id) {
       fetchVehicles();
     }
   }, [user, newVehicleID]);

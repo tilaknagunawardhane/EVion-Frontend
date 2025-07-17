@@ -74,7 +74,7 @@ const AddVehicleScreen = () => {
   };
 
   const handleSkip = () => {
-    router.push('/(tabs)');
+    router.push('/(tabs)/map');
   };
 
   if (loading) {

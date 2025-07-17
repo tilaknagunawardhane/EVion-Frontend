@@ -25,10 +25,10 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
           };
 
           const iconName = {
-            'bookings': 'calendar',
-            'Community': 'comments',
-            'Profile': 'user',
-            'StartCharging': 'play',
+            'bookings': 'calendar-plus-o',
+            'Community': 'commenting-o',
+            'Profile': 'user-o',
+            'StartCharging': 'plug',
             'map': 'map-o'
           }[route.name];
 
@@ -42,7 +42,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             >
               <FontAwesome 
                 name={iconName} 
-                size={24} 
+                size={20} 
                 color={isFocused ? colors.primary : colors.secondaryText} 
               />
               <Text style={[
@@ -124,10 +124,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingTop: 10,
+    paddingLeft:10,
+    paddingRight: 10
   },
   tabItem: {
     alignItems: 'center',
-    padding: 8,
+    padding: 6,
   },
   tabLabel: {
     fontFamily: fonts.PlusJakartaSans,
