@@ -59,7 +59,7 @@ const SignUpScreen = () => {
       console.log('User signed up successfully:', result.user);
 
       // await SecureStore.setItemAsync('isSignupFlow', 'true');
-await AsyncStorage.setItem('isSignupFlow', 'true');
+      await AsyncStorage.setItem('isSignupFlow', 'true');
       setTimeout(() => {
         router.replace('/pages/AddVehicle/AddVehicle1');
       }, 1500);

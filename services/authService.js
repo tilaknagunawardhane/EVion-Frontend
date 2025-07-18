@@ -56,7 +56,7 @@ export const setAuthToken = async (token) => {
 export const login = async (email, password, userType) => {
   try {
     const endpoint = `/${userType}/login`;
-    
+
     Toast.show({
       type: ALERT_TYPE.INFO,
       title: 'Logging In',
@@ -86,6 +86,16 @@ export const login = async (email, password, userType) => {
     await SecureStore.setItemAsync('accessToken', data.accessToken);
     await SecureStore.setItemAsync('refreshToken', data.refreshToken);
 
+    // Store user ID as string
+    if (data.user?._id) {
+      await SecureStore.setItemAsync('userID', String(data.user._id));
+    }
+
+    // Store user data as JSON string
+    if (data.user) {
+      await SecureStore.setItemAsync('user', JSON.stringify(data.user));
+    }
+
     Toast.show({
       type: ALERT_TYPE.SUCCESS,
       title: 'Welcome Back!',
@@ -111,23 +121,54 @@ export const login = async (email, password, userType) => {
 
 export const logout = async () => {
   try {
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('refreshToken');
+    // 1. Try to call backend logout endpoint
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (token) {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (apiError) {
+      console.warn('Logout API call failed:', apiError);
+    }
+
+    // 2. Clear ALL storage completely
+    await Promise.all([
+      SecureStore.deleteItemAsync('accessToken'),
+      SecureStore.deleteItemAsync('refreshToken'),
+      SecureStore.deleteItemAsync('userData'),
+      SecureStore.deleteItemAsync('userID'),
+      SecureStore.deleteItemAsync('user'), // Add this line
+      // AsyncStorage.clear() // Clear any non-secure storage
+    ]);
+
+    // 3. Verify everything is cleared
+    const remainingItems = await Promise.all([
+      SecureStore.getItemAsync('accessToken'),
+      SecureStore.getItemAsync('refreshToken'),
+      SecureStore.getItemAsync('user')
+    ]);
     
+    if (remainingItems.some(item => item !== null)) {
+      throw new Error('Failed to clear all authentication data');
+    }
+
+    // 4. Show success feedback
     Toast.show({
       type: ALERT_TYPE.SUCCESS,
       title: 'Logged Out',
-      textBody: 'You have been securely logged out',
-      autoClose: 1500,
+      textBody: 'You have been securely signed out',
+      autoClose: 2000
     });
-    
-    console.log('All auth items removed from storage');
+
   } catch (error) {
-    console.error('Logout service error:', error);
+    console.error('Logout error:', error);
     Toast.show({
       type: ALERT_TYPE.DANGER,
       title: 'Logout Error',
-      textBody: 'Failed to clear session data',
+      textBody: 'Failed to complete logout. Please try again.',
     });
     throw error;
   }
@@ -136,7 +177,7 @@ export const logout = async () => {
 export const register = async (name, email, password, userType) => {
   try {
     const endpoint = `/${userType}/register`;
-    
+
     Toast.show({
       type: ALERT_TYPE.INFO,
       title: 'Creating Account',
@@ -149,7 +190,7 @@ export const register = async (name, email, password, userType) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({name, email, password}),
+      body: JSON.stringify({ name, email, password }),
     });
 
     const data = await response.json();
@@ -165,7 +206,17 @@ export const register = async (name, email, password, userType) => {
 
     await SecureStore.setItemAsync('accessToken', data.accessToken);
     await SecureStore.setItemAsync('refreshToken', data.refreshToken);
-    
+
+    // Store user ID as string
+    if (data.user?._id) {
+      await SecureStore.setItemAsync('userID', String(data.user._id));
+    }
+
+    // Store user data as JSON string
+    if (data.user) {
+      await SecureStore.setItemAsync('user', JSON.stringify(data.user));
+    }
+
     Toast.show({
       type: ALERT_TYPE.SUCCESS,
       title: 'Account Created!',

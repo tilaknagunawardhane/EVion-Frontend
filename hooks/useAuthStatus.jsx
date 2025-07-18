@@ -9,12 +9,22 @@ export default function useAuthStatus() {
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        // Check both SecureStore and AsyncStorage for maximum compatibility
-        const accessToken = await SecureStore.getItemAsync('accessToken');
-        const refreshToken = await SecureStore.getItemAsync('refreshToken');
-        const user = await AsyncStorage.getItem("user");
+        // Check for BOTH accessToken AND user data
+        const [accessToken, user] = await Promise.all([
+          SecureStore.getItemAsync('accessToken'),
+          SecureStore.getItemAsync('user')
+        ]);
         
-        setIsLoggedIn(!!(accessToken || refreshToken || user));
+        // Only consider logged in if BOTH exist
+        const authenticated = !!(accessToken && user);
+        setIsLoggedIn(authenticated);
+        
+        // If accessToken exists but no user, clear invalid state
+        if (accessToken && !user) {
+          console.warn('Invalid auth state - clearing tokens');
+          await SecureStore.deleteItemAsync('accessToken');
+          await SecureStore.deleteItemAsync('refreshToken');
+        }
       } catch (error) {
         console.error("Auth status check error:", error);
         setIsLoggedIn(false);

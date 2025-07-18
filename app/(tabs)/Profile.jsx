@@ -14,12 +14,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import {useAuth} from '../../context/AuthContext'
+import { useAuth } from '../../context/AuthContext';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ProfileScreen1 = ({ route }) => {
-  const { logout } = useAuth
+  const { logout } = useAuth();
   const navigation = useNavigation();
   
   // Sample user data (in a real app, this would come from props or state management)
@@ -40,15 +42,21 @@ const ProfileScreen1 = ({ route }) => {
   const cardMargin = isSmallScreen ? 4 : 6;
   const avatarSize = isSmallScreen ? 60 : 72;
 
-  const removeUser = async () => {
+   const removeUser = async () => {
     try {
-      // await AsyncStorage.removeItem('user');
-      // console.log('User removed from AsyncStorage');
-      await logout();
-      console.log('User removed from Secure Storage');
-      router.push('/pages/SignInScreen');
+      await logout(); // Now properly called
+      console.log('User logged out successfully');
+      
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Logged Out',
+        textBody: 'You have been signed out successfully',
+        autoClose: 2000,
+      });
+      
+      router.replace('/pages/SignInScreen'); // Use replace instead of push
     } catch (e) {
-      console.log('Error removing user:', e);
+      console.error('Logout error:', e);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
