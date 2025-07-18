@@ -10,13 +10,16 @@ import fonts from '../../constants/fonts.js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
+import { useAuth } from '../../context/AuthContext'
 
 const SignUpScreen = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigation();
+  const { register } = useAuth();
 
   const handleSignUp = async () => {
     if (!name) {
@@ -42,33 +45,10 @@ const SignUpScreen = () => {
       console.log('Password validation failed');
       return;
     }
+    setIsLoading(true);
 
     try {
-
-      const response = await fetch(`${API_BASE_URL}/api/evowners/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: data.message || 'Failed to sign in. Please try again.',
-        });
-        return;
-      }
-      await AsyncStorage.setItem('user', JSON.stringify(data));
-      const user = JSON.parse(await AsyncStorage.getItem('user'));
-      console.log('User saved in AsyncStorage:', user);
+      const result = await register(name, email, password, 'evOwner')
 
       Toast.show({
         type: ALERT_TYPE.SUCCESS,
@@ -76,8 +56,10 @@ const SignUpScreen = () => {
         textBody: 'You have signed up successfully!',
       });
 
-      await AsyncStorage.setItem('isSignupFlow', 'true');
+      console.log('User signed up successfully:', result.user);
 
+      // await SecureStore.setItemAsync('isSignupFlow', 'true');
+await AsyncStorage.setItem('isSignupFlow', 'true');
       setTimeout(() => {
         router.replace('/pages/AddVehicle/AddVehicle1');
       }, 1500);
@@ -88,6 +70,8 @@ const SignUpScreen = () => {
         text1: 'Error',
         text2: 'An unexpected error occurred. Please try again later.',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -130,10 +114,11 @@ const SignUpScreen = () => {
           />
 
           <CustomButton
-            title="Sign up"
+            title={isLoading ? "Creating account..." : "Sign up"}
             onPress={handleSignUp}
             type="primary"
             style={styles.signUpButton}
+            disabled={isLoading}
           />
 
           <View style={styles.orSeparator}>

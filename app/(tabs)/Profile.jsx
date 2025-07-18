@@ -42,11 +42,18 @@ const ProfileScreen1 = ({ route }) => {
 
   const removeUser = async () => {
     try {
+      // await AsyncStorage.removeItem('user');
+      // console.log('User removed from AsyncStorage');
       await logout();
       console.log('User removed from Secure Storage');
       router.push('/pages/SignInScreen');
     } catch (e) {
       console.log('Error removing user:', e);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Failed to logout. Please try again.',
+      });
     }
   };
 

@@ -34,7 +34,6 @@ const SignInScreen = () => {
     }
     // if (!password || password.length < 8) {
     if (!password) {
-
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
@@ -47,7 +46,6 @@ const SignInScreen = () => {
     setIsLoading(true);
 
     try {
-
        const result = await login(email, password, 'evOwner');
 
        Toast.show({
