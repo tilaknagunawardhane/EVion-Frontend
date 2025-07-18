@@ -14,10 +14,12 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
+import {useAuth} from '../../context/AuthContext'
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ProfileScreen1 = ({ route }) => {
+  const { logout } = useAuth
   const navigation = useNavigation();
   
   // Sample user data (in a real app, this would come from props or state management)
@@ -40,8 +42,9 @@ const ProfileScreen1 = ({ route }) => {
 
   const removeUser = async () => {
     try {
-      await AsyncStorage.removeItem('user');
-      console.log('User removed from AsyncStorage');
+      await logout();
+      console.log('User removed from Secure Storage');
+      router.push('/pages/SignInScreen');
     } catch (e) {
       console.log('Error removing user:', e);
     }

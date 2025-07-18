@@ -52,7 +52,6 @@
     "plugins": [
       "expo-router",
       "expo-font",
-      
       [
         "expo-maps",
         {
@@ -60,7 +59,8 @@
           "requestLocationPermission": true,
           "locationPermission": "Allow EVion-Frontend to use your location"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "extra": {
       "router": {},
@@ -72,6 +72,5 @@
       "url": "https://u.expo.dev/bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
     },
     "owner": "tilaknagunawardhane"
-
   }
 }

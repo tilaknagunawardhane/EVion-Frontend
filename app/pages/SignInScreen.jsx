@@ -10,21 +10,20 @@ import AppBar from '../../components/AppBar';
 import colors from '../../constants/color.js';
 import fonts from '../../constants/fonts.js';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import { API_BASE_URL } from '@env'; // Ensure you have the correct path to your .env file
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../../context/AuthContext'
 
 
 const SignInScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fontsLoaded, setFontsLoaded] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
+  const {login} = useAuth()
 
 
 
   const handleSignIn = async () => {
-    router.push('/(tabs)/map');
+
     if (!email) {
       Toast.show({
         type: ALERT_TYPE.DANGER,
@@ -45,53 +44,35 @@ const SignInScreen = () => {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const response = await fetch(`${API_BASE_URL}/api/evowners/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-      });
-      const data = await response.json();
 
-      if (!response.ok) {
-        // Show backend error message
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: data.message || 'Failed to sign in. Please try again.',
-        });
-        return;
-      }
-       await AsyncStorage.setItem('user', JSON.stringify(data));
-  const user = JSON.parse(await AsyncStorage.getItem('user'));
-  console.log('User saved in AsyncStorage:', user);
+       const result = await login(email, password, 'evOwner');
 
-      // Success
-      Toast.show({
+       Toast.show({
         type: ALERT_TYPE.SUCCESS,
         title: 'Success',
-        textBody: 'You have signed up successfully!',
+        textBody: 'You have signed in successfully!',
       });
-      console.log('User signed in successfully:', data);
+
+      console.log('User signed in successfully:', result.user);
       setTimeout(() => {
-        router.replace('/(tabs)/maps');
+        router.replace('/(tabs)/map');
       }, 1500);
 
     }
     catch (error) {
       console.error('Network or unexpected error during sign-in:', error);
-      Toast.show({
+       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
-        textBody: 'A network error occurred. Please try again later.',
+        textBody: error.message || 'Failed to sign in. Please try again.',
       });
     }
-    // Add your sign in logic here
+    finally {
+      setIsLoading(false);
+    }
 
   };
 
@@ -136,10 +117,11 @@ const SignInScreen = () => {
           </TouchableOpacity>
 
           {/* Sign In Button */}
-          <CustomButton
-            title="Sign in"
+           <CustomButton
+            title={isLoading ? "Signing in..." : "Sign in"}
             onPress={handleSignIn}
             type="primary"
+            disabled={isLoading}
           />
 
           {/* OR Separator */}
