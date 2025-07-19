@@ -11,83 +11,75 @@ import { router, useLocalSearchParams } from 'expo-router'; // Ensure you have t
 import { API_BASE_URL } from '@env';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import useUserData from '../../../hooks/useUserData';
+import * as SecureStore from 'expo-secure-store';
 
 const VehicleAddedScreen = ({ navigation, route }) => {
   // Get vehicle parameters from route params
   const params = useLocalSearchParams();
+  const { user, isLoading: isUserLoading } = useUserData();
   const { newVehicleID } = params;
-  const [user, setUser] = useState(null);
   const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [newVehicle, setNewVehicle] = useState(null);
 
   useEffect(() => {
-    async function getUser() {
-      const user1 = await AsyncStorage.getItem('user');
-      const userObj = JSON.parse(user1);
-      // setUser(userObj);
-
-      const card = await AsyncStorage.getItem('paymentCard');
-      if (userObj) {
-        setUser(userObj);
-        console.log(user.user._id);
-        console.log(card);
-        
-      }
-    }
-    getUser();
-  }, []);
-
-  useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        setLoading(true);
-        if (user.user._id) {
-          console.log(user.user._id)
-          const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userID: user.user._id }),
-          });
+        setIsLoading(true);
+        setError(null);
 
-          const result = await response.json();
+        const token = await SecureStore.getItemAsync('accessToken');
+        if (!token) {
+          throw new Error('Not authenticated');
+        }
+        if (!user?._id) {
+          throw new Error('User ID not found');
+        }
 
-          if (!response.ok) {
-            Toast.show({
-              type: ALERT_TYPE.ERROR,
-              title: 'Error',
-              textBody: result.message || 'Failed to fetch vehicles'
-            });
-          }
+        const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({ userID: user._id }),
+        });
 
-          // Fix: Access data directly from result.data
-          setVehicles(result.data || []);
+        const result = await response.json();
 
-          if (newVehicleID) {
-            const foundVehicle = result.data.find(v => v._id === newVehicleID);
-            setNewVehicle(foundVehicle);
-          }
+        if (!response.ok) {
+          throw new Error(result.message || 'Failed to fetch vehicles');
+        }
+
+        // Ensure data is always an array
+        const vehicleData = Array.isArray(result.data) ? result.data : [];
+        setVehicles(vehicleData);
+
+        // Safely find the new vehicle
+        if (newVehicleID && vehicleData.length > 0) {
+          const foundVehicle = vehicleData.find(v => v._id === newVehicleID) || null;
+          setNewVehicle(foundVehicle);
         }
       } catch (error) {
         setError(error.message);
         Toast.show({
           type: ALERT_TYPE.DANGER,
           title: 'Error',
-          textBody: error.message,
+          textBody: error.message || 'Failed to load vehicles',
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
-    if (user?.user?._id) {
+    if (user?._id) {
       fetchVehicles();
     }
   }, [user, newVehicleID]);
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
