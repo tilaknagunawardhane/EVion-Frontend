@@ -8,27 +8,15 @@ import fonts from '../../../constants/fonts';
 import { router, useLocalSearchParams } from 'expo-router';
 import { API_BASE_URL } from '@env';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useUserData from '../../../hooks/useUserData';
+import * as SecureStore from 'expo-secure-store';
 
 const AddYourEVScreen = () => {
+  const { user, isLoading: isUserLoading } = useUserData();
   const params = useLocalSearchParams();
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    async function getUser() {
-      let user1 = await AsyncStorage.getItem('user');
-      if (user1) {
-        const userObj = JSON.parse(user1); // Parse FIRST
-        setUser(userObj);
-        console.log('user is: ',user);
-        console.log('typeee: ', typeof(user)); 
-        console.log('userID is: ', user.user._id);
-      }
-    } 
-    getUser();
-  }, []);
 
   const handleSelectFiles = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -72,96 +60,84 @@ const AddYourEVScreen = () => {
 
   const submitVehicleData = async (imageUri) => {
     setIsLoading(true);
+    setIsSubmitting(true);
     try {
-
-      console.log(user);
-      console.log('type eka:', typeof(user));
-      // const userObj = JSON.parse(user); // Parse FIRST
-      // setUser(userObj);
-
-      if (user && user.user._id) {
-        const userId = user.user._id;
-        console.log('id;;' ,userId);
-
-        const formData = new FormData();
-
-        formData.append('ownerId', userId);
-
-        // Add all vehicle data from previous screens
-        Object.entries(params).forEach(([key, value]) => {
-          if (value) formData.append(key, value);
-        });
-
-        // Add image file if exists
-        if (imageUri) {
-          const filename = imageUri.split('/').pop();
-          const match = /\.(\w+)$/.exec(filename);
-          const type = match ? `image/${match[1]}` : 'image';
-
-          formData.append('vehicleImage', {
-            uri: imageUri,
-            name: filename,
-            type
-          });
-        }
-
-        console.log(formData);
-
-        const response = await fetch(`${API_BASE_URL}/api/vehicles/addVehicle`, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          Toast.show({
-            type: ALERT_TYPE.DANGER,
-            textBody: data.message || 'Failed to add vehicle',
-            title: 'Error',
-
-          });
-          return;
-          // throw new Error(data.message || 'Failed to add vehicle');
-        }
-
-        Toast.show({
-          type: ALERT_TYPE.SUCCESS,
-          textBody: 'Vehicle added successfully',
-          title: 'success',
-        });
-
-        setTimeout(() => {
-          router.push({
-            pathname: '/pages/AddVehicle/addedvprofile2',
-            params: {
-              userID: data.data.userID,
-              newVehicleID: data.data.newVehicleID
-            }
-          });
-        }, 1500);
-        // Navigate to success screen
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) {
+        throw new Error('Not authenticated');
       }
-      else {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: 'Please Sign Up first',
+      if (!user?._id) {
+        throw new Error('User ID not found');
+      }
+
+      const formData = new FormData();
+      formData.append('ownerId', user._id);
+
+      // Add vehicle data from previous screens
+      Object.entries(params).forEach(([key, value]) => {
+        if (value && value !== 'undefined' && value !== 'null') {
+          formData.append(key, value);
+        }
+      });
+
+      if (imageUri) {
+        const filename = imageUri.split('/').pop();
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image';
+
+        formData.append('vehicleImage', {
+          uri: imageUri,
+          name: filename,
+          type
         });
       }
+
+      const response = await fetch(`${API_BASE_URL}/api/vehicles/addVehicle`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add vehicle');
+      }
+
+      const data = await response.json();
+
+      Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Success',
+        textBody: 'Vehicle added successfully',
+      });
+
+      // Navigate to next screen with proper data
+      router.push({
+        pathname: '/pages/AddVehicle/addedvprofile2',
+        params: {
+          userID: data.data?.userID || user._id,
+          newVehicleID: data.data?.newVehicleID || data.data?._id
+        }
+      });
+
     } catch (error) {
       console.error('Submission error:', error);
       Toast.show({
-        type: ALERT_TYPE.ERROR,
+        type: ALERT_TYPE.DANGER,
         title: 'Error',
         textBody: error.message || 'Failed to submit vehicle data',
       });
+
+      // Handle auth errors
+      if (error.message.includes('authenticated') || error.message.includes('Unauthorized')) {
+        router.replace('/pages/SignInScreen');
+      }
     } finally {
       setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -171,11 +147,25 @@ const AddYourEVScreen = () => {
     borderStyle: selectedImage ? 'solid' : 'dashed',
   };
 
-  if (isLoading) {
+  if (isUserLoading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Uploading your vehicle...</Text>
+        <Text style={styles.loadingText}>Loading user data...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Please sign in to add a vehicle</Text>
+        <CustomButton
+          title="Go to Sign In"
+          onPress={() => router.replace('/pages/SignInScreen')}
+          type="primary"
+          style={{ marginTop: 20 }}
+        />
       </View>
     );
   }
@@ -229,7 +219,7 @@ const AddYourEVScreen = () => {
       </ScrollView>
 
       <View style={styles.bottomSection}>
-        <TouchableOpacity onPress={handleSkip} disabled={isLoading}>
+        <TouchableOpacity onPress={handleSkip} disabled={isSubmitting}>
           <Text style={styles.skipText}>Skip for now</Text>
         </TouchableOpacity>
         <CustomButton
@@ -237,7 +227,7 @@ const AddYourEVScreen = () => {
           onPress={handleAddVehicle}
           type="primary"
           style={styles.addButton}
-          loading={isLoading}
+          loading={isSubmitting}
         />
       </View>
     </View>

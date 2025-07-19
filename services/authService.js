@@ -16,20 +16,12 @@ export const getAuthToken = async () => {
   try {
     const token = await SecureStore.getItemAsync('accessToken');
     if (!token) {
-      Toast.show({
-        type: ALERT_TYPE.WARNING,
-        title: 'Session Expired',
-        textBody: 'Please login again',
-      });
+      console.warn('No auth token found');
+      return null;
     }
     return token;
   } catch (error) {
     console.error('Error getting auth token:', error);
-    Toast.show({
-      type: ALERT_TYPE.DANGER,
-      title: 'Security Error',
-      textBody: 'Failed to retrieve authentication token',
-    });
     return null;
   }
 };
