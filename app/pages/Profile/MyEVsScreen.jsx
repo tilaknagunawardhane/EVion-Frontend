@@ -17,38 +17,38 @@ import { API_BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import CustomButton from '../../../components/CustomButton';
+import useUserData from '../../../hooks/useUserData';
+import * as SecureStore from 'expo-secure-store';
 
 const MyEVsScreen = () => {
   const router = useRouter();
   const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading: isUserLoading } = useUserData();
+  const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const user1 = await AsyncStorage.getItem('user');
-      if (user1) {
-        const userObj = JSON.parse(user1); // Parse FIRST
-        setUser(userObj);
-        console.log('user: ', user);
-      }
-    };
-    getUser();
-  }, []);
 
   const fetchVehicles = async () => {
     try {
-      setLoading(true);
-      if (!user?.user?._id) return;
+      setIsLoading(true);
+      if (!user?._id) return;
       // console.log('Fetching vehicles for user:', user._id);
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+      if (!user?._id) {
+        throw new Error('User ID not found');
+      }
 
       const response = await fetch(`${API_BASE_URL}/api/vehicles/fetchVehicles`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
-        body: JSON.stringify({ userID: user.user._id }),
+        body: JSON.stringify({ userID: user._id }),
       });
 
       const result = await response.json();
@@ -71,19 +71,19 @@ const MyEVsScreen = () => {
         textBody: error.message,
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
       setRefreshing(false);
     }
   };
 
   const handleAddVehicle = async () => {
-      await AsyncStorage.setItem('isProfileFlow', 'true');
-    
-      router.push('/pages/AddVehicle/AddVehicle1');
+    await AsyncStorage.setItem('isProfileFlow', 'true');
+
+    router.push('/pages/AddVehicle/AddVehicle1');
   }
 
   useEffect(() => {
-    if (user?.user?._id) {
+    if (user?._id) {
       fetchVehicles();
     }
   }, [user]);
@@ -93,7 +93,7 @@ const MyEVsScreen = () => {
     fetchVehicles();
   };
 
-  if (loading && vehicles.length === 0) {
+  if (isLoading && vehicles.length === 0) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -125,7 +125,7 @@ const MyEVsScreen = () => {
           />
         }
       >
-        {vehicles.length === 0 && !loading ? (
+        {vehicles.length === 0 && !isLoading ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No vehicles found</Text>
             <CustomButton
@@ -144,7 +144,7 @@ const MyEVsScreen = () => {
                   pathname: '/pages/Profile/VehicleProfile',
                   params: {
                     vehicleID: vehicle._id,
-                    userID: user.user._id,
+                    userID: user._id,
                   },
                 })
               }
