@@ -13,7 +13,7 @@ import {
   Image // Added this import
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { Link, router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 
@@ -293,6 +293,16 @@ const ProfileScreen = () => {
     }
   };
 
+  const handleActivityPress = () => {
+    console.log('Navigating to Activity page...');
+    try {
+      // Try a simpler approach - use the path structure as Expo Router expects
+      router.push('/pages/Profile/Activity/');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
@@ -333,6 +343,19 @@ const ProfileScreen = () => {
       {/* Content */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {renderContent()}
+
+        {/* Activity Button - Add this section */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={handleActivityPress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.menuItemContent}>
+            <Ionicons name="time-outline" size={20} color={colors.primary} />
+            <Text style={styles.menuItemText}>Activity</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.secondaryText} />
+          </View>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -522,6 +545,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.stroke,
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
   },
 });
 

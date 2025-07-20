@@ -11,12 +11,11 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ProfileScreen1 = ({ route }) => {
-  const navigation = useNavigation();
   
   // Sample user data (in a real app, this would come from props or state management)
   const userData = {
@@ -49,7 +48,7 @@ const ProfileScreen1 = ({ route }) => {
       {/* User Info Card */}
       <TouchableOpacity 
         style={styles.userCard}
-        onPress={() => navigation.navigate('EditProfile', { userData })}
+        onPress={() => router.push('/pages/Profile1')}
       >
         <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}>
           {userData.profileImage ? (
@@ -91,7 +90,7 @@ const ProfileScreen1 = ({ route }) => {
             marginRight: cardMargin,
             height: cardSize * 0.9 
           }]} 
-          onPress={() => navigation.navigate('pages/Profile/MyEVsScreen', { vehicles: userData.vehicles })}
+          onPress={() => router.push('/pages/Profile/MyEVsScreen')}
         >
           <Image 
             source={require('../../assets/byd.png')} 
@@ -108,7 +107,7 @@ const ProfileScreen1 = ({ route }) => {
             marginRight: cardMargin,
             height: cardSize * 0.9 
           }]} 
-          onPress={() => navigation.navigate('pages/Profile/Wallet/walletScreen')}
+          onPress={() => router.push('/pages/Profile/Wallet/walletScreen')}
         >
           <Image 
             source={require('../../assets/wallet.png')} 
@@ -123,7 +122,7 @@ const ProfileScreen1 = ({ route }) => {
             width: cardSize,
             height: cardSize * 0.9 
           }]} 
-          onPress={() => navigation.navigate('Activity', { activityCount: userData.recentActivity })}
+          onPress={() => router.push('/pages/Profile/Activity')}
         >
           <Image 
             source={require('../../assets/activity.png')} 
@@ -139,7 +138,7 @@ const ProfileScreen1 = ({ route }) => {
       <View style={styles.menuContainer}>
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => navigation.navigate('pages/Profile/SettingsScreen')}
+          onPress={() => router.push('/pages/Profile/SettingsScreen')}
         >
           <Image 
             source={require('../../assets/settings.png')} 
@@ -151,7 +150,7 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => navigation.navigate('pages/Profile/Favourites')}
+          onPress={() => router.push('/pages/Profile/Favourites')}
         >
           <Image 
             source={require('../../assets/favourite.png')} 
@@ -163,7 +162,7 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => navigation.navigate('FaultReports')}
+          onPress={() => router.push('/pages/FaultReport')}
         >
           <Image 
             source={require('../../assets/fault.png')} 
@@ -175,7 +174,7 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => navigation.navigate('pages/Profile/PrivacyPolicy')}
+          onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
         >
           <Image 
             source={require('../../assets/privacy.png')} 
@@ -187,7 +186,7 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => navigation.navigate('HelpCenter')}
+          onPress={() => router.push('/pages/HelpCenter')}
         >
           <Image 
             source={require('../../assets/help.png')} 
