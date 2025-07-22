@@ -18,9 +18,12 @@ import BackIcon from '../../../../assets/back-icon.png';
 import SettingsIcon from '../../../../assets/settings.png';
 import ManageCardIcon from '../../../../assets/wallet.png';
 import HistoryIcon from '../../../../assets/schedule.png';
+import { useRouter } from 'expo-router';
+
 
 const WalletScreen = () => {
   const navigation = useNavigation(); // ✅ Use hook for safe navigation
+  const router = useRouter();
 
   const transactions = [
     {
@@ -75,7 +78,7 @@ const WalletScreen = () => {
         <Text style={styles.balanceLabel}>Available Balance</Text>
         <Text style={styles.balance}>LKR 13,750.00</Text>
         <TouchableOpacity style={styles.addMoneyBtn}
-        onPress={() => navigation.navigate('pages/Profile/Wallet/AddMoney')}
+        onPress={() => router.push('/pages/Profile/Wallet/AddMoney')}
         >
           <Text style={styles.addMoneyText}>Add Money</Text>
         </TouchableOpacity>
@@ -85,7 +88,7 @@ const WalletScreen = () => {
       <View style={styles.actionsContainer}>
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => navigation.navigate('pages/Profile/Wallet/ManageCards')}
+          onPress={() => router.push('pages/Profile/Wallet/ManageCards')}
         >
           <Image source={ManageCardIcon} style={styles.actionIconImage} />
           <Text style={styles.actionLabel}>Manage Cards</Text>
@@ -93,7 +96,7 @@ const WalletScreen = () => {
 
         <TouchableOpacity
           style={styles.actionCard}
-          onPress={() => navigation.navigate('pages/Profile/Wallet/TransactionsHistory')}
+          onPress={() => router.push('pages/Profile/Wallet/TransactionsHistory')}
         >
           <Image source={HistoryIcon} style={styles.actionIconImage} />
           <Text style={styles.actionLabel}>Transactions History</Text>

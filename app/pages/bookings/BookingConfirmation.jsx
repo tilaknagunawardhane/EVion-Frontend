@@ -17,7 +17,7 @@ const BookingConfirmationModal = ({ visible, onClose, onConfirm }) => {
       name: "Genso Charging Station",
       address: "Southern Highway, Welipenna, Matugama"
     },
-    energy: "75kWh +40%",
+    energy: "75kWh",
     cost: "LKR 4125",
     dateTime: "22 Thursday, June\n05:00 - 06:00 AM"
   };

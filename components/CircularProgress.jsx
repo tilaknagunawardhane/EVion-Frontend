@@ -7,6 +7,7 @@ import fonts from '../constants/fonts';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const CircularProgress = ({ 
+  capacity,
   percentage, 
   size = SCREEN_WIDTH * 0.5, // Default to 50% of screen width
   strokeWidth = 12, 
@@ -18,7 +19,7 @@ const CircularProgress = ({
 }) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const progress = (percentage / 100) * circumference;
+  const progress = (capacity / 100) * circumference;
 
   // Responsive font sizes
   const percentageFontSize = size * 0.24;
@@ -60,13 +61,13 @@ const CircularProgress = ({
               styles.percentageText,
               { fontSize: percentageFontSize, lineHeight: percentageFontSize }
             ]}>
-              {Math.floor(percentage)}
+              {Math.floor(capacity)}
             </Text>
             <Text style={[
               styles.percentageSymbol,
               { fontSize: symbolFontSize, marginTop: percentageFontSize * 0.1 }
             ]}>
-              %
+              kwh
             </Text>
           </View>
           {additionalText && (
@@ -74,7 +75,7 @@ const CircularProgress = ({
               styles.additionalText,
               { fontSize: additionalTextFontSize }
             ]}>
-              {additionalText}
+              {/* {additionalText} */}
             </Text>
           )}
         </View>
