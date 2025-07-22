@@ -10,6 +10,8 @@ import {
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { Link, router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CustomButton from '../../components/CustomButton';
@@ -665,6 +667,16 @@ const Profile1 = () => {
     }
   ], [colors.primary, colors.secondaryText]);
 
+  const handleActivityPress = () => {
+    console.log('Navigating to Activity page...');
+    try {
+      // Try a simpler approach - use the path structure as Expo Router expects
+      router.push('/pages/Profile/Activity/');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -698,114 +710,22 @@ const Profile1 = () => {
         ))}
       </View>
 
-      <ScrollView style={styles.content}>
-        {activeTab === 'Basic Info' && (
-          <>
-            {/* Profile Picture */}
-            <View style={styles.profileSection}>
-              <View style={styles.profileImageContainer}>
-                <View style={styles.profileImage}>
-                  <Text style={styles.profileImageText}>👤</Text>
-                </View>
-                <TouchableOpacity style={styles.editProfileButton} onPress={handleProfilePictureChange}>
-                  <Text style={styles.editProfileButtonText}>✏️</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+      {/* Content */}
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {renderContent()}
 
-            {/* Profile Fields */}
-            <View style={styles.fieldsContainer}>
-              <ProfileFieldComponent
-                label="Name"
-                value={userInfo.name}
-                field="name"
-                isEditingField={isEditing === 'name'}
-                editingValue={editingValue}
-                onEdit={handleEdit}
-                onUpdate={handleUpdate}
-                onCancel={handleCancel}
-                onValueChange={handleEditingValueChange}
-              />
-              
-              <ProfileFieldComponent
-                label="Email Address"
-                value={userInfo.email}
-                field="email"
-                isEditingField={isEditing === 'email'}
-                editingValue={editingValue}
-                onEdit={handleEdit}
-                onUpdate={handleUpdate}
-                onCancel={handleCancel}
-                onValueChange={handleEditingValueChange}
-              />
-              
-              <ProfileFieldComponent
-                label="Contact Number"
-                value={userInfo.contactNumber}
-                field="contactNumber"
-                isEditingField={isEditing === 'contactNumber'}
-                editingValue={editingValue}
-                onEdit={handleEdit}
-                onUpdate={handleUpdate}
-                onCancel={handleCancel}
-                onValueChange={handleEditingValueChange}
-              />
-              
-              <ProfileFieldComponent
-                label="Home Address"
-                value={userInfo.homeAddress}
-                field="homeAddress"
-                isEditingField={isEditing === 'homeAddress'}
-                editingValue={editingValue}
-                onEdit={handleEdit}
-                onUpdate={handleUpdate}
-                onCancel={handleCancel}
-                onValueChange={handleEditingValueChange}
-                onSpecialEdit={handleShowAddressModal}
-              />
-              
-              <ProfileFieldComponent
-                label="Work Place"
-                value={userInfo.workPlace}
-                field="workPlace"
-                isEditingField={isEditing === 'workPlace'}
-                editingValue={editingValue}
-                onEdit={handleEdit}
-                onUpdate={handleUpdate}
-                onCancel={handleCancel}
-                onValueChange={handleEditingValueChange}
-              />
-            </View>
-          </>
-        )}
-
-        {activeTab === 'Signin Info' && (
-          <View style={styles.signinInfoContainer}>
-            <TouchableOpacity style={styles.signinInfoItem} onPress={handleEmailEdit} activeOpacity={0.7}>
-              <Text style={styles.signinInfoLabel}>Email Address</Text>
-              <View style={styles.signinInfoRow}>
-                <Text style={styles.signinInfoValue}>{userInfo.email}</Text>
-                <Text style={styles.signinInfoArrow}>›</Text>
-              </View>
-            </TouchableOpacity>
+        {/* Activity Button - Add this section */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={handleActivityPress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.menuItemContent}>
+            <Ionicons name="time-outline" size={20} color={colors.primary} />
+            <Text style={styles.menuItemText}>Activity</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.secondaryText} />
           </View>
-        )}
-
-        {activeTab === 'Security' && (
-          <View style={styles.securityContainer}>
-            <TouchableOpacity style={styles.securityItem} onPress={handleShowPasswordModal} activeOpacity={0.7}>
-              <Text style={styles.securityLabel}>Password</Text>
-              <Text style={styles.securityArrow}>›</Text>
-            </TouchableOpacity>
-            
-            <View style={styles.securityDivider} />
-            
-            <TouchableOpacity style={styles.securityItem} onPress={handleShowRecoveryPhoneModal} activeOpacity={0.7}>
-              <Text style={styles.securityLabel}>Recovery Phone Number</Text>
-              <Text style={styles.securityArrow}>›</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        </TouchableOpacity>
       </ScrollView>
 
       <AddressModal 
@@ -1247,6 +1167,25 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
   },
 
+  menuItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.stroke,
+  },
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  menuItemText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+  },
 });
 
 export default Profile1;
