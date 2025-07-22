@@ -49,7 +49,7 @@ const ProfileScreen1 = ({ route }) => {
       {/* User Info Card */}
       <TouchableOpacity 
         style={styles.userCard}
-        onPress={() => navigation.navigate('EditProfile', { userData })}
+        onPress={() => navigation.navigate('pages/Profile/ManageAccount/ManageAccountScreen', { userData })}
       >
         <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}>
           {userData.profileImage ? (
