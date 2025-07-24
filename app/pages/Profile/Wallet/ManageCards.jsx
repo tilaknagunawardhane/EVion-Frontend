@@ -9,7 +9,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 
 import colors from '../../../../constants/color';
 import fonts from '../../../../constants/fonts';
@@ -20,7 +19,6 @@ const mastercardLogo = require('../../../../assets/mastercard.png');
 
 const ManageCardsScreen = () => {
   const navigation = useNavigation();
-  const router = useRouter();
 
   const cards = [
     {
@@ -75,7 +73,7 @@ const ManageCardsScreen = () => {
         ))}
 
         {/* Add New Card Button */}
-        <TouchableOpacity style={styles.addCardBtn} onPress={() => router.push('pages/Profile/Wallet/AddNewCard')}  >
+        <TouchableOpacity style={styles.addCardBtn} onPress={() => navigation.navigate('pages/Profile/Wallet/AddNewCard')}  >
           <Ionicons name="add" size={20} color={colors.white} />
           <Text style={styles.addCardText}>Add New Card</Text>
         </TouchableOpacity>

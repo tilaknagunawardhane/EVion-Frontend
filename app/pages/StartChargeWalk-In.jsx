@@ -22,7 +22,6 @@ const StartChargeWalkInScreen = () => {
   const router = useRouter();
 
   const [chargingData, setChargingData] = useState({
-    capacity: 24,
     batteryPercentage: 17,
     chargingPower: '0 kW',
     chargingTime: '00:00:00',
@@ -45,8 +44,6 @@ const StartChargeWalkInScreen = () => {
           const secs = newSeconds % 60;
 
           setChargingData(prev => ({
-            capacity: Math.min(prev.capacity + (100 / 3600), 1000),
-
             batteryPercentage: Math.min(prev.batteryPercentage + (100 / 3600), 100),
             chargingPower: `${Math.floor(Math.random() * 5) + 5} kW`,
             chargingTime: `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
@@ -120,10 +117,9 @@ const StartChargeWalkInScreen = () => {
       <View style={styles.content}>
         <View style={styles.batteryContainer}>
           <CircularProgress
-            capacity={Math.floor(chargingData.capacity)}
             percentage={Math.floor(chargingData.batteryPercentage)}
             size={SCREEN_WIDTH * 0.5}
-            // additionalText={`${Math.floor(chargingData.batteryPercentage)}%`}
+            additionalText={`${Math.floor(chargingData.batteryPercentage)}%`}
             strokeWidth={12}
             activeColor={isCharging ? colors.primary : colors.secondaryText}
           />

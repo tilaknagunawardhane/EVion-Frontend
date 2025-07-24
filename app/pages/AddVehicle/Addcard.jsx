@@ -54,7 +54,7 @@ const AddPaymentMethodScreen = () => {
         title: 'Success',
         textBody: 'Card details saved successfully!',
         autoClose: 1500,
-        onHide: () => router.push('/(tabs)/map')
+        onHide: () => router.push('/(tabs)/Profile')
       });
 
     } catch (error) {
@@ -71,7 +71,7 @@ const AddPaymentMethodScreen = () => {
   };
 
   const handleSkip = () => {
-    router.push('/(tabs)/map');
+    router.push('/(tabs)/Profile');
   };
 
   return (

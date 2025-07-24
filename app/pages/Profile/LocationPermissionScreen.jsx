@@ -4,13 +4,9 @@ import RadioButton from '../../../components/RadioButton';
 import CustomButton from '../../../components/CustomButton';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
-import { router } from 'expo-router';
-import { useNavigation } from "@react-navigation/native";
 
 
 const LocationPermissionScreen = () => {
-    const navigation = useNavigation();
-  
   const [selectedOption, setSelectedOption] = useState('whileUsing');
 
   const handleSave = () => {
@@ -54,8 +50,7 @@ const LocationPermissionScreen = () => {
 
       <CustomButton
         title="Save"
-        // onPress={handleSave}
-        onPress={() => navigation.goBack()}
+        onPress={handleSave}
         type="primary"
         style={styles.saveButton}
       />

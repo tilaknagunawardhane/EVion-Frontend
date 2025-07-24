@@ -12,10 +12,10 @@ const ChargingStopedScreen = () => {
   
   // Battery and charging data
   const batteryPercentage = 18;
-  const capacity = 24;
+  const capacity = '24kWh';
   const chargingPower = '120kW';
   const chargingTime = '00:12:34';
-  const cost = '100.00';
+  const cost = '1650.00';
 
   const handleBackPress = () => {
     router.back();
@@ -51,7 +51,7 @@ return (
         {/* Battery Circle Progress - 65% */}
         <View style={styles.batteryContainer}>
             <CircularProgress 
-                capacity={Math.floor(capacity)}
+                percentage={batteryPercentage}
                 size={220}
                 strokeWidth={12}
                 additionalText={capacity}
@@ -66,7 +66,7 @@ return (
                     <Ionicons name="flash" size={16} color={colors.secondaryText} />
                 </View>
                 <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>Average Charging Power</Text>
+                    <Text style={styles.infoLabel}>Charging Power</Text>
                     <Text style={styles.infoValue}>{chargingPower}</Text>
                 </View>
             </View>
