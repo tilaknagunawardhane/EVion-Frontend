@@ -1,0 +1,491 @@
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  TouchableOpacity,
+  Image,
+  StatusBar,
+  TouchableWithoutFeedback
+} from 'react-native';
+import axios from 'axios';
+import * as Location from 'expo-location';
+import * as ExpoMaps from 'expo-maps';
+import { MaterialIcons } from '@expo/vector-icons';
+import { GOOGLE_MAPS_API_KEY } from '@env';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import colors from '../../../constants/color';
+import fonts from '../../../constants/fonts';
+import SearchContainer from '../../../components/maps/SearchContainer';
+import SuggestionsDropdown from '../../../components/maps/SuggestionsDropdown';
+import chargingStations from '../../../utils/ChargingStations';
+
+export default function DirectionsScreen() {
+  const params = useLocalSearchParams();
+  const navigation = useNavigation();
+
+  // State management
+  const [userLocation] = useState({
+    latitude: parseFloat(params.userLatitude),
+    longitude: parseFloat(params.userLongitude)
+  });
+  const [destination] = useState({
+    latitude: parseFloat(params.destinationLatitude),
+    longitude: parseFloat(params.destinationLongitude),
+    title: params.destinationTitle || 'Destination'
+  });
+  const [routePoints, setRoutePoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [distance, setDistance] = useState(null);
+  const [duration, setDuration] = useState(null);
+  const mapRef = useRef(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [fromText, setFromText] = useState('Your Location');
+  const [toText, setToText] = useState(params.destinationTitle || 'Destination');
+  const [fromCoords, setFromCoords] = useState({
+    latitude: parseFloat(params.userLatitude),
+    longitude: parseFloat(params.userLongitude)
+  });
+  const [toCoords, setToCoords] = useState({
+    latitude: parseFloat(params.destinationLatitude),
+    longitude: parseFloat(params.destinationLongitude)
+  });
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [activeField, setActiveField] = useState(null); // 'from' or 'to'
+
+  // Effects
+  useEffect(() => {
+    if (mapReady && routePoints.length > 0 && mapRef.current?.setCameraPosition) {
+      const centerLat = (fromCoords.latitude + toCoords.latitude) / 2;
+      const centerLng = (fromCoords.longitude + toCoords.longitude) / 2;
+
+      mapRef.current.setCameraPosition({
+        coordinates: { latitude: centerLat, longitude: centerLng },
+        zoom: 12,
+        duration: 1000,
+      });
+    }
+  }, [mapReady, routePoints, fromCoords, toCoords]);
+
+  useEffect(() => {
+    if (fromCoords && toCoords) {
+      fetchRoute(fromCoords, toCoords);
+    }
+  }, [fromCoords, toCoords]);
+
+  // Helper functions
+  const fetchRoute = async (start, end) => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/directions/json?` +
+        `origin=${start.latitude},${start.longitude}` +
+        `&destination=${end.latitude},${end.longitude}` +
+        `&key=${GOOGLE_MAPS_API_KEY}` +
+        `&mode=driving`
+      );
+      
+      if (response.data.status !== 'OK') {
+        throw new Error(response.data.error_message || 'Directions request failed');
+      }
+      
+      if (response.data.routes.length === 0) {
+        Alert.alert('No routes found', 'Could not find a path between these locations');
+        return;
+      }
+      
+      const route = response.data.routes[0];
+      const points = decodePolyline(route.overview_polyline.points);
+      setRoutePoints(points);
+      
+      if (route.legs.length > 0) {
+        const leg = route.legs[0];
+        setDistance(leg.distance.text);
+        setDuration(leg.duration.text);
+      }
+    } catch (error) {
+      console.error('Directions error:', error);
+      Alert.alert('Route Error', error.message || 'Failed to get directions. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+   const decodePolyline = (encoded) => {
+    const points = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
+
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+
+      const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      points.push({
+        latitude: lat * 1e-5,
+        longitude: lng * 1e-5
+      });
+    }
+
+    return points;
+  };
+
+  const recenterMap = () => {
+    if (mapRef.current?.setCameraPosition) {
+      const centerLat = (fromCoords.latitude + toCoords.latitude) / 2;
+      const centerLng = (fromCoords.longitude + toCoords.longitude) / 2;
+
+      mapRef.current.setCameraPosition({
+        coordinates: { latitude: centerLat, longitude: centerLng },
+        zoom: 12,
+        duration: 1000,
+      });
+    }
+  };
+
+  const fetchSuggestions = async (input, field) => {
+    if (!input || input.trim() === '') {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      // Get local station suggestions
+      const localSuggestions = chargingStations
+        .filter(station => station.title.toLowerCase().includes(input.toLowerCase()))
+        .map(station => ({
+          id: station.id,
+          description: station.title,
+          isLocal: true,
+          latitude: station.latitude,
+          longitude: station.longitude,
+          address: station.address,
+        }));
+
+      // Get Google Places API suggestions
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_MAPS_API_KEY}&components=country:lk`
+      );
+      
+      const apiSuggestions = response.data.status === 'OK' 
+        ? response.data.predictions.map(prediction => ({
+            id: prediction.place_id,
+            description: prediction.description,
+            isLocal: false,
+            placeId: prediction.place_id
+          }))
+        : [];
+
+      setSuggestions([...localSuggestions, ...apiSuggestions]);
+      setActiveField(field);
+      setShowDropdown(true);
+    } catch (error) {
+      console.error('Suggestions error:', error);
+      setSuggestions([]);
+    }
+  };
+
+  const handleSuggestionSelect = async (item) => {
+    try {
+      let coords;
+      if (item.isLocal) {
+        // Local station selected
+        coords = {
+          latitude: item.latitude,
+          longitude: item.longitude
+        };
+        if (activeField === 'from') {
+          setFromText(item.description);
+          setFromCoords(coords);
+        } else {
+          setToText(item.description);
+          setToCoords(coords);
+        }
+      } else {
+        // Google Places API result selected
+        const response = await axios.get(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${item.placeId}&key=${GOOGLE_MAPS_API_KEY}`
+        );
+        const { lat, lng } = response.data.result.geometry.location;
+        coords = { latitude: lat, longitude: lng };
+        
+        if (activeField === 'from') {
+          setFromText(item.description);
+          setFromCoords(coords);
+        } else {
+          setToText(item.description);
+          setToCoords(coords);
+        }
+      }
+
+      setShowDropdown(false);
+      setSuggestions([]);
+    } catch (error) {
+      console.error('Suggestion selection error:', error);
+      Alert.alert('Error', 'Failed to get location details');
+    }
+  };
+
+  const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
+  const MapViewComponent = MapNamespace.View;
+
+  return (
+    <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Image
+          source={require('../../../assets/back-icon.png')}
+          style={styles.backIcon}
+        />
+      </TouchableOpacity>
+
+      {/* Overlay to dismiss dropdowns when tapping outside search (not on map) */}
+      {showDropdown && (
+        <TouchableWithoutFeedback
+          onPress={() => {
+            setShowDropdown(false);
+            setSuggestions([]);
+          }}
+        >
+          <View style={styles.overlay} />
+        </TouchableWithoutFeedback>
+      )}
+
+      {/* Search Containers */}
+      <View style={styles.searchStack} pointerEvents={showDropdown ? 'box-none' : 'auto'}>
+        <View style={{ marginBottom: 60 }}>
+          <SearchContainer
+            searchQuery={fromText}
+            setSearchQuery={(text) => {
+              setFromText(text);
+              if (text.length > 2) fetchSuggestions(text, 'from');
+            }}
+            placeholder="From"
+            onFocus={() => {
+              if (fromText.length > 2) fetchSuggestions(fromText, 'from');
+            }}
+            onSearch={() => fetchSuggestions(fromText, 'from')}
+            hideFilterButton={true}
+          />
+          {/* Suggestions Dropdown for FROM field */}
+          {showDropdown && suggestions.length > 0 && activeField === 'from' && (
+            <SuggestionsDropdown
+              suggestions={suggestions}
+              onSelect={handleSuggestionSelect}
+              onClose={() => {
+                setShowDropdown(false);
+                setSuggestions([]);
+              }}
+            />
+          )}
+        </View>
+        <View>
+          <SearchContainer
+            searchQuery={toText}
+            setSearchQuery={(text) => {
+              setToText(text);
+              if (text.length > 2) fetchSuggestions(text, 'to');
+            }}
+            placeholder="To"
+            onFocus={() => {
+              if (toText.length > 2) fetchSuggestions(toText, 'to');
+            }}
+            onSearch={() => fetchSuggestions(toText, 'to')}
+            hideFilterButton={true}
+          />
+          {/* Suggestions Dropdown for TO field */}
+          {showDropdown && suggestions.length > 0 && activeField === 'to' && (
+            <SuggestionsDropdown
+              suggestions={suggestions}
+              onSelect={handleSuggestionSelect}
+              onClose={() => {
+                setShowDropdown(false);
+                setSuggestions([]);
+              }}
+            />
+          )}
+        </View>
+      </View>
+
+      {/* Map View */}
+      {loading && <ActivityIndicator size="large" style={styles.loader} />}
+
+      <MapViewComponent
+        ref={mapRef}
+        style={styles.map}
+        camera={{
+          centerCoordinate: {
+            latitude: (fromCoords.latitude + toCoords.latitude) / 2,
+            longitude: (fromCoords.longitude + toCoords.longitude) / 2
+          },
+          zoom: 12,
+        }}
+        onMapReady={() => {
+          setTimeout(() => setMapReady(true), 100);
+        }}
+        markers={[
+          {
+            id: 'start',
+            coordinates: fromCoords,
+            title: 'Start',
+            description: fromText,
+            icon: { uri: 'https://maps.gstatic.com/mapfiles/ms2/micons/blue-dot.png' }
+          },
+          {
+            id: 'end',
+            coordinates: toCoords,
+            title: 'Destination',
+            description: toText,
+            icon: { uri: 'https://maps.gstatic.com/mapfiles/ms2/micons/red-dot.png' }
+          },
+        ]}
+        polylines={routePoints.length > 0 ? [
+          {
+            id: 'route',
+            coordinates: routePoints,
+            strokeColor: '#007AFF',
+            strokeWidth: 4
+          }
+        ] : []}
+      />
+
+      {/* Route Info */}
+      {distance && duration && (
+        <View style={styles.routeInfo}>
+          <View style={styles.routeInfoRow}>
+            <MaterialIcons name="directions-car" size={24} color="#007AFF" />
+            <Text style={styles.routeInfoText}>{duration} ({distance})</Text>
+          </View>
+          <Text style={styles.destinationText} numberOfLines={2}>
+            To: {toText}
+          </Text>
+        </View>
+      )}
+
+      {/* Recenter Button */}
+      <TouchableOpacity
+        style={styles.recenterButton}
+        onPress={recenterMap}
+        activeOpacity={0.7}
+      >
+        <MaterialIcons name="my-location" size={24} color="#fff" />
+      </TouchableOpacity>
+    </View>
+)}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 50,
+    left: 16,
+    zIndex: 20,
+    backgroundColor: `${colors.stroke}4D`,
+    borderRadius: 20,
+    padding: 10,
+  },
+  backIcon: {
+    width: 18,
+    height: 18,
+    tintColor: colors.mainTextColor,
+    resizeMode: 'contain',
+  },
+  searchStack: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 100,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    flexDirection: 'column',
+  },
+  searchSpacer: {
+    height: 10,
+  },
+  map: {
+    flex: 1,
+  },
+  loader: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    zIndex: 10,
+    transform: [{ translateX: -18 }, { translateY: -18 }],
+  },
+  routeInfo: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  routeInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  routeInfoText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    marginLeft: 10,
+    color: colors.mainTextColor,
+  },
+  destinationText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+  },
+  recenterButton: {
+    position: 'absolute',
+    bottom: 120,
+    right: 20,
+    backgroundColor: colors.primary,
+    padding: 12,
+    borderRadius: 25,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    zIndex: 20,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 15,
+  },
+});

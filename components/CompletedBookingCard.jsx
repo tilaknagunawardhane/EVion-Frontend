@@ -1,0 +1,182 @@
+import React from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import colors from '../constants/color.js';
+import fonts from '../constants/fonts.js';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+
+
+const CompletedBookingCard = ({ 
+  dateLabel, 
+  time,
+  cost, 
+  stationName, 
+  address, 
+  carImage, 
+  carName, 
+  connectorType,
+  iconColor = colors.primary // Use primary color from constants as default
+}) => {
+    const router = useRouter();
+  
+  return (
+    <View style={styles.card}>
+      <View style={styles.topRow}>
+          <Text style={styles.dateText}>{dateLabel}</Text>
+          <View style={styles.costContainer}>
+            <Text style={styles.costText}>LKR {cost}</Text>
+          </View>
+          <TouchableOpacity style={styles.bookAgainButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
+            <Text style={styles.bookAgainText}>Book Again</Text>
+          </TouchableOpacity>
+        </View>
+      <View style={styles.separator} />
+      <View style={styles.middleRow}>
+        <View style={styles.stationContainer}>
+          <Text style={styles.stationName}>{stationName}</Text>
+          <Text style={styles.address}>{address}</Text>
+        </View>
+        <TouchableOpacity>
+          <MaterialIcons name="navigation" size={28} color={iconColor} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.separator} />
+      <View style={styles.bottomRow}>
+        <View style={styles.carContainer}>
+          <Image source={carImage} style={styles.carImage} />
+          <Text style={styles.carName}>{carName}</Text>
+        </View>
+        <View style={styles.connectorContainer}>
+          <MaterialCommunityIcons name="ev-plug-ccs2" size={24} color={colors.mainTextColor} />
+          <Text style={styles.connector}>{connectorType}</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.background, // Use background color from constants
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 10,
+    marginHorizontal: 16,
+    elevation: 2,
+  },
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+    justifyContent: 'space-between',
+  },
+  dateText: {
+    fontFamily: fonts.PlusJakartaSansBold, // Use bold font from constants
+    fontSize: 16,
+    color: colors.mainTextColor, // Use main text color from constants
+  },
+  duration: {
+    borderWidth: 1,
+    borderColor: colors.primary, // Use primary color for border
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginHorizontal: 10,
+  },
+  durationText: {
+    color: colors.primary, // Use primary color for text
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans, // Use regular font from constants
+  },
+  timeText: {
+    fontFamily: fonts.PlusJakartaSansBold, // Use bold font from constants
+    fontSize: 16,
+    color: colors.mainTextColor, // Use main text color from constants
+  },
+  separator: {
+    height: 1,
+    backgroundColor: colors.stroke, // Use stroke color from constants
+    marginVertical: 8,
+  },
+  middleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  stationContainer: {
+    flex: 1,
+  },
+  stationName: {
+    fontFamily: fonts.PlusJakartaSansMedium, // Use bold font from constants
+    fontSize: 16,
+    color: colors.mainTextColor, // Use main text color from constants
+  },
+  address: {
+    color: colors.secondaryText, // Use secondary text color from constants
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans, // Use regular font from constants
+  },
+  bottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  carContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  connectorContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+  },
+  carImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    resizeMode: 'cover',
+    overflow: 'hidden',
+    backgroundColor: colors.stroke, // Use stroke color as fallback background
+  },
+  carName: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans, // Use regular font from constants
+    color: colors.mainTextColor, // Use main text color from constants
+  },
+  connector: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans, // Use regular font from constants
+    color: colors.mainTextColor, // Use main text color from constants
+  },
+  costContainer: {
+  paddingHorizontal: 4,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+costText: {
+  color: colors.secondary, // Updated to match image color
+  fontSize: 14,
+  fontFamily: fonts.PlusJakartaSansMedium,
+},
+
+bookAgainButton: {
+  backgroundColor: colors.primary,
+  paddingHorizontal: 10,
+  paddingVertical: 6,
+  borderRadius: 6,
+},
+bookAgainText: {
+  color: '#fff',
+  fontSize: 12,
+  fontFamily: fonts.PlusJakartaSansMedium,
+},
+
+});
+
+export default CompletedBookingCard;

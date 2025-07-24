@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "scheme": "EVionFrontend",
+    "name": "EVion-Frontend",
+    "slug": "EVion-Frontend",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app needs access to your location to show maps and nearby stations.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.anonymous.EVionFrontend",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.EVionFrontend",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAghlt-S0i8b8IJLixLEl5fmTFqGfTqyfM"
+        }
+      },
+      "runtimeVersion": "1.0.0"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-maps",
+        {
+          "googleMapsApiKey": "AIzaSyAghlt-S0i8b8IJLixLEl5fmTFqGfTqyfM",
+          "requestLocationPermission": true,
+          "locationPermission": "Allow EVion-Frontend to use your location"
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
+    },
+    "owner": "tilaknagunawardhane"
+  }
+}
