@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import CustomSwitch from '../../../components/CustomSwitch';
+import { router } from 'expo-router';
 
 const SettingsScreen = () => {
   const navigation = useNavigation();
@@ -40,7 +41,7 @@ const SettingsScreen = () => {
       {/* Location Permission */}
       <TouchableOpacity
         style={styles.row}
-        onPress={() => navigation.navigate('pages/Profile/LocationPermissionScreen')}
+        onPress={() => router.push('pages/Profile/LocationPermissionScreen')}
       >
         <View>
           <Text style={styles.label}>Location Permission</Text>
