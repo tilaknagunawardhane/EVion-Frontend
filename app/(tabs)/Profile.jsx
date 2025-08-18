@@ -216,7 +216,7 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => router.push('/pages/HelpCenter')}
+          onPress={() => router.push({pathname: '/pages/StationProfile', params: { stationID: '687d2ec70e0c0b8ef0b4186c' }})}
         >
           <Image 
             source={require('../../assets/help.png')} 
