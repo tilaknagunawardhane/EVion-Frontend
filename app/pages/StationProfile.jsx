@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Dimensions } from 'react-native';
 import {
   View,
   Text,
@@ -21,6 +22,8 @@ import { API_BASE_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { useLocalSearchParams } from 'expo-router';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ChargingStationScreen = () => {
   const router = useRouter();
@@ -381,83 +384,86 @@ const styles = StyleSheet.create({
   },
   scrollContainer: { paddingBottom: 10 },
   imageContainer: { position: 'relative' },
-  stationImage: { width: '100%', height: 220 },
+  stationImage: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT * 0.28, resizeMode: 'cover' },
   backButton: {
     position: 'absolute',
-    top: 40,
-    left: 16,
+    top: SCREEN_HEIGHT * 0.05,
+    left: SCREEN_WIDTH * 0.04,
     backgroundColor: colors.background,
-    padding: 8,
+    padding: SCREEN_WIDTH * 0.02,
     borderRadius: 20
   },
-  backIcon: { width: 18, height: 18, tintColor: colors.mainTextColor },
+  backIcon: { width: SCREEN_WIDTH * 0.045, height: SCREEN_WIDTH * 0.045, tintColor: colors.mainTextColor },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 20,
-    marginTop: 16
+    marginHorizontal: SCREEN_WIDTH * 0.05,
+    marginTop: SCREEN_HEIGHT * 0.02
   },
   title: {
-    fontSize: 18,
+    fontSize: SCREEN_WIDTH < 375 ? 18 : 20,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor
   },
-  icon: { width: 30, height: 30, marginLeft: 8 },
+  icon: { width: SCREEN_WIDTH * 0.075, height: SCREEN_WIDTH * 0.075, marginLeft: SCREEN_WIDTH * 0.02 },
   subtitle: {
-    fontSize: 12,
+    fontSize: SCREEN_WIDTH < 375 ? 12 : 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    marginHorizontal: 20
+    marginHorizontal: SCREEN_WIDTH * 0.05
   },
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    margin: 16,
-    marginTop: 12
+    marginHorizontal: SCREEN_WIDTH * 0.04,
+    marginTop: SCREEN_HEIGHT * 0.015,
+    marginBottom: SCREEN_HEIGHT * 0.01
   },
   openBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: SCREEN_WIDTH * 0.03,
+    paddingVertical: SCREEN_HEIGHT * 0.005,
     borderRadius: 6
   },
   openText: {
     color: colors.background,
     fontFamily: fonts.PlusJakartaSansBold,
-    fontSize: 10
+    fontSize: SCREEN_WIDTH < 375 ? 10 : 12,
+
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center'
   },
   starIcon: {
-    width: 14,
-    height: 14,
+    width: SCREEN_WIDTH * 0.035,
+    height: SCREEN_WIDTH * 0.035,
     tintColor: colors.star,
-    marginRight: 4
+    marginRight: SCREEN_WIDTH * 0.01
   },
   ratingText: {
-    fontSize: 10,
+    fontSize: SCREEN_WIDTH < 375 ? 10 : 12,
+
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor
   },
   reportText: {
-    fontSize: 14,
+    fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.danger,
     textAlign: 'center',
     textDecorationLine: 'underline'
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
+
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    // marginBottom: 8,
-    marginHorizontal: 20
+    marginHorizontal: SCREEN_WIDTH * 0.05
   },
   noConnectors: {
-    marginHorizontal: 24,
+    marginHorizontal: SCREEN_WIDTH * 0.06,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans
   },
@@ -470,8 +476,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 32,
+    padding: SCREEN_WIDTH * 0.06,
+    paddingBottom: SCREEN_HEIGHT * 0.04,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -482,28 +488,29 @@ const styles = StyleSheet.create({
     marginBottom: 0,
   },
   chargerContainer: {
-    marginBottom: 20,
+    marginBottom: SCREEN_HEIGHT * 0.025,
     backgroundColor: colors.lightBackground,
     borderRadius: 12,
-    padding: 16,
+    padding: SCREEN_WIDTH * 0.04,
   },
   chargerTitle: {
-    fontSize: 14,
+    fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginBottom: 8,
+    marginBottom: SCREEN_HEIGHT * 0.01,
   },
   connectorSubtitle: {
-    fontSize: 14,
+    fontSize: SCREEN_WIDTH < 375 ? 12 : 16,
+
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.secondaryText,
-    marginBottom: 8,
+    marginBottom: SCREEN_HEIGHT * 0.01,
   },
   popupHeader: {
-    fontSize: 16,
+    fontSize: SCREEN_WIDTH < 375 ? 16 : 18,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginBottom: 16,
+    marginBottom: SCREEN_HEIGHT * 0.02,
     textAlign: 'center',
   },
   
