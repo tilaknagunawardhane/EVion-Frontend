@@ -25,9 +25,9 @@ const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, bat
           <Text style={styles.connectorType}>{connectorType}</Text>
         </View>
 
-        <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} />
+        {/* <View style={{ height: 1, backgroundColor: colors.stroke, marginVertical: 8 }} /> */}
 
-        <View style={styles.batteryInfo}>
+        {/* <View style={styles.batteryInfo}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={styles.batteryText}>Battery Gain:</Text>
             <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{batteryGain}</Text>
@@ -36,7 +36,7 @@ const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, bat
             <Text style={styles.batteryText}>Est. Time to 80%:</Text>
             <Text style={[styles.batteryText, { color: colors.mainTextColor, textAlign: 'right' }]}>{estimatedTime}</Text>
           </View>
-        </View>
+        </View> */}
 
         <View style={[styles.powerRow, { gap: 4 }]}>
           <View style={styles.infoBox}>
@@ -44,7 +44,7 @@ const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, bat
           </View>
 
           <View style={styles.infoBox}>
-            <Text style={styles.infoText}>LKR {price} /kW</Text>
+            <Text style={styles.infoText}>{price} /kW</Text>
           </View>
         </View>
       </TouchableOpacity>

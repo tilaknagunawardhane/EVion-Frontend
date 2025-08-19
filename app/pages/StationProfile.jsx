@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     marginBottom: 20,
   },
-  scrollContainer: { paddingBottom: 120 },
+  scrollContainer: { paddingBottom: 10 },
   imageContainer: { position: 'relative' },
   stationImage: { width: '100%', height: 220 },
   backButton: {
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 24,
+    marginHorizontal: 20,
     marginTop: 16
   },
   title: {
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    marginHorizontal: 24
+    marginHorizontal: 20
   },
   statusRow: {
     flexDirection: 'row',
@@ -453,8 +453,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginBottom: 8,
-    marginHorizontal: 24
+    // marginBottom: 8,
+    marginHorizontal: 20
   },
   noConnectors: {
     marginHorizontal: 24,
