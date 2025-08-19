@@ -22,12 +22,14 @@ import { API_BASE_URL } from '@env';
 import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { useLocalSearchParams } from 'expo-router';
+import useUserData from '../../hooks/useUserData';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ChargingStationScreen = () => {
   const router = useRouter();
   const { stationID: stationId } = useLocalSearchParams();
+  const { user, isLoading: isUserLoading } = useUserData();
   const [stationData, setStationData] = useState(null);
   const [selectedConnector, setSelectedConnector] = useState(null);
   const [showBottomPopup, setShowBottomPopup] = useState(false);
@@ -38,6 +40,9 @@ const ChargingStationScreen = () => {
   const fetchStationDetails = async () => {
     try {
       setIsLoading(true);
+       if (!user?._id) {
+        throw new Error('User ID not found');
+      }
       const token = await SecureStore.getItemAsync('accessToken');
       
       if (!token) {
@@ -45,11 +50,12 @@ const ChargingStationScreen = () => {
       }
 
       const response = await fetch(`${API_BASE_URL}/api/stations/station-details/${stationId}`, {
-        method: 'GET',
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ userID: user._id })
       });
 
       const result = await response.json();
@@ -81,13 +87,14 @@ const ChargingStationScreen = () => {
   const toggleBookmark = async () => {
     try {
       const token = await SecureStore.getItemAsync('accessToken');
-      const response = await fetch(`${API_BASE_URL}/api/stations/toggle-bookmark`, {
+      const response = await fetch(`${API_BASE_URL}/api/stations/toggle-bookmark/${stationId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ stationId }),
+        body: JSON.stringify({ userId: user._id })
+
       });
 
       const result = await response.json();
@@ -116,10 +123,11 @@ const ChargingStationScreen = () => {
   };
 
   useEffect(() => {
-    if (stationId) {
+    if (user?._id) {
       fetchStationDetails();
     }
-  }, [stationId]);
+  }, [user]);
+    
 
   const onRefresh = () => {
     setRefreshing(true);
