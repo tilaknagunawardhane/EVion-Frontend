@@ -155,8 +155,8 @@ const ChargingStationScreen = () => {
       status: connectorType.status === 'available' ? 'Available' : 'Unavailable',
       connectorType: connectorType.connector?.type_name || 'Unknown',
       connectorID: connectorType.connector?._id ? `#${connectorType.connector._id.slice(-4).toUpperCase()}` : '#N/A',
-      connectorImage: connectorType.connector?.type_name?.includes('CCS') 
-        ? require('../../assets/ccs2.png') 
+      connectorImage: connectorType.connector_img
+        ? { uri: `${API_BASE_URL}${connectorType.connector_img}` } 
         : require('../../assets/type2.png'),
       batteryGain: charger.power_type === 'DC' 
         ? '35% in 30 mins' 
