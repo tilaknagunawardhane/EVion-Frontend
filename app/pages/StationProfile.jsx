@@ -87,7 +87,7 @@ const ChargingStationScreen = () => {
   const toggleBookmark = async () => {
     try {
       const token = await SecureStore.getItemAsync('accessToken');
-      const response = await fetch(`${API_BASE_URL}/api/stations/toggle-bookmark/${stationId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/stations/toggle-favorite/${stationId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -100,7 +100,7 @@ const ChargingStationScreen = () => {
       const result = await response.json();
       
       if (response.ok) {
-        setBookmarked(result.isBookmarked);
+        setBookmarked(result.isFavorite);
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
           title: 'Success',
