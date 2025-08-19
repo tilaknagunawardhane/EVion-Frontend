@@ -30,6 +30,8 @@ const BookingsScreen = () => {
   console.log('API_BASE_URL:', API_BASE_URL);
 
   useEffect(() => {
+    if (!user) return; // do nothing until user is loaded
+
   const fetchBookings = async () => {
     try {
       const endpointMap = {
@@ -81,7 +83,7 @@ const BookingsScreen = () => {
 
     fetchBookings();
     // console.log('user: ', user);
-  }, [activeTab]);
+  }, [activeTab, user]);
 
 
   const renderBookings = () => {
