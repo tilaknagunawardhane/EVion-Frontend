@@ -8,7 +8,8 @@ import {
   ScrollView,
   Modal,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  FlatList
 } from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import ConnectorCard from '../../components/ConnectorCard';
@@ -25,7 +26,7 @@ const ChargingStationScreen = () => {
   const router = useRouter();
   const { stationID: stationId } = useLocalSearchParams();
   const [stationData, setStationData] = useState(null);
-  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedConnector, setSelectedConnector] = useState(null);
   const [showBottomPopup, setShowBottomPopup] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,8 +34,6 @@ const ChargingStationScreen = () => {
 
   const fetchStationDetails = async () => {
     try {
-      console.log('Fetching station details for ID:', stationId);
-
       setIsLoading(true);
       const token = await SecureStore.getItemAsync('accessToken');
       
@@ -62,6 +61,7 @@ const ChargingStationScreen = () => {
       }
 
       setStationData(result.data);
+      setBookmarked(result.data?.isBookmarked || false);
     } catch (error) {
       console.error('Fetch error:', error);
       Toast.show({
@@ -123,6 +123,18 @@ const ChargingStationScreen = () => {
     fetchStationDetails();
   };
 
+  const handleConnectorPress = (chargerIndex, connectorIndex) => {
+    const charger = stationData.chargers[chargerIndex];
+    const connector = charger.connector_types[connectorIndex];
+    setSelectedConnector({
+      chargerIndex,
+      connectorIndex,
+      charger,
+      connector
+    });
+    setShowBottomPopup(true);
+  };
+
   if (isLoading && !stationData) {
     return (
       <View style={styles.loadingContainer}>
@@ -148,26 +160,6 @@ const ChargingStationScreen = () => {
   const averageRating = stationData.ratings?.length > 0
     ? stationData.ratings.reduce((sum, rating) => sum + rating.stars, 0) / stationData.ratings.length
     : 0;
-
-  // Prepare connector data for display
-  const connectorArray = stationData.chargers?.flatMap(charger => 
-    charger.connector_types?.map(connectorType => ({
-      status: connectorType.status === 'available' ? 'Available' : 'Unavailable',
-      connectorType: connectorType.connector?.type_name || 'Unknown',
-      connectorID: connectorType.connector?._id ? `#${connectorType.connector._id.slice(-4).toUpperCase()}` : '#N/A',
-      connectorImage: connectorType.connector_img
-        ? { uri: `${API_BASE_URL}${connectorType.connector_img}` } 
-        : require('../../assets/type2.png'),
-      batteryGain: charger.power_type === 'DC' 
-        ? '35% in 30 mins' 
-        : '20% in 30 mins',
-      estimatedTime: charger.power_type === 'DC' 
-        ? '~45 mins' 
-        : '~2.5 - 3 hrs',
-      powerInfo: `${charger.max_power_output}kW (${charger.power_type})`,
-      price: `LKR ${charger.price || 0}.00`,
-    })) || []
-  ) || [];
 
   return (
     <View style={styles.container}>
@@ -234,21 +226,54 @@ const ChargingStationScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Connectors */}
-        <Text style={styles.sectionTitle}>Available Connectors</Text>
+        {/* Chargers List */}
+        <Text style={styles.sectionTitle}>Available Chargers</Text>
 
-        {connectorArray.length > 0 ? (
-          connectorArray.map((connector, index) => (
-            <ConnectorCard
-              key={index}
-              index={index + 1}
-              {...connector}
-              isSelected={index === selectedIndex}
-              onPress={() => handleConnectorPress(index)}
-            />
+        {stationData.chargers?.length > 0 ? (
+          stationData.chargers.map((charger, chargerIndex) => (
+            <View key={charger._id || chargerIndex} style={styles.chargerContainer}>
+              <Text style={styles.chargerTitle}>
+                Charger: {charger.charger_name} ({charger.power_type} - {charger.max_power_output}kW)
+              </Text>
+              
+              {/* Connectors List */}
+              <Text style={styles.connectorSubtitle}>Connectors:</Text>
+              
+              {charger.connector_types?.length > 0 ? (
+                charger.connector_types.map((connectorType, connectorIndex) => {
+                  const connectorData = {
+                    status: connectorType.status === 'available' ? 'Available' : 'Unavailable',
+                    connectorType: connectorType.connector?.type_name || 'Unknown',
+                    connectorID: connectorType.connector?._id ? `#${connectorType.connector._id.slice(-4).toUpperCase()}` : '#N/A',
+                    connectorImage: connectorType.connector_img
+                      ? { uri: `${API_BASE_URL}${connectorType.connector_img}` } 
+                      : require('../../assets/type2.png'),
+                    batteryGain: charger.power_type === 'DC' 
+                      ? '35% in 30 mins' 
+                      : '20% in 30 mins',
+                    estimatedTime: charger.power_type === 'DC' 
+                      ? '~45 mins' 
+                      : '~2.5 - 3 hrs',
+                    powerInfo: `${charger.max_power_output}kW (${charger.power_type})`,
+                    price: `LKR ${charger.price || 0}.00`,
+                  };
+
+                  return (
+                    <ConnectorCard
+                      key={connectorIndex}
+                      index={connectorIndex + 1}
+                      {...connectorData}
+                      onPress={() => handleConnectorPress(chargerIndex, connectorIndex)}
+                    />
+                  );
+                })
+              ) : (
+                <Text style={styles.noConnectors}>No connectors available for this charger.</Text>
+              )}
+            </View>
           ))
         ) : (
-          <Text style={styles.noConnectors}>No connectors available.</Text>
+          <Text style={styles.noConnectors}>No chargers available at this station.</Text>
         )}
       </ScrollView>
 
@@ -265,23 +290,59 @@ const ChargingStationScreen = () => {
           onPress={() => setShowBottomPopup(false)}
         >
           <View style={styles.modalContent}>
+            <Text style={styles.popupHeader}>
+              {selectedConnector?.charger?.charger_name} - {selectedConnector?.connector?.connector?.type_name}
+            </Text>
+            
             <CustomButton
               title="Book Now"
-              onPress={() => {}}
+              onPress={() => {
+                router.push({
+                  pathname: '/pages/bookings/AddBooking',
+                  params: {
+                    stationId,
+                    chargerId: selectedConnector?.charger?._id,
+                    connectorId: selectedConnector?.connector?.connector?._id
+                  }
+                });
+                setShowBottomPopup(false);
+              }}
               type="primary"
               style={[styles.popupButton, { backgroundColor: colors.primary }]}
               textStyle={{ color: colors.background }}
             />
+            
             <CustomButton
               title="Check Availability"
-              onPress={() => {}}
+              onPress={() => {
+                router.push({
+                  pathname: '/pages/CheckAvailability',
+                  params: {
+                    stationId,
+                    chargerId: selectedConnector?.charger?._id,
+                    connectorId: selectedConnector?.connector?.connector?._id
+                  }
+                });
+                setShowBottomPopup(false);
+              }}
               type="primary"
               style={[styles.popupButton, { backgroundColor: colors.bgGreen }]}
               textStyle={{ color: colors.primary }}
             />
+            
             <CustomButton
               title="Report Connector"
-              onPress={() => {}}
+              onPress={() => {
+                router.push({
+                  pathname: '/pages/ReportConnector',
+                  params: {
+                    stationId,
+                    chargerId: selectedConnector?.charger?._id,
+                    connectorId: selectedConnector?.connector?.connector?._id
+                  }
+                });
+                setShowBottomPopup(false);
+              }}
               type="primary"
               style={[styles.popupButton, { backgroundColor: 'transparent' }]}
               textStyle={{ color: colors.danger }}
@@ -293,6 +354,7 @@ const ChargingStationScreen = () => {
   );
 };
 
+// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: {
@@ -419,6 +481,32 @@ const styles = StyleSheet.create({
   popupButton: {
     marginBottom: 0,
   },
+  chargerContainer: {
+    marginBottom: 20,
+    backgroundColor: colors.lightBackground,
+    borderRadius: 12,
+    padding: 16,
+  },
+  chargerTitle: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+    marginBottom: 8,
+  },
+  connectorSubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.secondaryText,
+    marginBottom: 8,
+  },
+  popupHeader: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  
 });
 
 export default ChargingStationScreen;

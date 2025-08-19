@@ -7,7 +7,7 @@ const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, bat
   return (
      <View style={styles.wrapper}>
       {/* 👇 Index label above the card */}
-      <Text style={styles.indexTitle}>Charger {index}</Text>
+      {/* <Text style={styles.indexTitle}>Charger {index}</Text> */}
     <View style={styles.connectorCard}>
       <TouchableOpacity
         onPress={onPress}
@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    marginHorizontal: 24,
+    marginHorizontal: 0,
     borderWidth: 1,
     borderColor: colors.stroke,
     shadowColor: colors.stroke,
