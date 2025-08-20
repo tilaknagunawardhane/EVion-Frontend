@@ -30,7 +30,10 @@ const BookingsScreen = () => {
   console.log('API_BASE_URL:', API_BASE_URL);
 
   useEffect(() => {
-    if (!user) return; // do nothing until user is loaded
+    if (!user) {
+      console.log('No user detected');
+      return; // do nothing until user is loaded
+    }
 
   const fetchBookings = async () => {
     try {

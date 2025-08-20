@@ -10,9 +10,9 @@ const VehicleCard = ({ vehicle, selected }) => {
       <View style={styles.topRow}>
         <Image source={vehicle.image} style={styles.image} />
         <View style={styles.textContainer}>
-          <Text style={styles.name}>{vehicle.name}</Text>
-          <Text style={styles.year}>{vehicle.year}</Text>
-          <Text style={styles.details}>Battery Capacity: {vehicle.battery}</Text>
+          <Text style={styles.name}>{vehicle.make.make}</Text>
+          <Text style={styles.year}>{vehicle.manufactured_year}</Text>
+          <Text style={styles.details}>Battery Capacity: {vehicle.battery_capacity}</Text>
           <Text style={styles.details}>Charging Power DC: {vehicle.max_power_DC}</Text>
           <Text style={styles.details}>Charging Power AC: {vehicle.max_power_AC}</Text>
         </View>
@@ -20,14 +20,14 @@ const VehicleCard = ({ vehicle, selected }) => {
 
       <View style={styles.divider} />
 
-      <View style={styles.portRow}>
+      {/* <View style={styles.portRow}>
         {vehicle.ports.map((port, index) => (
           <View key={index} style={styles.portItem}>
             <MaterialCommunityIcons name={port.icon} size={20} color={colors.black} />
             <Text style={styles.portLabel}>{port.label}</Text>
           </View>
         ))}
-      </View>
+      </View> */}
     </View>
   );
 };

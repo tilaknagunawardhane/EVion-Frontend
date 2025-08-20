@@ -27,7 +27,6 @@ const AddBooking = () => {
 
   const [selectedField, setSelectedField] = useState(null);
   const [station, setStation] = useState(null);
-  const [vehicle, setVehicle] = useState(null);
   const [connector, setConnector] = useState(null);
 
   const [datetime, setDatetime] = useState(null);
@@ -68,11 +67,11 @@ const AddBooking = () => {
       throw new Error(`Server returned non-JSON response (status: ${response.status})`);
     }
       const data = await response.json();
-      // console.log('API Response:', data);
+      console.log('API Response:', data);
       // console.log('Array.isArray(data):', Array.isArray(data));
 
       if(response.ok) {
-        setOwnedVehicles(data);
+        setOwnedVehicles(Array.isArray(data) ? data : data.vehicles || []);
         console.log('ownedVehicles: ', ownedVehicles);
       }
       else{
@@ -87,7 +86,8 @@ const AddBooking = () => {
     fetchOwnedVehicles();
 
     if(params.selectedStation){
-      console.log('hee');
+      console.log('Station is selected');
+      console.log('station: ', params.selectedStation);
       setStation(JSON.parse(params.selectedStation));
     }
     if(params.selectedConnector){
@@ -104,12 +104,12 @@ const AddBooking = () => {
     console.log('user: ', user);
   }, [user]);
 
-  // useEffect(() => {
-  // if (ownedVehicles !== null) {
-  //   console.log('Updated ownedVehicles:', ownedVehicles);
-  //   console.log('ownedVehicles type: ', typeof(ownedVehicles));
-  // }
-  // }, [ownedVehicles]);
+  useEffect(() => {
+  if (ownedVehicles !== null) {
+    console.log('Updated ownedVehicles:', ownedVehicles);
+    console.log('ownedVehiles isArray??:', Array.isArray(ownedVehicles));
+  }
+  }, [ownedVehicles]);
 
   useEffect(()=> {
     console.log('selectedVEhicel: ', selectedVehicle);
@@ -154,7 +154,7 @@ const AddBooking = () => {
               color={selectedField === 'station' ? colors.primary : colors.lightGray}
             />
           }
-          text={station ? station : "Select Charging Station"}
+          text={station ? station.name : "Select Charging Station"}
           active={selectedField === 'station'}
           onPress={() => {
             setSelectedField('station');
@@ -175,7 +175,7 @@ const AddBooking = () => {
               color={selectedField === 'vehicle' ? colors.primary : colors.lightGray}
             />
           }
-          text={selectedVehicle ? `${selectedVehicle.make_info.make} ${selectedVehicle.model_info.model}` : "Select Vehicle"}
+          text={selectedVehicle ? `${selectedVehicle.make.make} ${selectedVehicle.model.model}` : "Select Vehicle"}
           active={selectedField === 'vehicle'}
           onPress={() => {
             setSelectedField('vehicle');
@@ -255,7 +255,7 @@ const AddBooking = () => {
             <ScrollView>
               {Array.isArray(ownedVehicles) ? (
               ownedVehicles.length > 0 ? (
-                ownedVehicles.map((item) => (
+                ownedVehicles.map((item) => ( 
                   <TouchableOpacity
                     key={item._id}
                     onPress={() => setSelectedVehicle(item)}
