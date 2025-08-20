@@ -8,10 +8,15 @@ import {
     TouchableOpacity,
     Image,
     Alert,
-    Platform
+    Platform,
+    ActivityIndicator
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import { API_BASE_URL } from '@env';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import useUserData from '../../hooks/useUserData';
+import * as SecureStore from 'expo-secure-store';
 
 import AppBar from '../../components/AppBar';
 import CustomButton from '../../components/CustomButton';
@@ -23,6 +28,8 @@ import fonts from '../../constants/fonts';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ReportIssueScreen = () => {
+    const { user, isLoading: isUserLoading } = useUserData();
+
     const router = useRouter();
     const params = useLocalSearchParams();
     const { stationId, station_name, station_address, station_city } = params;
@@ -46,33 +53,33 @@ const ReportIssueScreen = () => {
     ];
 
     const pickImage = async () => {
-    try {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permission required', 'Please allow access to your photos.');
-            return;
-        }
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission required', 'Please allow access to your photos.');
+                return;
+            }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images, 
-            allowsEditing: true,
-            quality: 0.8,
-            allowsMultipleSelection: false, 
-        });
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                quality: 0.8,
+                allowsMultipleSelection: false,
+            });
 
-        if (!result.canceled) {
-            const newAttachment = {
-                uri: result.assets[0].uri,
-                fileName: result.assets[0].fileName || `attachment_${Date.now()}.jpg`,
-                type: result.assets[0].type || 'image',
-            };
-            setAttachments(prev => [...prev, newAttachment]);
+            if (!result.canceled) {
+                const newAttachment = {
+                    uri: result.assets[0].uri,
+                    fileName: result.assets[0].fileName || `attachment_${Date.now()}.jpg`,
+                    type: result.assets[0].type || 'image',
+                };
+                setAttachments(prev => [...prev, newAttachment]);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Failed to select image. Please try again.');
         }
-    } catch (error) {
-        console.error('Error picking image:', error);
-        Alert.alert('Error', 'Failed to select image. Please try again.');
-    }
-};
+    };
 
 
     const pickSingleImage = async () => {
@@ -111,30 +118,92 @@ const ReportIssueScreen = () => {
         setAttachments(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = async () => {
-        if (!selectedCategory) {
-            alert('Please select an issue category');
-            return;
+   const handleSubmit = async () => {
+    if (!selectedCategory) {
+        alert('Please select an issue category');
+        return;
+    }
+
+    if (!description.trim()) {
+        alert('Please provide a description');
+        return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+        const token = await SecureStore.getItemAsync('accessToken');
+        if (!token) {
+            throw new Error('Not authenticated');
+        }
+        if (!user?._id) {
+            throw new Error('User ID not found');
         }
 
-        if (!description.trim()) {
-            alert('Please provide a description');
-            return;
+        // Send only the category label (string) instead of the whole object
+        const response = await fetch(`${API_BASE_URL}/api/reports/submit-report`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: user._id,
+                stationId,
+                category: selectedCategory.label, // Send only the label string
+                description,
+                attachments: attachments.map(att => att.uri), // Send only the URIs as strings
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to submit report');
         }
 
-        setIsSubmitting(true);
+        const data = await response.json();
+        Toast.show({
+            type: ALERT_TYPE.SUCCESS,
+            title: 'Success',
+            textBody: 'Issue reported successfully!',
+        });
+        router.back();
 
-        // Here you would typically upload attachments to your server
-        // and then submit the report with the attachment URLs
-        console.log('Submitting report with attachments:', attachments);
+    } catch (error) {
+        console.error('Error submitting report:', error);
+        Toast.show({
+            type: ALERT_TYPE.DANGER,
+            title: 'Error',
+            textBody: error.message || 'Failed to submit report',
+        });
+    } finally {
+        setIsSubmitting(false);
+    }
+};
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsSubmitting(false);
-            alert('Issue reported successfully!');
-            router.back();
-        }, 1500);
-    };
+    if (isUserLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={styles.loadingText}>Loading user data...</Text>
+            </View>
+        );
+    }
+
+    if (!user) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Please sign in to add a vehicle</Text>
+                <CustomButton
+                    title="Go to Sign In"
+                    onPress={() => router.replace('/pages/SignInScreen')}
+                    type="primary"
+                    style={{ marginTop: 20 }}
+                />
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -191,9 +260,9 @@ const ReportIssueScreen = () => {
                 {/* Attachment Section */}
                 <View style={styles.attachmentContainer}>
                     <Text style={styles.attachmentLabel}>Attachments (Optional)</Text>
-                    
+
                     {/* Attachment Button */}
-                    <TouchableOpacity 
+                    <TouchableOpacity
                         style={styles.attachmentButton}
                         onPress={Platform.OS === 'ios' ? pickSingleImage : pickImage}
                     >
@@ -381,6 +450,17 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         marginTop: SCREEN_HEIGHT * 0.02,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.background,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontFamily: fonts.PlusJakartaSans,
+        color: colors.mainTextColor,
     },
 });
 
