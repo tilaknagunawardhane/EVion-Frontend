@@ -40,11 +40,11 @@ const ChargingStationScreen = () => {
   const fetchStationDetails = async () => {
     try {
       setIsLoading(true);
-       if (!user?._id) {
+      if (!user?._id) {
         throw new Error('User ID not found');
       }
       const token = await SecureStore.getItemAsync('accessToken');
-      
+
       if (!token) {
         throw new Error('Not authenticated');
       }
@@ -59,6 +59,7 @@ const ChargingStationScreen = () => {
       });
 
       const result = await response.json();
+      console.log('Station Details:', result);
 
       if (!response.ok) {
         Toast.show({
@@ -98,7 +99,7 @@ const ChargingStationScreen = () => {
       });
 
       const result = await response.json();
-      
+
       if (response.ok) {
         setBookmarked(result.isFavorite);
         Toast.show({
@@ -127,7 +128,7 @@ const ChargingStationScreen = () => {
       fetchStationDetails();
     }
   }, [user]);
-    
+
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -174,7 +175,7 @@ const ChargingStationScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -187,9 +188,9 @@ const ChargingStationScreen = () => {
       >
         {/* Header Image */}
         <View style={styles.imageContainer}>
-          <Image 
-            source={require('../../assets/Station.jpg')} 
-            style={styles.stationImage} 
+          <Image
+            source={require('../../assets/Station.jpg')}
+            style={styles.stationImage}
           />
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Image source={require('../../assets/back-icon.png')} style={styles.backIcon} />
@@ -219,7 +220,7 @@ const ChargingStationScreen = () => {
         {/* Status & Rating */}
         <View style={styles.statusRow}>
           <View style={[
-            styles.openBadge, 
+            styles.openBadge,
             { backgroundColor: stationData.station_status === 'open' ? colors.primary : colors.danger }
           ]}>
             <Text style={styles.openText}>
@@ -232,10 +233,10 @@ const ChargingStationScreen = () => {
               {averageRating.toFixed(1)} ({stationData.ratings?.length || 0} Reviews)
             </Text>
           </View>
-          <TouchableOpacity 
-          onPress={() => router.push({
-            pathname: '/pages/StationReport',
-            params: { stationId: stationId, station_name: stationData.station_name, station_address: stationData.address, station_city: stationData.city }
+          <TouchableOpacity
+            onPress={() => router.push({
+              pathname: '/pages/StationReport',
+              params: { stationId: stationId, station_name: stationData.station_name, station_address: stationData.address, station_city: stationData.city }
             })}
           >
             <Text style={styles.reportText} >Report</Text>
@@ -251,24 +252,26 @@ const ChargingStationScreen = () => {
               <Text style={styles.chargerTitle}>
                 Charger: {charger.charger_name} ({charger.power_type} - {charger.max_power_output}kW)
               </Text>
-              
+
               {/* Connectors List */}
               <Text style={styles.connectorSubtitle}>Connectors:</Text>
-              
+
               {charger.connector_types?.length > 0 ? (
                 charger.connector_types.map((connectorType, connectorIndex) => {
                   const connectorData = {
                     status: connectorType.status === 'available' ? 'Available' : 'Unavailable',
                     connectorType: connectorType.connector?.type_name || 'Unknown',
-                    connectorID: connectorType.connector?._id ? `#${connectorType.connector._id.slice(-4).toUpperCase()}` : '#N/A',
+                    connectorID: connectorType.connector_id ? `#${connectorType.connector_id.slice(-4).toUpperCase()}` : '#N/A',
+                    // For the actual connector document ID, you can also store it separately if needed
+                    connectorDocumentId: connectorType.connector?._id,
                     connectorImage: connectorType.connector_img
-                      ? { uri: `${API_BASE_URL}${connectorType.connector_img}` } 
+                      ? { uri: `${API_BASE_URL}${connectorType.connector_img}` }
                       : require('../../assets/type2.png'),
-                    batteryGain: charger.power_type === 'DC' 
-                      ? '35% in 30 mins' 
+                    batteryGain: charger.power_type === 'DC'
+                      ? '35% in 30 mins'
                       : '20% in 30 mins',
-                    estimatedTime: charger.power_type === 'DC' 
-                      ? '~45 mins' 
+                    estimatedTime: charger.power_type === 'DC'
+                      ? '~45 mins'
                       : '~2.5 - 3 hrs',
                     powerInfo: `${charger.max_power_output}kW (${charger.power_type})`,
                     price: `LKR ${charger.price || 0}.00`,
@@ -309,7 +312,7 @@ const ChargingStationScreen = () => {
             <Text style={styles.popupHeader}>
               {selectedConnector?.charger?.charger_name} - {selectedConnector?.connector?.connector?.type_name}
             </Text>
-            
+
             <CustomButton
               title="Book Now"
               onPress={() => {
@@ -327,7 +330,7 @@ const ChargingStationScreen = () => {
               style={[styles.popupButton, { backgroundColor: colors.primary }]}
               textStyle={{ color: colors.background }}
             />
-            
+
             <CustomButton
               title="Check Availability"
               onPress={() => {
@@ -345,16 +348,26 @@ const ChargingStationScreen = () => {
               style={[styles.popupButton, { backgroundColor: colors.bgGreen }]}
               textStyle={{ color: colors.primary }}
             />
-            
+
             <CustomButton
               title="Report Connector"
               onPress={() => {
+                const currentConnector = selectedConnector?.connector;
                 router.push({
-                  pathname: '/pages/ReportConnector',
+                  pathname: '/pages/ChargerReport',
                   params: {
                     stationId,
+                    station_name: stationData.station_name,
+                    station_address: stationData.address,
+                    station_city: stationData.city,
                     chargerId: selectedConnector?.charger?._id,
-                    connectorId: selectedConnector?.connector?.connector?._id
+                    charger_name: selectedConnector?.charger?.charger_name,
+                    // Use the correct path based on your data structure
+                    connectorId: currentConnector?.connector_id, // The connector document ID
+                    connectorTypesId: currentConnector?._id, // The connector_types document ID
+                    connector_type: currentConnector?.connector?.type_name,
+                    connector_status: currentConnector?.status, // This is directly on connectorType
+                    connector_img: currentConnector?.connector_img // This is directly on connectorType
                   }
                 });
                 setShowBottomPopup(false);
@@ -526,7 +539,7 @@ const styles = StyleSheet.create({
     marginBottom: SCREEN_HEIGHT * 0.02,
     textAlign: 'center',
   },
-  
+
 });
 
 export default ChargingStationScreen;

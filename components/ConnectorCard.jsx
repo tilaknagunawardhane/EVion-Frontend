@@ -5,7 +5,7 @@ import fonts from '../constants/fonts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const ConnectorCard = ({ status, connectorID, connectorImage, connectorType, batteryGain, estimatedTime, powerInfo, price, onPress, index }) => {
+const ConnectorCard = ({ status, connectorID,connectorDocumentId, connectorImage, connectorType, batteryGain, estimatedTime, powerInfo, price, onPress, index }) => {
   return (
     <View style={styles.wrapper}>
       {/* 👇 Index label above the card */}
