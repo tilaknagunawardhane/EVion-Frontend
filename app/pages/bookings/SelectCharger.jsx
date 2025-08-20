@@ -39,6 +39,7 @@ const SelectCharger = () => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [selectedConnector, setSelectedConnector] = useState(null);
+  const [selectedDateTime, setSelectedDateTime] = useState(null);
 
   useEffect(() => {
     if(params.selectedVehicle){
@@ -49,6 +50,11 @@ const SelectCharger = () => {
       const Connector = JSON.parse(params.selectedConnector);
       setSelectedConnector(Connector);
     }
+    if(params.selectedDateTime){
+      console.log('dateTime: ', params.selectedDateTime);
+      const dateTime = JSON.parse(params.selectedDateTime);
+      setSelectedDateTime(dateTime);
+    }
 
     console.log('selected vehicle: ', selectedVehicle);
     console.log('selected connector: ', selectedConnector);
@@ -56,8 +62,9 @@ const SelectCharger = () => {
 
   const buildNavigationParams = () => ({
     ...(selectedVehicle && { selectedVehicle: JSON.stringify(selectedVehicle) }),
-    // ...(selectedConnector && { selectedConnector: JSON.stringify(selectedConnector) }),
+    ...(selectedConnector && { selectedConnector: JSON.stringify(selectedConnector) }),
     ...(selectedStation && { selectedStation: JSON.stringify(selectedStation)}),
+    ...(selectedDateTime && { selectedDateTime: JSON.stringify(selectedDateTime)}),
   });
 
   const handleSelect = () => {

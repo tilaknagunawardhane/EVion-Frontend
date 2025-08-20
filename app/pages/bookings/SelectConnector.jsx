@@ -1,36 +1,67 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import ConnectorCard from '../../../components/SelectConnectorCard';
- // <-- adjust path if needed
+import { API_BASE_URL } from '@env';
 
-/* ------------------------------------------------------------------ */
-/* Demo data – plug in your API response here                         */
-/* ------------------------------------------------------------------ */
-const connectors = [
-  {
-    id: '#E0299',
-    status: 'Available',
-    type: 'Type 2 (Mennekes)',
-    batteryGain: '~20% in 30 mins',
-    estTime: '~2.5 – 3 hrs',
-    power: '22kW (AC)',
-    price: 'LKR 55.00 /kW',
-    icon: require('../../../assets/type2.png'),
-  },
-];
 
 const SelectConnector = () => {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedStation, setSelectedStation] = useState(null);
   const [selectedConnector, setSelectedConnector] = useState(null);
+
+  const [connectors, setConnectors] = useState(null);
+  const [vehicleConnectors, setVehicleConnectors] = useState([]);
+
+  useEffect(() => {
+
+    if(params.selectedVehicle){
+      const vehicle = JSON.parse(params.selectedVehicle);
+      setSelectedVehicle(vehicle);
+      console.log('Selected Vehicle: ', vehicle);
+
+      const connectors = [
+        ...(vehicle.connector_type_AC ? [vehicle.connector_type_AC] : []),
+        ...(vehicle.connector_type_DC ? [vehicle.connector_type_DC] : []),
+      ];
+      setVehicleConnectors(connectors);
+      console.log('VehicleConnectors: ', connectors);
+      console.log('type: ', Array.isArray(connectors));
+
+      if(params.selectedStation){
+        const station = JSON.parse(params.selectedStation);
+        setSelectedStation(station);
+        console.log('Selected Station: ', selectedStation);
+      }
+      else{
+        console.log('No Station');
+      }
+
+    }
+    else{
+      console.log('No vehicle');
+    }
+
+  }, []);
+
+  // console.log('params: ', params.selectedVehicle ? JSON.parse(params.selectedVehicle) : null);
+
+
+  const buildNavigationParams = () => ({
+    ...(selectedVehicle && { selectedVehicle: JSON.stringify(selectedVehicle) }),
+    ...(selectedStation && { selectedStation: JSON.stringify(selectedStation) }),
+    ...(selectedConnector && { selectedConnector: JSON.stringify(selectedConnector) }),
+  });
 
   const handleSelect = () => {
     if (selectedConnector) {
       router.push({
         pathname: '/pages/bookings/AddBooking',
-        params: { selectedConnector },
+        params: buildNavigationParams(),
       });
     }
   };
@@ -43,15 +74,15 @@ const SelectConnector = () => {
       <Text style={styles.title}>Select Connector</Text>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {connectors.map((item) => (
+        {vehicleConnectors.map((item) => (
           <TouchableOpacity
-            key={item.id}
+            key={item._id}
             activeOpacity={0.9}
             onPress={() => setSelectedConnector(item)}
           >
             <ConnectorCard
               connector={item}
-              selected={selectedConnector?.id === item.id}
+              selected={selectedConnector?._id === item._id}
             />
           </TouchableOpacity>
         ))}

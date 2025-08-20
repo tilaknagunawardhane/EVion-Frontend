@@ -16,6 +16,7 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
             size={28}
             color={colors.primary}
           />
+          <Text style={styles.typeText}>{connector.current_type} - {connector.type_name}</Text>
         </View>
 
         {/* Status + Type */}
@@ -27,7 +28,7 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
         </View>
 
         {/* ID */}
-        <Text style={styles.idText}>ID: {connector.id}</Text>
+        <Text style={styles.idText}>ID: {connector._id}</Text>
       </View>
 
       {/* Divider */}

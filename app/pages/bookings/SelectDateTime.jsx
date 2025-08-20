@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,25 @@ export default function SelectDateTime() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedConnector, setSelectedConnector] = useState(null);
+
+  useEffect(() => {
+    if(params.selectedStation){
+    const station = JSON.parse(params.selectedStation);
+    setSelectedStation(station);
+  }
+  if(params.selectedVehicle){
+    const vehicle = JSON.parse(params.selectedVehicle);
+    setSelectedVehicle(vehicle);
+  }
+  if(params.selectedConnector){
+    const Connector = JSON.parse(params.selectedConnector);
+    setSelectedConnector(Connector);
+  }
+  }, []);
+
   const dates = useMemo(
     () => Array.from({ length: DAY_COUNT }).map((_, i) => dayjs().add(i, 'day')),
     [],
@@ -33,14 +52,14 @@ export default function SelectDateTime() {
       const start = startOfDay.add(i, 'minute');
       const end = start.add(SLOT_MINUTES, 'minute');
       list.push({
-        label: `${start.format('HH:mm a')} – ${end.format('HH:mm a')}`,
+        label: `${start.format('HH:mm')} – ${end.format('HH:mm')}`,
         available: !(i < 240 || i === 180 || i === 210),
       });
     }
     return list.slice(0, 48); // Only first 48 slots
   }, []);
 
-  const [selectedSlotIdx, setSelectedSlotIdx] = useState(null);
+  const [selectedSlots, setSelectedSlots] = useState([]); // array of indices
   const [page, setPage] = useState(0);
 
   const paginatedSlots = useMemo(() => {
@@ -49,23 +68,56 @@ export default function SelectDateTime() {
     return allSlots.slice(28, 48);
   }, [page, allSlots]);
 
-  const handleContinue = () => {
-    if (selectedSlotIdx === null) return;
-    const date = dates[selectedDateIdx].format('YYYY-MM-DD');
-    const time = allSlots[selectedSlotIdx].label;
+  const handleSlotPress = (index) => {
+    if (selectedSlots.length === 0) {
+      setSelectedSlots([index]);
+    } else {
+      const min = Math.min(...selectedSlots);
+      const max = Math.max(...selectedSlots);
 
-    const navigationParams = {
-      selectedDateTime: `${date} ${time}`,
-      ...(params.selectedStation && { selectedStation: params.selectedStation }),
-      ...(params.selectedVehicle && { selectedVehicle: params.selectedVehicle }),
-      ...(params.selectedConnector && { selectedConnector: params.selectedConnector }),
-    };
+      if (
+        (index === max + 1 || index === min - 1) &&
+        selectedSlots.length < 4
+      ) {
+        // extend selection if consecutive and < 4
+        setSelectedSlots([...selectedSlots, index].sort((a, b) => a - b));
+      } else {
+        // reset selection
+        setSelectedSlots([index]);
+      }
+    }
+  };
+
+
+  const buildNavigationParams = (selectedDateTime) => ({
+    ...(selectedVehicle && { selectedVehicle: JSON.stringify(selectedVehicle) }),
+    ...(selectedConnector && { selectedConnector: JSON.stringify(selectedConnector) }),
+    ...(selectedStation && { selectedStation: JSON.stringify(selectedStation)}),
+    ...(selectedDateTime && { selectedDateTime: JSON.stringify(selectedDateTime)}),
+    });
+
+
+  const handleContinue = () => {
+    if (selectedSlots.length === 0) return;
+
+    const date = dates[selectedDateIdx].format('YYYY:MM:DD');
+    const first = allSlots[selectedSlots[0]].label.split('–')[0].trim();
+    const last = allSlots[selectedSlots[selectedSlots.length - 1]].label
+      .split('–')[1]
+      .trim();
+
+    const timeRange = `${first} to ${last}`;
+    const selectedDateTime = (`${date}  ${timeRange}`);
+ 
+    console.log('selectedSlots: ', selectedSlots);
+    console.log('Time range: ', timeRange);
 
     router.replace({
       pathname: '/pages/bookings/AddBooking',
-      params: navigationParams,
+      params: buildNavigationParams(selectedDateTime),
     });
   };
+
 
   return (
     <View style={s.container}>
@@ -92,7 +144,7 @@ export default function SelectDateTime() {
             <Pressable
               onPress={() => {
                 setSelectedDateIdx(index);
-                setSelectedSlotIdx(null);
+                setSelectedSlots([]);
               }}
               style={[
                 s.dateBox,
@@ -130,12 +182,12 @@ export default function SelectDateTime() {
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => {
           const actualIndex = page === 0 ? index : page === 1 ? index + 14 : index + 28;
-          const chosen = actualIndex === selectedSlotIdx;
+          const chosen = selectedSlots.includes(actualIndex);
           const dis = !item.available;
           return (
             <Pressable
               disabled={dis}
-              onPress={() => setSelectedSlotIdx(actualIndex)}
+              onPress={() => handleSlotPress(actualIndex)}
               style={[
                 s.slotBox,
                 dis && s.slotDisabled,
@@ -160,10 +212,7 @@ export default function SelectDateTime() {
           <Pressable
             key={i}
             onPress={() => setPage(i)}
-            style={[
-              s.dot,
-              page === i && { backgroundColor: colors.primary },
-            ]}
+            style={[s.dot, page === i && { backgroundColor: colors.primary }]}
           />
         ))}
       </View>
@@ -172,14 +221,14 @@ export default function SelectDateTime() {
       <TouchableOpacity
         style={[
           s.cta,
-          selectedSlotIdx === null && { backgroundColor: colors.lightestGray },
+          selectedSlots.length === 0 && { backgroundColor: colors.lightestGray },
         ]}
-        disabled={selectedSlotIdx === null}
+        disabled={selectedSlots.length === 0}
         onPress={handleContinue}>
         <Text
           style={[
             s.ctaTxt,
-            selectedSlotIdx === null && { color: colors.secondaryText },
+            selectedSlots.length === 0 && { color: colors.secondaryText },
           ]}>
           Continue
         </Text>
@@ -280,9 +329,9 @@ const s = StyleSheet.create({
   /* dots */
   dotsWrap: { flexDirection: 'row', justifyContent: 'center', marginVertical: 12 },
   dot: {
-    width: 10,
-    height: 6,
-    borderRadius: 3,
+    width: 20,
+    height: 12,
+    borderRadius: 6,
     marginHorizontal: 4,
     backgroundColor: colors.lightGray,
   },
