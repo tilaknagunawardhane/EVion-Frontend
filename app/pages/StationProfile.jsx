@@ -232,8 +232,13 @@ const ChargingStationScreen = () => {
               {averageRating.toFixed(1)} ({stationData.ratings?.length || 0} Reviews)
             </Text>
           </View>
-          <TouchableOpacity>
-            <Text style={styles.reportText}>Report</Text>
+          <TouchableOpacity 
+          onPress={() => router.push({
+            pathname: '/pages/StationReport',
+            params: { stationId: stationId, station_name: stationData.station_name, station_address: stationData.address, station_city: stationData.city }
+            })}
+          >
+            <Text style={styles.reportText} >Report</Text>
           </TouchableOpacity>
         </View>
 
