@@ -3,28 +3,45 @@ import { View, Text, Image, StyleSheet } from 'react-native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import dolphine from '../assets/vehicles/dolphin.png'
+import ccs1 from '../assets/connectors/ccs1.png';
+import type2 from '../assets/connectors/type2.png';
+
+const connectorImages = {
+  'connectors/type2.png': type2,
+  'connectors/ccs1.png': ccs1,
+};
+
+const vehicleImages = {
+  'vehicles/dolphine.png' : dolphine,
+}
 
 const VehicleCard = ({ vehicle, selected }) => {
   return (
     <View style={[styles.card, selected && styles.selectedCard]}>
       <View style={styles.topRow}>
-        <Image source={vehicle.image} style={styles.image} />
+        <Image source={vehicleImages[vehicle.image]} style={styles.image} />
         <View style={styles.textContainer}>
-          <Text style={styles.name}>{vehicle.name}</Text>
-          <Text style={styles.year}>{vehicle.year}</Text>
-          <Text style={styles.details}>Battery Capacity: {vehicle.battery}</Text>
+          <Text style={styles.name}>{vehicle.make.make} {vehicle.model.model}</Text>
+          <Text style={styles.year}>{vehicle.manufactured_year}</Text>
+          <Text style={styles.details}>Battery Capacity: {vehicle.battery_capacity}</Text>
           <Text style={styles.details}>Charging Power DC: {vehicle.max_power_DC}</Text>
           <Text style={styles.details}>Charging Power AC: {vehicle.max_power_AC}</Text>
         </View>
-      </View>
+      </View> 
 
       <View style={styles.divider} />
 
       <View style={styles.portRow}>
-        {vehicle.ports.map((port, index) => (
+        {[vehicle.connector_type_AC, vehicle.connector_type_DC].map((port, index) => (
           <View key={index} style={styles.portItem}>
-            <MaterialCommunityIcons name={port.icon} size={20} color={colors.black} />
-            <Text style={styles.portLabel}>{port.label}</Text>
+            {port?.image && (
+              <Image
+                 source={connectorImages[port.image]}
+                style={styles.portIcon}
+              />
+            )}
+            <Text style={styles.portLabel}>{port?.type_name}</Text>
           </View>
         ))}
       </View>

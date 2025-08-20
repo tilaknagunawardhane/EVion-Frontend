@@ -12,8 +12,10 @@ import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { API_BASE_URL } from '@env';
 import { useRouter , useLocalSearchParams} from 'expo-router';
+import useUserData from '../../hooks/useUserData';
 
 const BookingsScreen = () => {
+  const { user } = useUserData();
   const [activeTab, setActiveTab] = useState('Upcoming');
   const router = useRouter();
     const params = useLocalSearchParams();
@@ -28,6 +30,11 @@ const BookingsScreen = () => {
   console.log('API_BASE_URL:', API_BASE_URL);
 
   useEffect(() => {
+    if (!user) {
+      console.log('No user detected');
+      return; // do nothing until user is loaded
+    }
+
   const fetchBookings = async () => {
     try {
       const endpointMap = {
@@ -36,7 +43,7 @@ const BookingsScreen = () => {
         Cancelled: 'getUserCancelledBookings',
       };
       const endpoint = endpointMap[activeTab];
-      const url = `${API_BASE_URL}/api/bookings/${endpoint}?ev_user_id=6849cbc0f3c3b1455d5c128b`;
+      const url = `${API_BASE_URL}/api/bookings/${endpoint}?ev_user_id=${user._id}`;
       console.log('Fetching from:', url);
 
       const response = await fetch(url, {
@@ -78,7 +85,8 @@ const BookingsScreen = () => {
   };
 
     fetchBookings();
-  }, [activeTab]);
+    // console.log('user: ', user);
+  }, [activeTab, user]);
 
 
   const renderBookings = () => {

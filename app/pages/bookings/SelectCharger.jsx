@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
-import { useRouter } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const sampleStations = [
   {
@@ -30,26 +31,58 @@ const sampleStations = [
 ];
 
 const SelectCharger = () => {
-  const router = useRouter();
+  const navigation = useNavigation();
   const [searchText, setSearchText] = useState('');
+
+  const router = useRouter();
+  const params = useLocalSearchParams();
   const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedConnector, setSelectedConnector] = useState(null);
+
+  useEffect(() => {
+    if(params.selectedVehicle){
+      const vehicle = JSON.parse(params.selectedVehicle);
+      setSelectedVehicle(vehicle);
+    }
+    if(params.selectedConnector){
+      const Connector = JSON.parse(params.selectedConnector);
+      setSelectedConnector(Connector);
+    }
+
+    console.log('selected vehicle: ', selectedVehicle);
+    console.log('selected connector: ', selectedConnector);
+  }, []);
+
+  const buildNavigationParams = () => ({
+    ...(selectedVehicle && { selectedVehicle: JSON.stringify(selectedVehicle) }),
+    // ...(selectedConnector && { selectedConnector: JSON.stringify(selectedConnector) }),
+    ...(selectedStation && { selectedStation: JSON.stringify(selectedStation)}),
+  });
+
+  const handleSelect = () => {
+    if (selectedStation) {
+      router.push({
+        pathname: '/pages/bookings/AddBooking',
+        params: buildNavigationParams(),
+      });
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* ---------- Header ---------- */}
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="chevron-back" size={24} color={colors.black} />
         </TouchableOpacity>
-
         <Text style={styles.headerTitle}>Charging Stations</Text>
-
         <TouchableOpacity>
           <Icon name="ellipsis-vertical" size={20} color={colors.black} />
         </TouchableOpacity>
       </View>
 
-      {/* ---------- Search ---------- */}
+      {/* Search */}
       <View style={styles.searchRow}>
         <TextInput
           placeholder="Search a station"
@@ -58,75 +91,45 @@ const SelectCharger = () => {
           onChangeText={setSearchText}
           style={styles.searchInput}
         />
-        <Icon
-          name="search-outline"
-          size={20}
-          color={colors.lightGray}
-          style={styles.searchIcon}
-        />
+        <Icon name="search-outline" size={20} color={colors.lightGray} style={styles.searchIcon} />
       </View>
 
-      {/* ---------- Open Map ---------- */}
+      {/* Open Map */}
       <TouchableOpacity style={styles.mapButton}>
         <MaterialIcons name="map" size={20} color={colors.primary} />
         <Text style={styles.mapButtonText}>Open Map</Text>
       </TouchableOpacity>
 
-      {/* ---------- Favourites ---------- */}
+      {/* Favourites Section */}
       <Text style={styles.sectionTitle}>Favourites</Text>
-
       <FlatList
         data={sampleStations}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 16 }}
-        renderItem={({ item }) => {
-          const isSelected = selectedStation?.id === item.id;
-          return (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setSelectedStation(item)}
-              style={[
-                styles.card,
-                isSelected && { borderColor: colors.primary, borderWidth: 1.5 },
-              ]}
-            >
-              <Image source={item.image} style={styles.cardImage} />
-
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>{item.name}</Text>
-                <Text style={styles.cardSubtitle}>{item.address}</Text>
-              </View>
-
-              <MaterialIcons name="bookmark" size={20} color={colors.primary} />
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            key={item.id}
+            onPress={() => setSelectedStation(item)}
+          >
+            <View style={styles.card}>
+            <Image source={item.image} style={styles.cardImage} />
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text style={styles.cardSubtitle}>{item.address}</Text>
+            </View>
+            <MaterialIcons name="bookmark" size={20} color={colors.primary} />
+          </View>
+          </TouchableOpacity>
+        )}
       />
 
-      {/* ---------- Select Button ---------- */}
-      <TouchableOpacity
-        style={[
-          styles.disabledButton,
-          selectedStation && { backgroundColor: colors.primary },
-        ]}
+      {/* Select Button */}
+      <TouchableOpacity 
+        style={[styles.selectBtn, !selectedStation && styles.disabledButton]}
+        onPress={handleSelect}
         disabled={!selectedStation}
-        onPress={() => {
-          if (selectedStation) {
-            router.push({
-              pathname: '/pages/bookings/AddBooking',
-              params: {
-                selectedStation: JSON.stringify(selectedStation),
-              },
-            });
-          }
-        }}
-      >
-        <Text
-          style={[
-            styles.disabledButtonText,
-            selectedStation && { color: colors.white },
-          ]}
-        >
+      >  
+        <Text style={[styles.selectText, !selectedStation && styles.disabledButtonText]}>
           Select
         </Text>
       </TouchableOpacity>
@@ -135,15 +138,11 @@ const SelectCharger = () => {
 };
 
 export default SelectCharger;
-
-/* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
   },
-
-  /* ----- Header ----- */
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,8 +156,6 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
-
-  /* ----- Search ----- */
   searchRow: {
     flexDirection: 'row',
     backgroundColor: colors.white,
@@ -176,9 +173,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: colors.mainTextColor,
   },
-  searchIcon: { marginLeft: 8 },
-
-  /* ----- Map Button ----- */
+  searchIcon: {
+    marginLeft: 8,
+  },
   mapButton: {
     flexDirection: 'row',
     backgroundColor: '#e6faf7',
@@ -194,8 +191,6 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginLeft: 8,
   },
-
-  /* ----- Section Title ----- */
   sectionTitle: {
     fontFamily: fonts.PlusJakartaSansMedium,
     fontSize: 14,
@@ -203,8 +198,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 10,
   },
-
-  /* ----- Card ----- */
   card: {
     backgroundColor: colors.white,
     flexDirection: 'row',
@@ -212,8 +205,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'transparent',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 1 },
@@ -226,7 +217,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 12,
   },
-  cardContent: { flex: 1 },
+  cardContent: {
+    flex: 1,
+  },
   cardTitle: {
     fontFamily: fonts.PlusJakartaSansMedium,
     fontSize: 14,
@@ -237,8 +230,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.secondaryText,
   },
-
-  /* ----- Select Button ----- */
   disabledButton: {
     backgroundColor: colors.lightestGray,
     paddingVertical: 16,
@@ -251,5 +242,17 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSansMedium,
     fontSize: 15,
+  },
+  selectBtn: {
+    backgroundColor: colors.primary,
+    margin: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  selectText: {
+    fontSize: 15,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.white,
   },
 });
