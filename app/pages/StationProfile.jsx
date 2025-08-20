@@ -1,95 +1,210 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Dimensions } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Modal,
+  ActivityIndicator,
+  RefreshControl,
+  FlatList
+} from 'react-native';
 import CustomButton from '../../components/CustomButton';
 import ConnectorCard from '../../components/ConnectorCard';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
-import { useNavigation } from '@react-navigation/native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { API_BASE_URL } from '@env';
+import * as SecureStore from 'expo-secure-store';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { useLocalSearchParams } from 'expo-router';
+import useUserData from '../../hooks/useUserData';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ChargingStationScreen = () => {
-    const params = useLocalSearchParams();
-  
-  const navigation = useNavigation();
-  const [selectedIndex, setSelectedIndex] = useState(null);
+  const router = useRouter();
+  const { stationID: stationId } = useLocalSearchParams();
+  const { user, isLoading: isUserLoading } = useUserData();
+  const [stationData, setStationData] = useState(null);
+  const [selectedConnector, setSelectedConnector] = useState(null);
   const [showBottomPopup, setShowBottomPopup] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const stationImage = require('../../assets/Station.jpg');
-  const stationName = 'Fonseka Charging Station';
-  const address = 'No: 2/82, Maha Payagala, Payagala';
+  const fetchStationDetails = async () => {
+    try {
+      setIsLoading(true);
+       if (!user?._id) {
+        throw new Error('User ID not found');
+      }
+      const token = await SecureStore.getItemAsync('accessToken');
+      
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
 
-  const toggleBookmark = () => {
-    setBookmarked(!bookmarked);
+      const response = await fetch(`${API_BASE_URL}/api/stations/station-details/${stationId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userID: user._id })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        Toast.show({
+          type: ALERT_TYPE.ERROR,
+          title: 'Error',
+          textBody: result.message || 'Failed to fetch station details'
+        });
+        return;
+      }
+
+      setStationData(result.data);
+      setBookmarked(result.data?.isBookmarked || false);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
   };
 
-  const connectorArray = [
-    {
-      status: 'Available',
-      connectorType: 'CCS 2',
-      connectorID: '#E0299',
-      connectorImage: require('../../assets/ccs2.png'),
-      batteryGain: '35% in 30 mins',
-      estimatedTime: '~45 mins',
-      powerInfo: '50kW (DC)',
-      price: 'LKR 55.00',
-    },
-    {
-      status: 'Charger Busy',
-      connectorType: 'Type 2 (Mennekes)',
-      connectorID: '#E1121',
-      connectorImage: require('../../assets/type2.png'),
-      batteryGain: '20% in 30 mins',
-      estimatedTime: '~2.5 - 3 hrs',
-      powerInfo: '22kW (AC)',
-      price: 'LKR 55.00',
-    },
-  ];
+  const toggleBookmark = async () => {
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      const response = await fetch(`${API_BASE_URL}/api/stations/toggle-favorite/${stationId}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user._id })
 
-  const handleReport = () => console.log('Report pressed');
-  const handleBookNow = () => {
-    router.push('/pages/bookings/AddBooking');
-    console.log('Book Now pressed');
-    setShowBottomPopup(false);
-  };
-  const handleCheckAvailability = () => {
-    router.push('/pages/CheckAvailability');
+      });
 
-    console.log('Check Availability pressed');
-    setShowBottomPopup(false);
-  };
-  const handleNavigate = () => {
-    console.log('Report pressed');
-    setShowBottomPopup(false);
+      const result = await response.json();
+      
+      if (response.ok) {
+        setBookmarked(result.isFavorite);
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: result.message,
+        });
+      } else {
+        Toast.show({
+          type: ALERT_TYPE.ERROR,
+          title: 'Error',
+          textBody: result.message,
+        });
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Failed to update bookmark',
+      });
+    }
   };
 
-  const handleConnectorPress = (index) => {
-    setSelectedIndex(index);
+  useEffect(() => {
+    if (user?._id) {
+      fetchStationDetails();
+    }
+  }, [user]);
+    
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchStationDetails();
+  };
+
+  const handleConnectorPress = (chargerIndex, connectorIndex) => {
+    const charger = stationData.chargers[chargerIndex];
+    const connector = charger.connector_types[connectorIndex];
+    setSelectedConnector({
+      chargerIndex,
+      connectorIndex,
+      charger,
+      connector
+    });
     setShowBottomPopup(true);
   };
 
+  if (isLoading && !stationData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading station details...</Text>
+      </View>
+    );
+  }
+
+  if (!stationData) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>Station not found</Text>
+        <CustomButton
+          title="Go Back"
+          onPress={() => router.back()}
+        />
+      </View>
+    );
+  }
+
+  // Calculate average rating
+  const averageRating = stationData.ratings?.length > 0
+    ? stationData.ratings.reduce((sum, rating) => sum + rating.stars, 0) / stationData.ratings.length
+    : 0;
+
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
+          />
+        }
+      >
         {/* Header Image */}
         <View style={styles.imageContainer}>
-          <Image source={stationImage} style={styles.stationImage} />
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+          <Image 
+            source={require('../../assets/Station.jpg')} 
+            style={styles.stationImage} 
+          />
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Image source={require('../../assets/back-icon.png')} style={styles.backIcon} />
           </TouchableOpacity>
         </View>
 
         {/* Header Title */}
         <View style={styles.topRow}>
-          <Text style={styles.title}>{stationName}</Text>
+          <Text style={styles.title}>{stationData.station_name}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>
             <TouchableOpacity onPress={toggleBookmark}>
               <MaterialCommunityIcons
                 name={bookmarked ? 'heart' : 'heart-outline'}
                 size={24}
-                color={bookmarked ? colors.danger : colors.danger} // gold when filled
+                color={bookmarked ? colors.danger : colors.danger}
                 style={styles.icon}
               />
             </TouchableOpacity>
@@ -99,39 +214,77 @@ const ChargingStationScreen = () => {
           </View>
         </View>
 
-        <Text style={styles.subtitle}>{address}</Text>
+        <Text style={styles.subtitle}>{stationData.address}, {stationData.city}</Text>
 
         {/* Status & Rating */}
         <View style={styles.statusRow}>
-          <View style={styles.openBadge}>
-            <Text style={styles.openText}>Open</Text>
+          <View style={[
+            styles.openBadge, 
+            { backgroundColor: stationData.station_status === 'open' ? colors.primary : colors.danger }
+          ]}>
+            <Text style={styles.openText}>
+              {stationData.station_status === 'open' ? 'Open' : 'Closed'}
+            </Text>
           </View>
           <View style={styles.ratingRow}>
             <Image source={require('../../assets/star.png')} style={styles.starIcon} />
-            <Text style={styles.ratingText}>4.5 (43 Reviews)</Text>
+            <Text style={styles.ratingText}>
+              {averageRating.toFixed(1)} ({stationData.ratings?.length || 0} Reviews)
+            </Text>
           </View>
-          <TouchableOpacity onPress={handleReport}>
+          <TouchableOpacity>
             <Text style={styles.reportText}>Report</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Connectors  */}
-        <Text style={styles.sectionTitle}>Available Connectors</Text>
+        {/* Chargers List */}
+        <Text style={styles.sectionTitle}>Available Chargers</Text>
 
-        {connectorArray.length > 0 ? (
-          connectorArray.map((connector, index) => (
-            <ConnectorCard
-              key={index}
-              index={index + 1}
-              {...connector}
-              isSelected={index === selectedIndex}
-              onSelect={() => handleConnectorPress(index)}
-              onDotsPress={() => setPopupIndex(index)}
-              onPress={() => handleConnectorPress(index)}
-            />
+        {stationData.chargers?.length > 0 ? (
+          stationData.chargers.map((charger, chargerIndex) => (
+            <View key={charger._id || chargerIndex} style={styles.chargerContainer}>
+              <Text style={styles.chargerTitle}>
+                Charger: {charger.charger_name} ({charger.power_type} - {charger.max_power_output}kW)
+              </Text>
+              
+              {/* Connectors List */}
+              <Text style={styles.connectorSubtitle}>Connectors:</Text>
+              
+              {charger.connector_types?.length > 0 ? (
+                charger.connector_types.map((connectorType, connectorIndex) => {
+                  const connectorData = {
+                    status: connectorType.status === 'available' ? 'Available' : 'Unavailable',
+                    connectorType: connectorType.connector?.type_name || 'Unknown',
+                    connectorID: connectorType.connector?._id ? `#${connectorType.connector._id.slice(-4).toUpperCase()}` : '#N/A',
+                    connectorImage: connectorType.connector_img
+                      ? { uri: `${API_BASE_URL}${connectorType.connector_img}` } 
+                      : require('../../assets/type2.png'),
+                    batteryGain: charger.power_type === 'DC' 
+                      ? '35% in 30 mins' 
+                      : '20% in 30 mins',
+                    estimatedTime: charger.power_type === 'DC' 
+                      ? '~45 mins' 
+                      : '~2.5 - 3 hrs',
+                    powerInfo: `${charger.max_power_output}kW (${charger.power_type})`,
+                    price: `LKR ${charger.price || 0}.00`,
+                  };
+
+                  return (
+                    <ConnectorCard
+                      key={connectorIndex}
+                      index={connectorIndex + 1}
+                      {...connectorData}
+                      onPress={() => handleConnectorPress(chargerIndex, connectorIndex)}
+                    />
+                  );
+                })
+              ) : (
+                <Text style={styles.noConnectors}>No connectors available for this charger.</Text>
+              )}
+            </View>
           ))
         ) : (
-          <Text style={styles.noConnectors}>No connectors available.</Text>
+          <Text style={styles.noConnectors}>No chargers available at this station.</Text>
         )}
       </ScrollView>
 
@@ -148,32 +301,61 @@ const ChargingStationScreen = () => {
           onPress={() => setShowBottomPopup(false)}
         >
           <View style={styles.modalContent}>
-
-
-            {/* Book Now - Primary Color */}
+            <Text style={styles.popupHeader}>
+              {selectedConnector?.charger?.charger_name} - {selectedConnector?.connector?.connector?.type_name}
+            </Text>
+            
             <CustomButton
               title="Book Now"
-              onPress={handleBookNow}
+              onPress={() => {
+                router.push({
+                  pathname: '/pages/bookings/AddBooking',
+                  params: {
+                    stationId,
+                    chargerId: selectedConnector?.charger?._id,
+                    connectorId: selectedConnector?.connector?.connector?._id
+                  }
+                });
+                setShowBottomPopup(false);
+              }}
               type="primary"
               style={[styles.popupButton, { backgroundColor: colors.primary }]}
               textStyle={{ color: colors.background }}
             />
-
-            {/* Check Availability - Light Blue */}
+            
             <CustomButton
               title="Check Availability"
-              onPress={handleCheckAvailability}
+              onPress={() => {
+                router.push({
+                  pathname: '/pages/CheckAvailability',
+                  params: {
+                    stationId,
+                    chargerId: selectedConnector?.charger?._id,
+                    connectorId: selectedConnector?.connector?.connector?._id
+                  }
+                });
+                setShowBottomPopup(false);
+              }}
               type="primary"
-              style={[styles.popupButton, { backgroundColor: colors.bgGreen }]} // Light blue
+              style={[styles.popupButton, { backgroundColor: colors.bgGreen }]}
               textStyle={{ color: colors.primary }}
             />
-
-            {/* Report Connector - Light Red */}
+            
             <CustomButton
               title="Report Connector"
-              onPress={handleReport}
+              onPress={() => {
+                router.push({
+                  pathname: '/pages/ReportConnector',
+                  params: {
+                    stationId,
+                    chargerId: selectedConnector?.charger?._id,
+                    connectorId: selectedConnector?.connector?.connector?._id
+                  }
+                });
+                setShowBottomPopup(false);
+              }}
               type="primary"
-              style={[styles.popupButton, { backgroundColor: 'transparent' }]} // Light red
+              style={[styles.popupButton, { backgroundColor: 'transparent' }]}
               textStyle={{ color: colors.danger }}
             />
           </View>
@@ -183,92 +365,116 @@ const ChargingStationScreen = () => {
   );
 };
 
+// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scrollContainer: { paddingBottom: 120 },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 20,
+  },
+  scrollContainer: { paddingBottom: 10 },
   imageContainer: { position: 'relative' },
-  stationImage: { width: '100%', height: 220 },
+  stationImage: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT * 0.28, resizeMode: 'cover' },
   backButton: {
     position: 'absolute',
-    top: 40,
-    left: 16,
+    top: SCREEN_HEIGHT * 0.05,
+    left: SCREEN_WIDTH * 0.04,
     backgroundColor: colors.background,
-    padding: 8,
+    padding: SCREEN_WIDTH * 0.02,
     borderRadius: 20
   },
-  backIcon: { width: 18, height: 18, tintColor: colors.mainTextColor },
+  backIcon: { width: SCREEN_WIDTH * 0.045, height: SCREEN_WIDTH * 0.045, tintColor: colors.mainTextColor },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 24,
-    marginTop: 16
+    marginHorizontal: SCREEN_WIDTH * 0.05,
+    marginTop: SCREEN_HEIGHT * 0.02
   },
   title: {
-    fontSize: 18,
+    fontSize: SCREEN_WIDTH < 375 ? 18 : 20,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor
   },
-  icon: { width: 30, height: 30, marginLeft: 8 },
+  icon: { width: SCREEN_WIDTH * 0.075, height: SCREEN_WIDTH * 0.075, marginLeft: SCREEN_WIDTH * 0.02 },
   subtitle: {
-    fontSize: 12,
+    fontSize: SCREEN_WIDTH < 375 ? 12 : 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    marginHorizontal: 24
+    marginHorizontal: SCREEN_WIDTH * 0.05
   },
   statusRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    margin: 16,
-    marginTop: 12
+    marginHorizontal: SCREEN_WIDTH * 0.04,
+    marginTop: SCREEN_HEIGHT * 0.015,
+    marginBottom: SCREEN_HEIGHT * 0.01
   },
   openBadge: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: SCREEN_WIDTH * 0.03,
+    paddingVertical: SCREEN_HEIGHT * 0.005,
     borderRadius: 6
   },
   openText: {
     color: colors.background,
     fontFamily: fonts.PlusJakartaSansBold,
-    fontSize: 10
+    fontSize: SCREEN_WIDTH < 375 ? 10 : 12,
+
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center'
   },
   starIcon: {
-    width: 14,
-    height: 14,
+    width: SCREEN_WIDTH * 0.035,
+    height: SCREEN_WIDTH * 0.035,
     tintColor: colors.star,
-    marginRight: 4
+    marginRight: SCREEN_WIDTH * 0.01
   },
   ratingText: {
-    fontSize: 10,
+    fontSize: SCREEN_WIDTH < 375 ? 10 : 12,
+
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor
   },
   reportText: {
-    fontSize: 14,
+    fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.danger,
     textAlign: 'center',
     textDecorationLine: 'underline'
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
+
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginBottom: 8,
-    marginHorizontal: 24
+    marginHorizontal: SCREEN_WIDTH * 0.05
   },
   noConnectors: {
-    marginHorizontal: 24,
+    marginHorizontal: SCREEN_WIDTH * 0.06,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans
   },
-  // Modal styles
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -278,35 +484,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 32,
-    // Shadow properties for iOS
+    padding: SCREEN_WIDTH * 0.06,
+    paddingBottom: SCREEN_HEIGHT * 0.04,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 }, // Negative value lifts shadow up
+    shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    // Elevation for Android
     elevation: 10,
-  },
-  popupHeader: {
-    marginBottom: 20,
-  },
-  popupTitle: {
-    fontSize: 18,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.mainTextColor,
-    textAlign: 'center',
-  },
-  popupSubtitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-    textAlign: 'center',
-    marginTop: 4,
   },
   popupButton: {
     marginBottom: 0,
   },
+  chargerContainer: {
+    marginBottom: SCREEN_HEIGHT * 0.025,
+    backgroundColor: colors.lightBackground,
+    borderRadius: 12,
+    padding: SCREEN_WIDTH * 0.04,
+  },
+  chargerTitle: {
+    fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+    marginBottom: SCREEN_HEIGHT * 0.01,
+  },
+  connectorSubtitle: {
+    fontSize: SCREEN_WIDTH < 375 ? 12 : 16,
+
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.secondaryText,
+    marginBottom: SCREEN_HEIGHT * 0.01,
+  },
+  popupHeader: {
+    fontSize: SCREEN_WIDTH < 375 ? 16 : 18,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+    textAlign: 'center',
+  },
+  
 });
 
 export default ChargingStationScreen;
