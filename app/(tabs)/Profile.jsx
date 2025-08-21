@@ -204,7 +204,9 @@ const ProfileScreen1 = ({ route }) => {
 
         <TouchableOpacity 
           style={styles.listItem} 
-          onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
+          // onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
+          onPress={() => router.push({pathname: '/pages/bookings/ReportIssue', params: { bookingId: '68a6c105b056f6456292bdd7' }})}
+
         >
           <Image 
             source={require('../../assets/privacy.png')} 
