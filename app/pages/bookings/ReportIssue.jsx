@@ -357,7 +357,7 @@ const BookingReportScreen = () => {
 
                 {/* Issue Category Dropdown */}
                 <DropdownField
-                    label="Issue Category*"
+                    label="Issue Category"
                     selectedValue={selectedCategory}
                     onValueChange={setSelectedCategory}
                     placeholder="Select the category"
@@ -368,7 +368,7 @@ const BookingReportScreen = () => {
 
                 {/* Description Input */}
                 <InputField
-                    label="Description*"
+                    label="Description"
                     value={description}
                     onChangeText={setDescription}
                     placeholder="Describe the issue with your booking..."
