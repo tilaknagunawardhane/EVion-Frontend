@@ -76,9 +76,9 @@ const ProfileScreen1 = ({ route }) => {
       </View>
 
       {/* User Info Card */}
-      <TouchableOpacity 
-        style={styles.userCard}
-        onPress={() => router.push('/pages/Profile/Profile1')}
+        <TouchableOpacity 
+          style={styles.userCard}
+          onPress={() => router.push('/pages/Profile1')}
       >
         <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}>
           {userData.profileImage ? (
