@@ -16,6 +16,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useAuth } from '../../context/AuthContext';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import AchievementBadge from '../../components/AchievementBadge';
+import { achievements, getAchievementProgress, getUnlockedAchievements } from '../../constants/achievements';
 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -162,6 +164,47 @@ const ProfileScreen1 = ({ route }) => {
           <Text style={styles.cardLabel}>Activity</Text>
           
         </TouchableOpacity>
+      </View>
+
+      {/* Achievements Section */}
+      <View style={styles.achievementsContainer}>
+        <View style={styles.achievementsHeader}>
+          <Text style={styles.achievementsTitle}>Achievements</Text>
+          <TouchableOpacity 
+            onPress={() => router.push('/pages/Profile/Achievements')}
+          >
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.achievementsStats}>
+          <Text style={styles.statsText}>
+            {getUnlockedAchievements().length} of {achievements.length} unlocked
+          </Text>
+          <View style={styles.progressBar}>
+            <View 
+              style={[
+                styles.progressFill, 
+                { width: `${getAchievementProgress().percentage}%` }
+              ]} 
+            />
+          </View>
+        </View>
+
+        {/* Recent Achievements */}
+        <View style={styles.recentAchievements}>
+          {getUnlockedAchievements().slice(0, 3).map((achievement) => (
+            <AchievementBadge
+              key={achievement.id}
+              title={achievement.title}
+              description={achievement.description}
+              icon={achievement.icon}
+              isUnlocked={achievement.isUnlocked}
+              progress={achievement.progress}
+              type={achievement.type}
+            />
+          ))}
+        </View>
       </View>
 
       {/* Menu Items */}
@@ -395,6 +438,57 @@ const styles = StyleSheet.create({
     fontSize: SCREEN_WIDTH < 375 ? 14 : 15,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.danger,
+  },
+  
+  // Achievements styles
+  achievementsContainer: {
+    marginTop: SCREEN_HEIGHT * 0.01,
+    marginBottom: SCREEN_HEIGHT * 0.02,
+  },
+  achievementsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SCREEN_HEIGHT * 0.015,
+  },
+  achievementsTitle: {
+    fontSize: SCREEN_WIDTH < 375 ? 18 : 20,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+  },
+  viewAllText: {
+    fontSize: SCREEN_WIDTH < 375 ? 12 : 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
+  },
+  achievementsStats: {
+    backgroundColor: colors.bgGreen,
+    padding: SCREEN_WIDTH < 375 ? 12 : 16,
+    borderRadius: 12,
+    marginBottom: SCREEN_HEIGHT * 0.015,
+    borderWidth: 1,
+    borderColor: colors.primary + '20',
+  },
+  statsText: {
+    fontSize: SCREEN_WIDTH < 375 ? 13 : 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: colors.white,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: colors.primary,
+    borderRadius: 3,
+  },
+  recentAchievements: {
+    marginTop: SCREEN_HEIGHT * 0.01,
   },
 });
 
