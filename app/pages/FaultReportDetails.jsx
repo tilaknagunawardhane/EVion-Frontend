@@ -75,9 +75,9 @@ const FaultReportDetails = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'resolved': return colors.success;
+      case 'resolved': return colors.primary;
       case 'rejected': return colors.danger;
-      case 'under-review': return colors.warning;
+      case 'under-review': return colors.secondary;
       default: return colors.secondaryText;
     }
   };
@@ -142,7 +142,7 @@ const FaultReportDetails = () => {
 
   return (
     <View style={styles.container}>
-      <AppBar title={title || "Report Details"} onBackPress={() => router.back()} />
+      <AppBar onBackPress={() => router.back()} />
       
       <ScrollView 
         style={styles.content}
@@ -204,9 +204,9 @@ const FaultReportDetails = () => {
                 <View style={styles.infoGrid}>
                   {renderInfoCard('Station Name', report.station_id.station_name, 'business')}
                   {renderInfoCard('Address', `${report.station_id.address}, ${report.station_id.city}`, 'location')}
-                  {report.station_id.district && (
+                  {/* {report.station_id.district && (
                     renderInfoCard('District', report.station_id.district, 'map')
-                  )}
+                  )} */}
                 </View>
               ))
             )}
@@ -214,9 +214,9 @@ const FaultReportDetails = () => {
             {report.charger_id && (
               renderDetailSection('Charger Details', (
                 <View style={styles.infoGrid}>
-                  {renderInfoCard('Charger Name', report.charger_id.charger_name, 'flash')}
-                  {renderInfoCard('Power Type', report.charger_id.power_type, 'battery-charging')}
-                  {renderInfoCard('Max Output', report.charger_id.max_power_output ? `${report.charger_id.max_power_output} kW` : 'N/A', 'speedometer')}
+                  {renderInfoCard('Charger Name', report.charger_details.charger_name, 'flash')}
+                  {renderInfoCard('Power Type', report.charger_details.power_type, 'battery-charging')}
+                  {renderInfoCard('Max Output', report.charger_details.max_power_output ? `${report.charger_details.max_power_output} kW` : 'N/A', 'speedometer')}
                 </View>
               ))
             )}
@@ -227,7 +227,7 @@ const FaultReportDetails = () => {
                   {renderInfoCard('Booking ID', report.booking_id._id, 'receipt')}
                   {renderInfoCard('Booking Date', new Date(report.booking_id.booking_date).toLocaleDateString(), 'calendar')}
                   {renderInfoCard('Status', capitalizeFirstLetter(report.booking_id.status), 'time')}
-                  {renderInfoCard('Cost', report.booking_id.cost ? `$${report.booking_id.cost}` : 'N/A', 'cash')}
+                  {renderInfoCard('Cost', report.booking_id.cost ? `Rs ${report.booking_id.cost}` : 'N/A', 'cash')}
                 </View>
               ))
             )}
@@ -236,7 +236,7 @@ const FaultReportDetails = () => {
             {report.status === 'resolved' && report.action && (
               renderDetailSection('Resolution Details', (
                 <View style={styles.resolutionContainer}>
-                  <Ionicons name="checkmark-done" size={20} color={colors.success} style={styles.resolutionIcon} />
+                  <Ionicons name="checkmark-done" size={20} color={colors.primary} style={styles.resolutionIcon} />
                   <Text style={styles.resolutionText}>{report.action}</Text>
                 </View>
               ))
@@ -254,8 +254,8 @@ const FaultReportDetails = () => {
             {report.refund_amount && (
               renderDetailSection('Refund Information', (
                 <View style={styles.refundContainer}>
-                  <Ionicons name="card" size={20} color={colors.success} style={styles.refundIcon} />
-                  <Text style={styles.refundText}>Refund Amount: ${report.refund_amount}</Text>
+                  <Ionicons name="card" size={20} color={colors.primary} style={styles.refundIcon} />
+                  <Text style={styles.refundText}>Refund Amount:  Rs {report.refund_amount}</Text>
                   <Text style={styles.refundSubtext}>Processed on {new Date(report.resolved_at).toLocaleDateString()}</Text>
                 </View>
               ))
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     flex: 1,
@@ -454,11 +454,11 @@ const styles = StyleSheet.create({
   resolutionContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: colors.success + '10',
+    backgroundColor: colors.primary + '10',
     padding: 16,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.success,
+    borderLeftColor: colors.primary,
   },
   resolutionIcon: {
     marginRight: 12,
@@ -492,11 +492,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   refundContainer: {
-    backgroundColor: colors.success + '10',
+    backgroundColor: colors.primary + '10',
     padding: 16,
     borderRadius: 12,
     borderLeftWidth: 4,
-    borderLeftColor: colors.success,
+    borderLeftColor: colors.primary,
   },
   refundIcon: {
     marginBottom: 8,
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   refundText: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.success,
+    color: colors.primary,
     marginBottom: 4,
   },
   refundSubtext: {

@@ -265,49 +265,6 @@ const FaultReport = () => {
       </View>
 
       {renderContent()}
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowReportModal(true)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-
-      {/* Report Modal */}
-      <Modal
-        visible={showReportModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowReportModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Report Fault</Text>
-            <TouchableOpacity
-              onPress={() => setShowReportModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>×</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={styles.modalContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <CustomButton
-              title="Submit Report"
-              onPress={() => {
-                setShowReportModal(false);
-                router.push('/pages/ReportFault');
-              }}
-              style={styles.submitButton}
-            />
-          </ScrollView>
-        </View>
-      </Modal>
     </View>
   );
 };

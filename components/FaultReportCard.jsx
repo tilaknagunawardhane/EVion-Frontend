@@ -13,9 +13,9 @@ const FaultReportCard = ({
   const getStatusColor = () => {
     switch (status) {
       case "Processing":
-        return colors.primary;
-      case "Resolved":
         return colors.HighlightText;
+      case "Resolved":
+        return colors.primary;
       case "Rejected":
         return colors.danger;
       default:
@@ -26,9 +26,9 @@ const FaultReportCard = ({
   const getStatusBackgroundColor = () => {
     switch (status) {
       case "Processing":
-        return colors.bgGreen;
+        return "#FFF5E6"; // 20% opacity
       case "Resolved":
-        return "#FFF5E6";
+        return colors.bgGreen;
       case "Rejected":
         return "#FFE6E6";
       default:
