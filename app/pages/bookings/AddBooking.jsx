@@ -120,7 +120,12 @@ const AddBooking = () => {
 
 
   const handleSubmit = () => {
-    if (!isFormComplete) return;
+    if (!isFormComplete){
+      console.log('Form is not completed!!');
+      return;
+    }
+
+    
     console.log('Booking submitted');
   };
 

@@ -106,7 +106,7 @@ export default function SelectDateTime() {
       .split('–')[1]
       .trim();
 
-    const timeRange = `${first} to ${last}`;
+    const timeRange = `${first} - ${last}`;
     const selectedDateTime = (`${date}  ${timeRange}`);
  
     console.log('selectedSlots: ', selectedSlots);
