@@ -14,21 +14,23 @@ import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { API_BASE_URL } from '@env';
+import useUserData from '../../../hooks/useUserData';
 
-const sampleStations = [
-  {
-    _id: '687d2ec70e0c0b8ef0b4186c',
-    name: 'Genso Charging Station',
-    address: 'Southern Highway, Welipenna, Matugama',
-    image: require('../../../assets/chargingStations/genso1.png'),
-  },
-  {
-    _id: '686cc1846c2941a55f13a8cd',
-    name: 'Electric Vehicle Charging Station',
-    address: 'Wellawaya Rd, Wadduwa',
-    image: require('../../../assets/chargingStations/genso1.png'),
-  },
-];
+// const favouriteStations = [
+//   {
+//     _id: '687d2ec70e0c0b8ef0b4186c',
+//     name: 'Genso Charging Station',
+//     address: 'Southern Highway, Welipenna, Matugama',
+//     image: require('../../../assets/chargingStations/genso1.png'),
+//   },
+//   {
+//     _id: '686cc1846c2941a55f13a8cd',
+//     name: 'Electric Vehicle Charging Station',
+//     address: 'Wellawaya Rd, Wadduwa',
+//     image: require('../../../assets/chargingStations/genso1.png'),
+//   },
+// ];
 
 const SelectCharger = () => {
   const navigation = useNavigation();
@@ -41,7 +43,13 @@ const SelectCharger = () => {
   const [selectedConnector, setSelectedConnector] = useState(null);
   const [selectedDateTime, setSelectedDateTime] = useState(null);
 
+  const [favouriteStations, setfavouriteStations] = useState(null);
+
+  const { user } = useUserData();
+
   useEffect(() => {
+    if (!user) return;
+
     if(params.selectedVehicle){
       const vehicle = JSON.parse(params.selectedVehicle);
       setSelectedVehicle(vehicle);
@@ -58,7 +66,44 @@ const SelectCharger = () => {
 
     console.log('selected vehicle: ', selectedVehicle);
     console.log('selected connector: ', selectedConnector);
-  }, []);
+
+
+    //Fetching the Favourite stations
+
+    const fetchFavouriteStations = async () => {
+      try {
+        const url = `${API_BASE_URL}/api/bookings/getFavouritePartneredStations?ev_user_id=${user._id}`;
+        console.log('Fetching from:', url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log('Samples: ', data);
+        setfavouriteStations(Array.isArray(data) ? data : []);
+      }
+      else{
+        console.error('Error:', data.message || 'No message provided');
+      }
+
+      } catch (error) {
+        console.error('Fetch error:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+    };
+
+    fetchFavouriteStations();
+
+  }, [user]);
+
+  useEffect(() => {
+    console.log('Favourite Stations: ', favouriteStations);
+  }, [favouriteStations]);
 
   const buildNavigationParams = () => ({
     ...(selectedVehicle && { selectedVehicle: JSON.stringify(selectedVehicle) }),
@@ -110,7 +155,7 @@ const SelectCharger = () => {
       {/* Favourites Section */}
       <Text style={styles.sectionTitle}>Favourites</Text>
       <FlatList
-        data={sampleStations}
+        data={favouriteStations}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingHorizontal: 16 }}
         renderItem={({ item }) => (
@@ -121,7 +166,7 @@ const SelectCharger = () => {
             <View style={styles.card}>
             <Image source={item.image} style={styles.cardImage} />
             <View style={styles.cardContent}>
-              <Text style={styles.cardTitle}>{item.name}</Text>
+              <Text style={styles.cardTitle}>{item.station_name}</Text>
               <Text style={styles.cardSubtitle}>{item.address}</Text>
             </View>
             <MaterialIcons name="bookmark" size={20} color={colors.primary} />
