@@ -14,7 +14,7 @@ const SelectConnector = () => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedConnector, setSelectedConnector] = useState(null);
 
-  const [connectors, setConnectors] = useState(null);
+  const [ChargerConnectors, setChargerConnectors] = useState(null);
   const [vehicleConnectors, setVehicleConnectors] = useState([]);
 
   useEffect(() => {
@@ -29,8 +29,8 @@ const SelectConnector = () => {
         ...(vehicle.connector_type_DC ? [vehicle.connector_type_DC] : []),
       ];
       setVehicleConnectors(connectors);
-      console.log('VehicleConnectors: ', connectors);
-      console.log('type: ', Array.isArray(connectors));
+      // console.log('VehicleConnectors: ', connectors);
+      // console.log('type: ', Array.isArray(connectors));
 
       if(params.selectedStation){
         const station = JSON.parse(params.selectedStation);

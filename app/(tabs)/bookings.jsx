@@ -82,7 +82,6 @@ const BookingsScreen = () => {
     }
 
     console.log('bookingsData: ', bookingsData);
-    console.log('connector; ', bookingsData[activeTab].connector);
   };
 
     fetchBookings();

@@ -62,6 +62,10 @@ export default function SelectDateTime() {
   const [selectedSlots, setSelectedSlots] = useState([]); // array of indices
   const [page, setPage] = useState(0);
 
+  useEffect(() => {
+    console.log('Selected Slots: ', selectedSlots);
+  },[selectedSlots])
+
   const paginatedSlots = useMemo(() => {
     if (page === 0) return allSlots.slice(0, 14);
     if (page === 1) return allSlots.slice(14, 28);
@@ -98,25 +102,35 @@ export default function SelectDateTime() {
 
 
   const handleContinue = () => {
-    if (selectedSlots.length === 0) return;
+  if (selectedSlots.length === 0) return;
 
-    const date = dates[selectedDateIdx].format('YYYY:MM:DD');
-    const first = allSlots[selectedSlots[0]].label.split('–')[0].trim();
-    const last = allSlots[selectedSlots[selectedSlots.length - 1]].label
-      .split('–')[1]
-      .trim();
+  const date = dates[selectedDateIdx]; // dayjs object
 
-    const timeRange = `${first} - ${last}`;
-    const selectedDateTime = (`${date}  ${timeRange}`);
- 
-    console.log('selectedSlots: ', selectedSlots);
-    console.log('Time range: ', timeRange);
+  const firstSlot = allSlots[selectedSlots[0]];
+  const lastSlot = allSlots[selectedSlots[selectedSlots.length - 1]];
 
-    router.replace({
-      pathname: '/pages/bookings/AddBooking',
-      params: buildNavigationParams(selectedDateTime),
-    });
+  const dateStr = date.format('YYYY-MM-DD');
+  const firstTime = firstSlot.label.split('–')[0].trim();
+  const lastTime = lastSlot.label.split('–')[1].trim();
+
+  const [startHour, startMinute] = firstTime.split(':').map(Number);
+  const bookingStartTime = date.hour(startHour).minute(startMinute).format("YYYY-MM-DDTHH:mm:ss");
+
+  const numberOfSlots = selectedSlots.length;
+
+  const selectedDateTime = {
+    label: `${dateStr} ${firstTime} - ${lastTime}`,
+    bookingStartTime,
+    numberOfSlots,
   };
+
+  console.log('Selected DateTime:', selectedDateTime);
+
+  router.replace({
+    pathname: '/pages/bookings/AddBooking',
+    params: buildNavigationParams(selectedDateTime),
+  });
+};
 
 
   return (

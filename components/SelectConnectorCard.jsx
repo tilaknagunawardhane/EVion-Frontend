@@ -4,6 +4,20 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
 
+const getConnectorImage = (imageName) => {
+  switch (imageName) {
+    case 'connectors/ccs1.png':
+      return require('../assets/connectors/ccs1.png');
+    case 'connectors/ccs2.png':
+      return require('../assets/connectors/ccs2.png');
+    case 'connectors/type2.png':
+      return require('../assets/connectors/type2.png');
+    default:
+      return null; // fallback
+  }
+};
+
+
 const SelectConnectorCard = ({ connector, selected = false }) => {
   return (
     <View style={[styles.card, selected && styles.selectedCard]}>
@@ -11,11 +25,10 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
       <View style={styles.headerRow}>
         {/* Icon */}
         <View style={styles.iconWrapper}>
-          <MaterialCommunityIcons
-            name="ev-plug-type2"
-            size={28}
-            color={colors.primary}
-          />
+        <Image
+          source={getConnectorImage(connector.image)} 
+          style={styles.currencyIcon}
+        />
           <Text style={styles.typeText}>{connector.current_type} - {connector.type_name}</Text>
         </View>
 
@@ -23,7 +36,7 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
         <View style={styles.headerTextWrapper}>
           <Text style={styles.statusText}>{connector.status}</Text>
           <Text style={styles.typeText} numberOfLines={2}>
-            {connector.label || connector.type}
+            {connector.label || connector.type_name}
           </Text>
         </View>
 

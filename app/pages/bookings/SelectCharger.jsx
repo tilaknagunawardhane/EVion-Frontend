@@ -17,13 +17,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const sampleStations = [
   {
-    id: '1',
+    _id: '687d2ec70e0c0b8ef0b4186c',
     name: 'Genso Charging Station',
     address: 'Southern Highway, Welipenna, Matugama',
     image: require('../../../assets/chargingStations/genso1.png'),
   },
   {
-    id: '2',
+    _id: '686cc1846c2941a55f13a8cd',
     name: 'Electric Vehicle Charging Station',
     address: 'Wellawaya Rd, Wadduwa',
     image: require('../../../assets/chargingStations/genso1.png'),
