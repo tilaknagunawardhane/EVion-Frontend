@@ -12,6 +12,18 @@ export default function PagesLayout() {
         name="Profile"
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name="Profile/ManageAccount/UpdateEmailScreen"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile/ManageAccount/VerifyEmailScreen"
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Profile/ManageAccount/ManageAccountScreen"
+        options={{ headerShown: false }}
+      />
       {/* Add other page screens as needed */}
     </Stack>
   );

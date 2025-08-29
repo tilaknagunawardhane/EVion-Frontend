@@ -11,19 +11,27 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { useAuth } from '../../context/AuthContext';
-import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ProfileScreen1 = ({ route }) => {
-  const { logout } = useAuth();
-  const navigation = useNavigation();
+  // Remove user function (no backend logic)
+  const removeUser = () => {
+    router.push('/pages/SignInScreen');
+  };
+  // Margin between quick access cards
+  const cardMargin = 12;
+  // Card size for quick access cards
+  const cardSize = SCREEN_WIDTH < 375 ? 90 : 110;
+  // Responsive flag for small screens
+  const isSmallScreen = SCREEN_WIDTH < 375;
+  // No backend logic required
   
+  // Avatar size for profile image
+  const avatarSize = SCREEN_WIDTH < 375 ? 60 : 80;
+
   // Sample user data (in a real app, this would come from props or state management)
   const userData = {
     name: 'Vishwani Vilochaṇa',
@@ -36,216 +44,178 @@ const ProfileScreen1 = ({ route }) => {
     recentActivity: 12,
   };
 
-  // Responsive calculations
-  const isSmallScreen = SCREEN_WIDTH < 375;
-  const cardSize = isSmallScreen ? SCREEN_WIDTH / 3.5 : SCREEN_WIDTH / 3.8;
-  const cardMargin = isSmallScreen ? 4 : 6;
-  const avatarSize = isSmallScreen ? 60 : 72;
-
-   const removeUser = async () => {
-    try {
-      await logout(); // Now properly called
-      console.log('User logged out successfully');
-      
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: 'Logged Out',
-        textBody: 'You have been signed out successfully',
-        autoClose: 2000,
-      });
-      
-      router.replace('/pages/SignInScreen'); // Use replace instead of push
-    } catch (e) {
-      console.error('Logout error:', e);
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: 'Failed to logout. Please try again.',
-      });
-    }
-  };
-
   return (
-    <ScrollView 
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <Text style={styles.title}>Profile</Text>
-      </View>
-
-      {/* User Info Card */}
-      <TouchableOpacity 
-        style={styles.userCard}
-        onPress={() => router.push('/pages/Profile/Profile1')}
+    <View style={{ flex: 1 }}>
+      <ScrollView 
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}>
-          {userData.profileImage ? (
-            <Image 
-              source={require('../../assets/avatar.png')} 
-              style={styles.avatar} 
-            />
-          ) : (
-            <FontAwesome 
-              size={isSmallScreen ? 24 : 28} 
-              name="user-o" 
-              color={colors.primary}  
-            />
-          )}
+        <View style={styles.headerRow}>
+          <Text style={styles.title}>Profile</Text>
         </View>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">
-            {userData.name}
-          </Text>
-          <Text style={styles.userEmail} numberOfLines={1} ellipsizeMode="tail">
-            {userData.email}
-          </Text>
+
+            {/* User Info Card */}
+            <TouchableOpacity 
+              style={styles.userCard}
+              onPress={() => router.push('/pages/Profile/Profile1')}
+            >
+              <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}> 
+                {userData.profileImage ? (
+                  <Image 
+                    source={require('../../assets/avatar.png')} 
+                    style={styles.avatar} 
+                  />
+                ) : (
+                  <FontAwesome 
+                    size={isSmallScreen ? 24 : 28} 
+                    name="user-o" 
+                    color={colors.primary}  
+                  />
+                )}
+              </View>
+              <View style={styles.userInfo}>
+                <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">
+                  {userData.name}
+                </Text>
+                 <TouchableOpacity onPress={() => router.push('/pages/Profile/Profile1')} activeOpacity={0.7}>
+                  <Text style={[styles.userEmail, { color: colors.primary, textDecorationLine: 'underline' }]} numberOfLines={1} ellipsizeMode="tail">
+                    {userData.email}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.userBalance}>
+                <FontAwesome 
+                  size={isSmallScreen ? 24 : 28} 
+                  name="angle-right" 
+                  color={colors.secondaryText}  
+                />
+              </View>
+            </TouchableOpacity>
+
+            {/* Quick Access Cards */}
+            <View style={styles.cardRow}>
+              <TouchableOpacity 
+                style={[styles.card, { 
+                  width: cardSize, 
+                  marginRight: cardMargin,
+                  height: cardSize * 0.9 
+                }]} 
+                onPress={() => router.push('/pages/Profile/MyEVsScreen')}
+              >
+                <Image 
+                  source={require('../../assets/byd.png')} 
+                  style={styles.cardIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.cardLabel}>My EVs</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.card, { 
+                  width: cardSize, 
+                  marginRight: cardMargin,
+                  height: cardSize * 0.9 
+                }]} 
+                onPress={() => router.push('/pages/Profile/Wallet/walletScreen')}
+              >
+                <Image 
+                  source={require('../../assets/wallet.png')} 
+                  style={styles.cardIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.cardLabel}>Wallet</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.card, { 
+                  width: cardSize,
+                  height: cardSize * 0.9 
+                }]} 
+                onPress={() => router.push('/pages/Profile/Activity')}
+              >
+                <Image 
+                  source={require('../../assets/activity.png')} 
+                  style={styles.cardIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.cardLabel}>Activity</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Menu Items */}
+            <View style={styles.menuContainer}>
+              <TouchableOpacity 
+                style={styles.listItem} 
+                onPress={() => router.push('/pages/Profile/SettingsScreen')}
+              >
+                <Image 
+                  source={require('../../assets/settings.png')} 
+                  style={styles.listIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.listLabel}>Settings</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.listItem} 
+                onPress={() => router.push('/pages/Profile/Favourites')}
+              >
+                <Image 
+                  source={require('../../assets/favourite.png')} 
+                  style={styles.listIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.listLabel}>Favourites</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.listItem} 
+                onPress={() => router.push('/pages/FaultReport')}
+              >
+                <Image 
+                  source={require('../../assets/fault.png')} 
+                  style={styles.listIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.listLabel}>Fault Reports</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.listItem} 
+                onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
+              >
+                <Image 
+                  source={require('../../assets/privacy.png')} 
+                  style={styles.listIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.listLabel}>Privacy Policy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.listItem} 
+                onPress={() => router.push({pathname: '/pages/StationProfile', params: { stationID: '687d2ec70e0c0b8ef0b4186c' }})}
+              >
+                <Image 
+                  source={require('../../assets/help.png')} 
+                  style={styles.listIcon} 
+                  resizeMode="contain"
+                />
+                <Text style={styles.listLabel}>Help Center</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Sign Out Button */}
+            <TouchableOpacity 
+              style={styles.signOut}
+              onPress={removeUser}
+            >
+              <View style={styles.signOutRow}>
+                <Image
+                  source={require('../../assets/signout.png')}
+                  style={styles.signOutIcon}
+                  resizeMode="contain"
+                />
+                <Text style={styles.signOutText}>Sign out</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
-        <View style={styles.userBalance}>
-         <FontAwesome 
-              size={isSmallScreen ? 24 : 28} 
-              name="angle-right" 
-              color={colors.secondaryText}  
-            />
-       
-        </View>
-      </TouchableOpacity>
-
-      {/* Quick Access Cards */}
-      <View style={styles.cardRow}>
-        <TouchableOpacity 
-          style={[styles.card, { 
-            width: cardSize, 
-            marginRight: cardMargin,
-            height: cardSize * 0.9 
-          }]} 
-          onPress={() => router.push('/pages/Profile/MyEVsScreen')}
-        >
-          <Image 
-            source={require('../../assets/byd.png')} 
-            style={styles.cardIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.cardLabel}>My EVs</Text>
-          
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.card, { 
-            width: cardSize, 
-            marginRight: cardMargin,
-            height: cardSize * 0.9 
-          }]} 
-          onPress={() => router.push('/pages/Profile/Wallet/walletScreen')}
-        >
-          <Image 
-            source={require('../../assets/wallet.png')} 
-            style={styles.cardIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.cardLabel}>Wallet</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.card, { 
-            width: cardSize,
-            height: cardSize * 0.9 
-          }]} 
-          onPress={() => router.push('/pages/Profile/Activity')}
-        >
-          <Image 
-            source={require('../../assets/activity.png')} 
-            style={styles.cardIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.cardLabel}>Activity</Text>
-          
-        </TouchableOpacity>
-      </View>
-
-      {/* Menu Items */}
-      <View style={styles.menuContainer}>
-        <TouchableOpacity 
-          style={styles.listItem} 
-          onPress={() => router.push('/pages/Profile/SettingsScreen')}
-        >
-          <Image 
-            source={require('../../assets/settings.png')} 
-            style={styles.listIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.listLabel}>Settings</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.listItem} 
-          onPress={() => router.push('/pages/Profile/Favourites')}
-        >
-          <Image 
-            source={require('../../assets/favourite.png')} 
-            style={styles.listIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.listLabel}>Favourites</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.listItem} 
-          onPress={() => router.push('/pages/FaultReport')}
-        >
-          <Image 
-            source={require('../../assets/fault.png')} 
-            style={styles.listIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.listLabel}>Fault Reports</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.listItem} 
-          // onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
-          onPress={() => router.push({pathname: '/pages/bookings/ReportIssue', params: { bookingId: '68a6c105b056f6456292bdd7' }})}
-
-        >
-          <Image 
-            source={require('../../assets/privacy.png')} 
-            style={styles.listIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.listLabel}>Privacy Policy</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.listItem} 
-          onPress={() => router.push({pathname: '/pages/StationProfile', params: { stationID: '687d2ec70e0c0b8ef0b4186c' }})}
-        >
-          <Image 
-            source={require('../../assets/help.png')} 
-            style={styles.listIcon} 
-            resizeMode="contain"
-          />
-          <Text style={styles.listLabel}>Help Center</Text>
-         
-        </TouchableOpacity>
-      </View>
-
-      {/* Sign Out Button */}
-      <TouchableOpacity 
-        style={styles.signOut}
-        onPress={removeUser}
-      >
-        <View style={styles.signOutRow}>
-          <Image
-            source={require('../../assets/signout.png')}
-            style={styles.signOutIcon}
-            resizeMode="contain"
-          />
-          <Text style={styles.signOutText}>Sign out</Text>
-        </View>
-      </TouchableOpacity>
-    </ScrollView>
-  );
+      );
 };
 
 const styles = StyleSheet.create({
