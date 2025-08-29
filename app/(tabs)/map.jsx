@@ -30,6 +30,7 @@ const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
 export default function MapScreen() {
   const router = useRouter();
   
+  
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
