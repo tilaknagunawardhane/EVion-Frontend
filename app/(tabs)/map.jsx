@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location';
-import * as ExpoMaps from 'expo-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import stationIcon from '../../assets/map/station-icon.png';
 import { GOOGLE_MAPS_API_KEY } from '@env';
@@ -27,9 +27,8 @@ import { useRouter } from 'expo-router';
 
 const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
 
-
 export default function MapScreen() {
-        const router = useRouter();
+  const router = useRouter();
   
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -38,40 +37,53 @@ export default function MapScreen() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [selectedStation, setSelectedStation] = useState(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const mapRef = useRef(null);
 
   // Get user location
   useEffect(() => {
+    console.log('Requesting location permissions...');
     (async () => {
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
+        console.log('Location permission status:', status);
         if (status !== 'granted') {
           setErrorMsg('Permission denied');
           return;
         }
 
+        console.log('Getting current position...');
         let loc = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.High,
           timeout: 15000,
         });
+        console.log('Location received:', loc.coords);
         setLocation(loc.coords);
       } catch (err) {
         console.error('Location error:', err);
         setErrorMsg('Failed to get location');
+        
+        // Fallback to Colombo if location fails
+        setLocation({
+          latitude: 6.9271,
+          longitude: 79.8612,
+        });
       }
     })();
   }, []);
 
-  // Center map on user location
+  // Center map on user location when map is loaded
   useEffect(() => {
-    if (location && mapRef.current?.setCameraPosition) {
-      mapRef.current.setCameraPosition({
-        coordinates: { latitude: location.latitude, longitude: location.longitude },
-        zoom: 13,
-        duration: 1000,
-      });
+    if (location && mapRef.current && mapLoaded) {
+      console.log('Animating to location:', location);
+      mapRef.current.animateToRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }, 1000);
     }
-  }, [location]);
+  }, [location, mapLoaded]);
 
   // Find nearby stations
   useEffect(() => {
@@ -85,6 +97,7 @@ export default function MapScreen() {
         );
         return distance <= 10;
       });
+      console.log('Found nearby stations:', nearby.length);
       setNearbyStations(nearby);
     }
   }, [location]);
@@ -103,8 +116,6 @@ export default function MapScreen() {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
-
-
 
   // Fetch place suggestions
   const fetchSuggestions = React.useCallback(async (input) => {
@@ -146,11 +157,12 @@ export default function MapScreen() {
         coords = geocoded[0];
       }
 
-      mapRef.current?.setCameraPosition({
-        coordinates: coords,
-        zoom: 14,
-        duration: 1000,
-      });
+      mapRef.current?.animateToRegion({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      }, 1000);
 
       const nearby = chargingStations.filter(station =>
         getDistanceFromLatLonInKm(
@@ -172,18 +184,18 @@ export default function MapScreen() {
 
   // Recenter map
   const reCenter = () => {
-    if (mapRef.current?.setCameraPosition && location) {
-      mapRef.current.setCameraPosition({
-        coordinates: { latitude: location.latitude, longitude: location.longitude },
-        zoom: 15,
-        duration: 1000,
-      });
+    if (mapRef.current && location) {
+      mapRef.current.animateToRegion({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      }, 1000);
     }
     setSearchQuery('');
     setShowDropdown(false);
     setSuggestions([]);
     setSelectedStation(null);
-    // Don't clear nearbyStations - let the useEffect handle it
   };
 
   // Navigate to directions
@@ -199,6 +211,19 @@ export default function MapScreen() {
         destinationTitle: destinationTitle || 'Destination'
       }
     });
+  };
+
+  // Handle marker press
+  const handleMarkerPress = (station) => {
+    console.log('Marker pressed:', station.title);
+    setSelectedStation(station);
+    // Center map on selected station
+    mapRef.current?.animateToRegion({
+      latitude: station.latitude,
+      longitude: station.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    }, 300);
   };
 
   // Combine suggestions
@@ -220,10 +245,11 @@ export default function MapScreen() {
   ];
 
   // Loading states
-  if (errorMsg) {
+  if (errorMsg && !location) {
     return (
       <View style={styles.centered}>
         <Text style={{ color: 'red' }}>❌ {errorMsg}</Text>
+        <Text style={{ marginTop: 10 }}>Using default location</Text>
       </View>
     );
   }
@@ -231,57 +257,78 @@ export default function MapScreen() {
   if (!location) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-        <Text>Fetching your location...</Text>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 10 }}>Fetching your location...</Text>
       </View>
     );
   }
 
-  const MapNamespace = Platform.OS === 'ios' ? ExpoMaps.AppleMaps : ExpoMaps.GoogleMaps;
-  const MapViewComponent = MapNamespace.View;
-
   return (
     <View style={styles.container}>
-      <MapViewComponent
+      <MapView
         ref={mapRef}
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
         style={styles.map}
         showsUserLocation={true}
-        userLocationPriority="high"
-        userLocationUpdateInterval={5000}
-        camera={{
-          centerCoordinate: {
-            latitude: location.latitude,
-            longitude: location.longitude
-          },
-          zoom: 15,
+        showsMyLocationButton={false}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
         }}
-        markers={[
-          {
-            id: 'user-location',
-            coordinates: {
-              latitude: location.latitude,
-              longitude: location.longitude
-            },
-            title: 'You are here'
-          },
-          ...chargingStations.map(station => ({
-            id: station.id,
-            coordinates: {
-              latitude: station.latitude,
-              longitude: station.longitude
-            },
-            title: station.title,
-            snippet: station.description,
-            stationData: station,
-            icon: {
-              uri: Image.resolveAssetSource(stationIcon).uri,
-              width: 48,
-              height: 48
-            }
-          }))
-        ]}
+        onMapReady={() => {
+          console.log('Map is ready');
+          setMapLoaded(true);
+        }}
+        onPress={() => {
+          setSelectedStation(null);
+          setSuggestions([]);
+        }}
+        mapType="standard"
+      >
+        {/* User Location Marker (optional) */}
+        <Marker
+          coordinate={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+          }}
+          title="Your Location"
+          description="You are here"
+        >
+          <View style={styles.userLocationMarker}>
+            <MaterialIcons name="person-pin-circle" size={40} color={colors.primary} />
+          </View>
+        </Marker>
 
-      />
+        {/* Charging Station Markers */}
+        {chargingStations.map(station => (
+          <Marker
+            key={station.id}
+            coordinate={{
+              latitude: station.latitude,
+              longitude: station.longitude,
+            }}
+            title={station.title}
+            description={station.description}
+            onPress={() => handleMarkerPress(station)}
+          >
+            <Image 
+              source={stationIcon} 
+              style={{ width: 48, height: 48 }} 
+              resizeMode="contain"
+            />
+          </Marker>
+        ))}
+      </MapView>
+
+      {/* Map loading indicator overlay */}
+      {!mapLoaded && (
+        <View style={styles.mapLoadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.mapLoadingText}>Loading map...</Text>
+        </View>
+      )}
 
       {/* Transparent overlay for suggestions */}
       {suggestions.length > 0 && (
@@ -380,6 +427,7 @@ export default function MapScreen() {
           }}
         />
       )}
+
       {/* Recenter Button */}
       <TouchableOpacity
         style={[
@@ -390,50 +438,6 @@ export default function MapScreen() {
       >
         <MaterialIcons name="my-location" size={24} color="#fff" />
       </TouchableOpacity>
-
-
-
-      {/* Nearby Stations Menu */}
-      {/* {nearbyStations.length > 0 && !selectedStation && (
-        <View style={styles.nearbyMenu}>
-          <Text style={styles.nearbyTitle}>Nearby Stations</Text>
-          <FlatList
-            data={nearbyStations.slice(0, 3)} // Show max 3 stations
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.nearbyItem}
-                onPress={() => {
-                  console.log('Selected nearby station:', item.title);
-                  setSelectedStation(item);
-                  // Center map on selected station
-                  mapRef.current?.setCameraPosition({
-                    coordinates: {
-                      latitude: item.latitude,
-                      longitude: item.longitude
-                    },
-                    zoom: 16,
-                    duration: 300,
-                  });
-                }}
-              >
-                <MaterialIcons name="ev-station" size={20} color={colors.primary} />
-                <View style={styles.nearbyItemText}>
-                  <Text style={styles.nearbyItemTitle}>{item.title}</Text>
-                  <Text style={styles.nearbyItemDistance}>
-                    {getDistanceFromLatLonInKm(
-                      location.latitude,
-                      location.longitude,
-                      item.latitude,
-                      item.longitude
-                    ).toFixed(1)} km away
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )} */}
     </View>
   );
 }
@@ -535,5 +539,25 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.gray,
     marginTop: 2,
+  },
+  mapLoadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  mapLoadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: colors.gray,
+  },
+  userLocationMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

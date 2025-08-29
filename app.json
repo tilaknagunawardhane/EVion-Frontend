@@ -22,6 +22,9 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.anonymous.EVionFrontend",
+      "config": {
+        "googleMapsApiKey": "AIzaSyAmKf5PrCaWDXe26SYUYdSD95Flgtod3fw"
+      },
       "runtimeVersion": {
         "policy": "appVersion"
       }
@@ -40,7 +43,7 @@
       ],
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyAghlt-S0i8b8IJLixLEl5fmTFqGfTqyfM"
+          "apiKey": "AIzaSyB3_MPgAsAVzyIWrhmWnIWzmBlusld8IW0"
         }
       },
       "runtimeVersion": "1.0.0"
@@ -53,11 +56,15 @@
       "expo-router",
       "expo-font",
       [
-        "expo-maps",
+        "expo-dev-client",
         {
-          "googleMapsApiKey": "AIzaSyAghlt-S0i8b8IJLixLEl5fmTFqGfTqyfM",
-          "requestLocationPermission": true,
-          "locationPermission": "Allow EVion-Frontend to use your location"
+          "addGeneratedScheme": false
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": "AIzaSyB3_MPgAsAVzyIWrhmWnIWzmBlusld8IW0"
         }
       ],
       [
