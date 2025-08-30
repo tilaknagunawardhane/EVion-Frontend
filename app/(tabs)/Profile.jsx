@@ -199,21 +199,46 @@ const ProfileScreen1 = ({ route }) => {
               </TouchableOpacity>
             </View>
 
-            {/* Sign Out Button */}
-            <TouchableOpacity 
-              style={styles.signOut}
-              onPress={removeUser}
-            >
-              <View style={styles.signOutRow}>
-                <Image
-                  source={require('../../assets/signout.png')}
-                  style={styles.signOutIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.signOutText}>Sign out</Text>
-              </View>
-            </TouchableOpacity>
-          </ScrollView>
+        <TouchableOpacity 
+          style={styles.listItem} 
+          // onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
+          onPress={() => router.push({pathname: '/pages/bookings/ReportIssue', params: { bookingId: '68a6c105b056f6456292bdd7' }})}
+
+        >
+          <Image 
+            source={require('../../assets/privacy.png')} 
+            style={styles.listIcon} 
+            resizeMode="contain"
+          />
+          <Text style={styles.listLabel}>Privacy Policy</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.listItem} 
+          onPress={() => router.push({pathname: '/pages/StationProfile', params: { stationID: '687d2ec70e0c0b8ef0b4186c' }})}
+        >
+          <Image 
+            source={require('../../assets/help.png')} 
+            style={styles.listIcon} 
+            resizeMode="contain"
+          />
+          <Text style={styles.listLabel}>Help Center</Text>
+         
+        </TouchableOpacity>
+      </View>
+
+      {/* Sign Out Button */}
+      <TouchableOpacity 
+        style={styles.signOut}
+        onPress={removeUser}
+      >
+        <View style={styles.signOutRow}>
+          <Image
+            source={require('../../assets/signout.png')}
+            style={styles.signOutIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.signOutText}>Sign out</Text>
         </View>
       );
 };
