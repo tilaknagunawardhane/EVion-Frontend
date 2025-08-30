@@ -1,163 +1,231 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Platform,
   ActivityIndicator,
   TouchableOpacity,
-  FlatList,
-  Image,
   Alert,
-  TouchableWithoutFeedback
 } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { MaterialIcons } from '@expo/vector-icons';
-import stationIcon from '../../assets/map/station-icon.png';
-import { GOOGLE_MAPS_API_KEY } from '@env';
-import { router } from 'expo-router';
-import colors from '../../constants/color';
-import SearchContainer from '../../components/maps/SearchContainer';
-import StationInfoCard from '../../components/maps/StationInfoCard';
-import SuggestionsDropdown from '../../components/maps/SuggestionsDropdown';
-import chargingStations from '../../utils/ChargingStations';
 import { useRouter } from 'expo-router';
+import colors from '../../constants/color';
 
-const GOOGLE_API_KEY = GOOGLE_MAPS_API_KEY;
+// Import your API key from environment variables
+import { OPEN_CHARGE_MAP_API_KEY } from '@env';
+
+// Components
+import SearchContainer from '../../components/maps/SearchContainer';
+import StationDetailsModal from '../../components/maps/StationDetailsModal';
+import LoadingOverlay from '../../components/maps/LoadingOverlay';
+import UserLocationMarker from '../../components/maps/UserLocationMarker';
+import ChargingStationMarker from '../../components/maps/ChargingStationMarker';
+
+// Utils
+import { getDistanceFromLatLonInKm } from '../../utils/mapUtils';
+
+const OPEN_CHARGE_MAP_API_URL = 'https://api.openchargemap.io/v3/poi';
 
 export default function MapScreen() {
   const router = useRouter();
+  const mapRef = useRef(null);
   
-  
+  // State management
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [nearbyStations, setNearbyStations] = useState([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
+  const [chargingStations, setChargingStations] = useState([]);
   const [selectedStation, setSelectedStation] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const mapRef = useRef(null);
+  const [stationsLoaded, setStationsLoaded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Get user location
+  // Get user location on component mount
   useEffect(() => {
-    console.log('Requesting location permissions...');
-    (async () => {
-      try {
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        console.log('Location permission status:', status);
-        if (status !== 'granted') {
-          setErrorMsg('Permission denied');
-          return;
-        }
+    getUserLocation();
+  }, []);
 
-        console.log('Getting current position...');
-        let loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.High,
-          timeout: 15000,
-        });
-        console.log('Location received:', loc.coords);
-        setLocation(loc.coords);
-      } catch (err) {
-        console.error('Location error:', err);
-        setErrorMsg('Failed to get location');
-        
-        // Fallback to Colombo if location fails
+  // Load charging stations when location is available
+  useEffect(() => {
+    if (location && !stationsLoaded) {
+      loadChargingStations();
+    }
+  }, [location, stationsLoaded]);
+
+  // Center map on user location when map is ready
+  useEffect(() => {
+    if (location && mapRef.current && mapLoaded) {
+      centerMapOnUserLocation();
+    }
+  }, [location, mapLoaded]);
+
+  const getUserLocation = async () => {
+    try {
+      console.log('Requesting location permissions...');
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        setErrorMsg('Location permission denied');
+        Alert.alert('Permission Required', 'Location permission is required to show your location on the map.');
+        // Fallback to Colombo, Sri Lanka
         setLocation({
           latitude: 6.9271,
           longitude: 79.8612,
         });
+        return;
       }
-    })();
-  }, []);
 
-  // Center map on user location when map is loaded
-  useEffect(() => {
-    if (location && mapRef.current && mapLoaded) {
-      console.log('Animating to location:', location);
-      mapRef.current.animateToRegion({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }, 1000);
-    }
-  }, [location, mapLoaded]);
-
-  // Find nearby stations
-  useEffect(() => {
-    if (location) {
-      const nearby = chargingStations.filter((station) => {
-        const distance = getDistanceFromLatLonInKm(
-          location.latitude,
-          location.longitude,
-          station.latitude,
-          station.longitude
-        );
-        return distance <= 10;
+      console.log('Getting current position...');
+      let loc = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        timeout: 30000,
+        maximumAge: 10000,
       });
-      console.log('Found nearby stations:', nearby.length);
-      setNearbyStations(nearby);
+      
+      console.log('Location received:', loc.coords);
+      console.log('Accuracy:', loc.coords.accuracy);
+      
+      // Check if this looks like a simulator location (California coordinates)
+      const isSimulatorLocation = (
+        Math.abs(loc.coords.latitude - 37.4219983) < 0.001 &&
+        Math.abs(loc.coords.longitude - (-122.084)) < 0.001
+      );
+      
+      if (isSimulatorLocation) {
+        console.log('Detected simulator location, using Sri Lanka coordinates for better testing');
+        Alert.alert(
+          'Simulator Location Detected', 
+          'Using Sri Lanka coordinates for better charging station data. In a real device, your actual location will be used.',
+          [{ text: 'OK' }]
+        );
+        setLocation({
+          latitude: 6.9271, // Colombo
+          longitude: 79.8612,
+          accuracy: loc.coords.accuracy,
+        });
+      } else {
+        setLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          accuracy: loc.coords.accuracy,
+        });
+      }
+      
+      setErrorMsg(null);
+      
+    } catch (err) {
+      console.error('Location error:', err);
+      setErrorMsg('Failed to get location');
+      Alert.alert('Location Error', 'Unable to get your location. Using Colombo, Sri Lanka as default.');
+      
+      // Fallback to Colombo, Sri Lanka
+      setLocation({
+        latitude: 6.9271,
+        longitude: 79.8612,
+      });
     }
-  }, [location]);
+  };
+  
+  const loadChargingStations = async () => {
+    try {
+      console.log('Loading charging stations...');
+      
+      const response = await axios.get(OPEN_CHARGE_MAP_API_URL, {
+        params: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          distance: 50, // 50km radius
+          maxresults: 100,
+          compact: true,
+          verbose: false,
+          countrycode: 'LK' // Sri Lanka
+        },
+        headers: {
+          'X-API-Key': OPEN_CHARGE_MAP_API_KEY
+        }
+      });
 
-  // Calculate distance between coordinates
-  const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
-    const R = 6371;
-    const dLat = ((lat2 - lat1) * Math.PI) / 180;
-    const dLon = ((lon2 - lon1) * Math.PI) / 180;
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+      const stations = response.data.map(station => ({
+        id: station.ID,
+        title: station.AddressInfo?.Title || 'Charging Station',
+        description: station.AddressInfo?.AddressLine1 || 'No description available',
+        latitude: station.AddressInfo?.Latitude,
+        longitude: station.AddressInfo?.Longitude,
+        address: `${station.AddressInfo?.AddressLine1 || ''}, ${station.AddressInfo?.Town || ''}, ${station.AddressInfo?.StateOrProvince || ''}`.trim().replace(/^,|,$/g, ''),
+        town: station.AddressInfo?.Town,
+        postcode: station.AddressInfo?.Postcode,
+        country: station.AddressInfo?.Country?.Title,
+        operatorInfo: station.OperatorInfo,
+        connections: station.Connections,
+        usageType: station.UsageType,
+        statusType: station.StatusType,
+        numberOfPoints: station.NumberOfPoints,
+        phone: station.AddressInfo?.ContactTelephone1,
+        website: station.AddressInfo?.RelatedURL
+      })).filter(station => station.latitude && station.longitude);
+
+      console.log(`Loaded ${stations.length} charging stations`);
+      setChargingStations(stations);
+      setStationsLoaded(true);
+      
+    } catch (error) {
+      console.error('Error loading charging stations:', error);
+      Alert.alert('Error', 'Failed to load charging stations');
+      setStationsLoaded(true);
+    }
   };
 
-  // Fetch place suggestions
-  const fetchSuggestions = React.useCallback(async (input) => {
-    if (!input || input.trim() === '') {
-      setSuggestions([]);
-      return;
+  const centerMapOnUserLocation = () => {
+    if (!location || !mapRef.current) return;
+    
+    mapRef.current.animateToRegion({
+      latitude: location.latitude,
+      longitude: location.longitude,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    }, 1000);
+  };
+
+  const handleMarkerPress = (station) => {
+    console.log('Marker pressed:', station.title);
+    setSelectedStation(station);
+    
+    // Center map on selected station
+    if (mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: station.latitude,
+        longitude: station.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }, 500);
     }
+  };
+
+  const handleSearch = async (query) => {
+    if (!query.trim()) return;
 
     try {
-      const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&key=${GOOGLE_API_KEY}&components=country:lk`
+      // First, check if query matches any charging station
+      const matchingStation = chargingStations.find(station =>
+        station.title.toLowerCase().includes(query.toLowerCase()) ||
+        station.town?.toLowerCase().includes(query.toLowerCase())
       );
-      setSuggestions(response.data.status === 'OK' ? response.data.predictions : []);
-    } catch (error) {
-      console.error('Places API error:', error);
-      setSuggestions([]);
-    }
-  }, []);
 
-  // Handle search
-  const handleSearch = async (placeId = null, description = null) => {
-    if (!searchQuery.trim() && !description) return;
-
-    try {
-      let coords;
-      if (placeId) {
-        const response = await axios.get(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
-        );
-        const { lat, lng } = response.data.result.geometry.location;
-        coords = { latitude: lat, longitude: lng };
-        setSearchQuery(description);
-      } else {
-        const geocoded = await Location.geocodeAsync(searchQuery);
-        if (geocoded.length === 0) {
-          Alert.alert('No results found');
-          return;
-        }
-        coords = geocoded[0];
+      if (matchingStation) {
+        handleMarkerPress(matchingStation);
+        return;
       }
 
+      // If no station found, geocode the location
+      const geocoded = await Location.geocodeAsync(query);
+      if (geocoded.length === 0) {
+        Alert.alert('No results found', 'Please try a different search term');
+        return;
+      }
+
+      const coords = geocoded[0];
       mapRef.current?.animateToRegion({
         latitude: coords.latitude,
         longitude: coords.longitude,
@@ -165,113 +233,62 @@ export default function MapScreen() {
         longitudeDelta: 0.05,
       }, 1000);
 
-      const nearby = chargingStations.filter(station =>
+      // Find nearby stations to the searched location
+      const nearbyStations = chargingStations.filter(station =>
         getDistanceFromLatLonInKm(
           coords.latitude,
           coords.longitude,
           station.latitude,
           station.longitude
-        ) <= 3
+        ) <= 5 // 5km radius
       );
 
-      setNearbyStations(nearby);
-      setShowDropdown(nearby.length > 0);
-      setSuggestions([]);
+      if (nearbyStations.length > 0) {
+        // Show the closest station
+        const closestStation = nearbyStations.reduce((prev, current) =>
+          getDistanceFromLatLonInKm(coords.latitude, coords.longitude, prev.latitude, prev.longitude) <
+          getDistanceFromLatLonInKm(coords.latitude, coords.longitude, current.latitude, current.longitude)
+            ? prev : current
+        );
+        setSelectedStation(closestStation);
+      }
+
     } catch (error) {
       console.error('Search error:', error);
-      Alert.alert('Error searching for location');
+      Alert.alert('Error', 'Failed to search location');
     }
   };
 
-  // Recenter map
-  const reCenter = () => {
-    if (mapRef.current && location) {
-      mapRef.current.animateToRegion({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      }, 1000);
-    }
+  const handleReCenter = () => {
+    centerMapOnUserLocation();
+    setSelectedStation(null);
     setSearchQuery('');
-    setShowDropdown(false);
-    setSuggestions([]);
+  };
+
+  const handleTripPlan = () => {
+    // Navigate to trip plan page (placeholder)
+    router.push('/pages/TripPlan');
+  };
+
+  const handleCloseModal = () => {
     setSelectedStation(null);
   };
 
-  // Navigate to directions
-  const navigateToDirections = (destinationLat, destinationLng, destinationTitle) => {
-    if (!location) return;
-    router.push({
-      pathname: '/pages/maps/DirectionsScreen',
-      params: {
-        userLatitude: location.latitude,
-        userLongitude: location.longitude,
-        destinationLatitude: destinationLat,
-        destinationLongitude: destinationLng,
-        destinationTitle: destinationTitle || 'Destination'
-      }
-    });
-  };
-
-  // Handle marker press
-  const handleMarkerPress = (station) => {
-    console.log('Marker pressed:', station.title);
-    setSelectedStation(station);
-    // Center map on selected station
-    mapRef.current?.animateToRegion({
-      latitude: station.latitude,
-      longitude: station.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    }, 300);
-  };
-
-  // Combine suggestions
-  const combinedSuggestions = [
-    ...chargingStations
-      .filter(station =>
-        station.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        searchQuery.trim() !== ''
-      )
-      .map(station => ({
-        id: station.id,
-        description: station.title,
-        isLocal: true,
-        latitude: station.latitude,
-        longitude: station.longitude,
-        address: station.address,
-      })),
-    ...suggestions
-  ];
-
-  // Loading states
-  if (errorMsg && !location) {
-    return (
-      <View style={styles.centered}>
-        <Text style={{ color: 'red' }}>❌ {errorMsg}</Text>
-        <Text style={{ marginTop: 10 }}>Using default location</Text>
-      </View>
-    );
-  }
-
+  // Show loading screen while getting location
   if (!location) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ marginTop: 10 }}>Fetching your location...</Text>
-      </View>
-    );
+    return <LoadingOverlay message="Getting your location..." />;
   }
 
   return (
     <View style={styles.container}>
+      {/* Map View */}
       <MapView
         ref={mapRef}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
         style={styles.map}
         showsUserLocation={true}
         showsMyLocationButton={false}
+        followsUserLocation={false}
         initialRegion={{
           latitude: location.latitude,
           longitude: location.longitude,
@@ -284,281 +301,125 @@ export default function MapScreen() {
         }}
         onPress={() => {
           setSelectedStation(null);
-          setSuggestions([]);
         }}
         mapType="standard"
       >
-        {/* User Location Marker (optional) */}
-        <Marker
-          coordinate={{
-            latitude: location.latitude,
-            longitude: location.longitude,
-          }}
-          title="Your Location"
-          description="You are here"
-        >
-          <View style={styles.userLocationMarker}>
-            <MaterialIcons name="person-pin-circle" size={40} color={colors.primary} />
-          </View>
-        </Marker>
+        {/* User Location Marker */}
+        <UserLocationMarker location={location} />
 
         {/* Charging Station Markers */}
         {chargingStations.map(station => (
-          <Marker
+          <ChargingStationMarker
             key={station.id}
-            coordinate={{
-              latitude: station.latitude,
-              longitude: station.longitude,
-            }}
-            title={station.title}
-            description={station.description}
+            station={station}
             onPress={() => handleMarkerPress(station)}
-          >
-            <Image 
-              source={stationIcon} 
-              style={{ width: 48, height: 48 }} 
-              resizeMode="contain"
-            />
-          </Marker>
+            isSelected={selectedStation?.id === station.id}
+          />
         ))}
       </MapView>
 
-      {/* Map loading indicator overlay */}
+      {/* Map Loading Overlay */}
       {!mapLoaded && (
-        <View style={styles.mapLoadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.mapLoadingText}>Loading map...</Text>
-        </View>
+        <LoadingOverlay message="Loading map..." />
       )}
 
-      {/* Transparent overlay for suggestions */}
-      {suggestions.length > 0 && (
-        <TouchableWithoutFeedback onPress={() => {
-          setSuggestions([]);
-          setSelectedStation(null);
-        }}>
-          <View style={styles.overlay} />
-        </TouchableWithoutFeedback>
-      )}
-
-      {/* Search Bar */}
+      {/* Search Container */}
       <SearchContainer
         searchQuery={searchQuery}
-        setSearchQuery={(text) => {
-          setSearchQuery(text);
-          fetchSuggestions && fetchSuggestions(text);
-        }}
-        handleSearch={() => handleSearch()}
-        onFilterPress={() => router.push('/pages/Filters')}
-        fetchSuggestions={fetchSuggestions}
-        onFocus={() => fetchSuggestions && searchQuery && fetchSuggestions(searchQuery)}
+        setSearchQuery={setSearchQuery}
+        onSearch={handleSearch}
+        chargingStations={chargingStations}
+        onStationSelect={handleMarkerPress}
       />
 
-      {/* Suggestions Dropdown */}
-      {suggestions.length > 0 && (
-        <SuggestionsDropdown
-          suggestions={combinedSuggestions}
-          getDetails={async (placeId, isLocal, lat, lng) => {
-            if (isLocal) return { lat, lng };
-            try {
-              const response = await axios.get(
-                `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${GOOGLE_API_KEY}`
-              );
-              const { lat: gLat, lng: gLng } = response.data.result.geometry.location;
-              return { lat: gLat, lng: gLng };
-            } catch (error) {
-              console.error('Details fetch error:', error);
-              return null;
-            }
-          }}
-          onSelect={(details, description, isLocal) => {
-            setSearchQuery(description);
-            setSuggestions([]);
-            details && navigateToDirections(details.lat, details.lng, description);
-          }}
+      {/* Station Details Modal */}
+      {selectedStation && (
+        <StationDetailsModal
+          station={selectedStation}
+          userLocation={location}
+          onClose={handleCloseModal}
+          isVisible={!!selectedStation}
         />
       )}
 
-      {/* Nearby Stations List */}
-      {showDropdown && nearbyStations.length > 0 && (
-        <View style={styles.resultsContainer}>
-          <FlatList
-            data={nearbyStations}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.resultItem}
-                onPress={() => navigateToDirections(
-                  item.latitude,
-                  item.longitude,
-                  item.title
-                )}
-              >
-                <Text>{item.title}</Text>
-                <Text style={styles.distanceText}>
-                  {getDistanceFromLatLonInKm(
-                    location.latitude,
-                    location.longitude,
-                    item.latitude,
-                    item.longitude
-                  ).toFixed(2)} km away
-                </Text>
-              </TouchableOpacity>
-            )}
-          />
+      {/* Floating Action Buttons */}
+      <View style={styles.fabContainer}>
+        {/* Re-center Button */}
+        <TouchableOpacity
+          style={[styles.fab, styles.recenterFab]}
+          onPress={handleReCenter}
+        >
+          <MaterialIcons name="my-location" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Trip Plan Button */}
+        <TouchableOpacity
+          style={[styles.fab, styles.tripPlanFab]}
+          onPress={handleTripPlan}
+        >
+          <MaterialIcons name="route" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Stations Loading Indicator */}
+      {!stationsLoaded && (
+        <View style={styles.stationsLoadingIndicator}>
+          <ActivityIndicator size="small" color={colors.primary} />
         </View>
       )}
-
-      {/* Station Info Card */}
-      {selectedStation && (
-        <StationInfoCard
-          station={selectedStation}
-          onClose={() => {
-            console.log('Closing station info card');
-            setSelectedStation(null);
-            reCenter();
-          }}
-          onNavigate={(station) => {
-            navigateToDirections(
-              station.latitude,
-              station.longitude,
-              station.title
-            );
-            setSelectedStation(null);
-          }}
-        />
-      )}
-
-      {/* Recenter Button */}
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          { bottom: selectedStation ? 180 : 100 }
-        ]}
-        onPress={reCenter}
-      >
-        <MaterialIcons name="my-location" size={24} color="#fff" />
-      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { flex: 1 },
-  resultsContainer: {
+  container: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  fabContainer: {
     position: 'absolute',
-    top: 110,
-    left: 20,
-    right: 20,
-    maxHeight: 200,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    zIndex: 10,
-  },
-  resultItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-  },
-  overlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
-    zIndex: 5,
-  },
-  distanceText: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    right: 16,
+    bottom: 100,
   },
   fab: {
-    position: 'absolute',
-    right: 10,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: colors.primary,
-    padding: 12,
-    borderRadius: 25,
-    elevation: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
     shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
     shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    shadowRadius: 4.65,
+    marginBottom: 16,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
+  recenterFab: {
+    // Additional styles for recenter button if needed
   },
-  nearbyMenu: {
+  tripPlanFab: {
+    backgroundColor: colors.secondary || colors.primary,
+  },
+  stationsLoadingIndicator: {
     position: 'absolute',
-    bottom: 120,
-    left: 20,
-    right: 20,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    elevation: 5,
+    top: 100,
+    right: 16,
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 8,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    maxHeight: 200,
-  },
-  nearbyTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: colors.black,
-  },
-  nearbyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    backgroundColor: '#f8f9fa',
-  },
-  nearbyItemText: {
-    marginLeft: 12,
-    flex: 1,
-  },
-  nearbyItemTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.black,
-  },
-  nearbyItemDistance: {
-    fontSize: 12,
-    color: colors.gray,
-    marginTop: 2,
-  },
-  mapLoadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  mapLoadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: colors.gray,
-  },
-  userLocationMarker: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });

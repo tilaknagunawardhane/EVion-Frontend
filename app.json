@@ -79,7 +79,8 @@
       "router": {},
       "eas": {
         "projectId": "bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
-      }
+      },
+      "openChargeMapApiKey": "2a12ca16-1591-4521-93d4-8dd3a8347925"
     },
     "updates": {
       "url": "https://u.expo.dev/bc38139b-764d-4f33-bcb0-fd7dd4a2a11a"
