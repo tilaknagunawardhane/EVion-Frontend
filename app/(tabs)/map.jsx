@@ -267,7 +267,7 @@ export default function MapScreen() {
 
   const handleTripPlan = () => {
     // Navigate to trip plan page (placeholder)
-    router.push('/pages/TripPlan');
+    router.push('/pages/TripPlanner1');
   };
 
   const handleCloseModal = () => {

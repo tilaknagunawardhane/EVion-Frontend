@@ -11,6 +11,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import colors from '../constants/color';
 import fonts from '../constants/fonts';
+import { router } from 'expo-router';
+
 
 const AppBar = ({ title = 'Plan Your Route' }) => {
   const navigation = useNavigation();
@@ -29,7 +31,7 @@ const AppBar = ({ title = 'Plan Your Route' }) => {
 
         <TouchableOpacity
           style={styles.iconContainer}
-          onPress={() => navigation.navigate('pages/SavedTripsScreen')}
+          onPress={() => router.push('pages/SavedTripsScreen')}
         >
           <Image
             source={require('../assets/clock-icon.png')}
