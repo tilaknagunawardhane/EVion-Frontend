@@ -295,7 +295,7 @@ const ChargerReportScreen = () => {
 
                 {/* Issue Category Dropdown */}
                 <DropdownField
-                    label="Issue Category*"
+                    label="Issue Category"
                     selectedValue={selectedCategory}
                     onValueChange={setSelectedCategory}
                     placeholder="Select the category"
@@ -306,7 +306,7 @@ const ChargerReportScreen = () => {
 
                 {/* Description Input */}
                 <InputField
-                    label="Description*"
+                    label="Description"
                     value={description}
                     onChangeText={setDescription}
                     placeholder="Describe the issue in detail..."
