@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import CustomButton from '../../../components/CustomButton';
@@ -55,6 +55,15 @@ const ProfileFieldComponent = React.memo(({
 ));
 
 const Profile1 = () => {
+  const params = useLocalSearchParams();
+  useEffect(() => {
+    if (params.homeAddress) {
+      setUserInfo(prev => ({
+        ...prev,
+        homeAddress: params.homeAddress
+      }));
+    }
+  }, [params.homeAddress]);
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Basic Info');
   const [isEditing, setIsEditing] = useState(null);
@@ -577,7 +586,6 @@ const Profile1 = () => {
                 placeholder={userInfo.name}
                 multiline={false}
                 keyboardType="default"
-          
               />
 
               <ProfileFieldComponent
@@ -623,7 +631,8 @@ const Profile1 = () => {
                 placeholder={userInfo.homeAddress}
                 multiline={true}
                 keyboardType="default"
-                onSpecialEdit={() => setShowAddressModal(true)}
+                // Connect to Address.jsx on edit button
+                onSpecialEdit={() => router.push('/pages/Profile/ManageAccount/Address')}
               />
 
               <ProfileFieldComponent
@@ -671,7 +680,7 @@ const Profile1 = () => {
 
             <View style={styles.securityDivider} />
 
-            <TouchableOpacity onPress={() => router.push('/pages/Profile/RecoveryPhoneScreen')}>
+            <TouchableOpacity onPress={() => router.push('/pages/Profile/ManageAccount/RecoveryPhone')}>
               <View style={styles.securityItem}>
                 <Text style={styles.securityLabel}>Recovery Phone Number</Text>
                 <Text style={styles.securityArrow}>›</Text>

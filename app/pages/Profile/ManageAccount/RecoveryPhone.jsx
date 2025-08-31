@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import colors from '../../../constants/color';
+import colors from '../../../../constants/color';
+import { useRouter } from 'expo-router';
 
-const RecoveryPhoneScreen = ({ navigation }) => {
+const RecoveryPhoneScreen = () => {
   const [recoveryPhone, setRecoveryPhone] = useState('+94');
 
   const isRecoveryPhoneValid = () => {
@@ -28,9 +29,10 @@ const RecoveryPhoneScreen = ({ navigation }) => {
     Alert.alert('Success', 'Recovery phone number updated successfully');
   };
 
+  const router = useRouter();
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>‹</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Recovery Phone</Text>
