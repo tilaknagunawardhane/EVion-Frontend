@@ -14,8 +14,9 @@ const SelectConnector = () => {
   const [selectedStation, setSelectedStation] = useState(null);
   const [selectedConnector, setSelectedConnector] = useState(null);
 
-  const [ChargerConnectors, setChargerConnectors] = useState(null);
   const [vehicleConnectors, setVehicleConnectors] = useState([]);
+  const [stationConnectors, setStationConnectors] = useState([]);
+  const [compatibleConnectors, setCompatibleConnectors] = useState([]);
 
   useEffect(() => {
 
@@ -35,7 +36,7 @@ const SelectConnector = () => {
       if(params.selectedStation){
         const station = JSON.parse(params.selectedStation);
         setSelectedStation(station);
-        console.log('Selected Station: ', selectedStation);
+        console.log('Selected Station: ', station);
       }
       else{
         console.log('No Station');
@@ -45,8 +46,64 @@ const SelectConnector = () => {
     else{
       console.log('No vehicle');
     }
-
   }, []);
+
+  // Fetching the station connectors
+  useEffect(() => {   
+
+    if (!selectedStation?._id) return;  //stop if station is null
+
+    const fetchStationsConectors = async () => {
+      try {
+        const url = `${API_BASE_URL}/api/bookings/getConnectorsByStation?station_id=${selectedStation._id}`;
+        console.log('Fetching from:', url);
+
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('Response status:', response.status);
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log('Samples: ', data);
+        setStationConnectors(Array.isArray(data) ? data : []);
+      }
+      else{
+        console.error('Error:', data.message || 'No message provided');
+      }
+
+      } catch (error) {
+        console.error('Fetch error:', error.message);
+        console.error('Error stack:', error.stack);
+      }
+    };
+
+    fetchStationsConectors();
+
+  }, [selectedStation]);
+  
+  // getting the compatible connectors
+  useEffect(() => {
+    console.log('vehicleConnectors: ', vehicleConnectors);
+    console.log('stationConnectors: ', stationConnectors);
+
+    if (!vehicleConnectors.length || !stationConnectors.length) {
+      setCompatibleConnectors([]);
+      return;
+    }
+
+    const compatible = stationConnectors.filter(stationCon =>
+      vehicleConnectors.some(vehicleCon => vehicleCon._id === stationCon.connector?._id)
+    );
+
+    console.log('Compatible connectors:', compatible);
+    setCompatibleConnectors(compatible);
+
+  }, [vehicleConnectors, stationConnectors]);
 
   // console.log('params: ', params.selectedVehicle ? JSON.parse(params.selectedVehicle) : null);
 
@@ -74,7 +131,7 @@ const SelectConnector = () => {
       <Text style={styles.title}>Select Connector</Text>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {vehicleConnectors.map((item) => (
+        {compatibleConnectors.map((item) => (
           <TouchableOpacity
             key={item._id}
             activeOpacity={0.9}

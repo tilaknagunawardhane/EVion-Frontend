@@ -26,22 +26,23 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
         {/* Icon */}
         <View style={styles.iconWrapper}>
         <Image
-          source={getConnectorImage(connector.image)} 
+          source={getConnectorImage(connector.connector.image)} 
           style={styles.currencyIcon}
         />
-          <Text style={styles.typeText}>{connector.current_type} - {connector.type_name}</Text>
+          <Text style={styles.typeText}>{connector.connector.current_type} - {connector.connector.type_name}</Text>
         </View>
 
         {/* Status + Type */}
         <View style={styles.headerTextWrapper}>
-          <Text style={styles.statusText}>{connector.status}</Text>
           <Text style={styles.typeText} numberOfLines={2}>
-            {connector.label || connector.type_name}
+            {/* {connector.label || connector.type_name} */}
           </Text>
         </View>
+        
+        <Text style={styles.statusText}>{connector.status}</Text>
 
         {/* ID */}
-        <Text style={styles.idText}>ID: {connector._id}</Text>
+        {/* <Text style={styles.idText}>ID: {connector.connector._id}</Text> */}
       </View>
 
       {/* Divider */}

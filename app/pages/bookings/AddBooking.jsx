@@ -209,7 +209,7 @@ const AddBooking = () => {
               color={selectedField === 'station' ? colors.primary : colors.lightGray}
             />
           }
-          text={station ? station.name : "Select Charging Station"}
+          text={station ? station.station_name : "Select Charging Station"}
           active={selectedField === 'station'}
           onPress={() => {
             setSelectedField('station');
@@ -248,7 +248,7 @@ const AddBooking = () => {
               color={selectedField === 'connector' ? colors.primary : colors.lightGray}
             />
           }
-          text={connector ? `${connector.current_type} ${connector.type_name}` : "Select Connector"}
+          text={connector ? `${connector.connector.current_type} ${connector.connector.type_name}` : "Select Connector"}
           active={selectedField === 'connector'}
           onPress={() => {
             setSelectedField('connector');
