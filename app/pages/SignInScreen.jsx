@@ -18,21 +18,60 @@ const SignInScreen = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // const {login} = useAuth() // Remove backend login
+  const {login} = useAuth()
 
 
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
+
+    if (!email) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter your email address.',
+      });
+      return;
+    }
+    // if (!password || password.length < 8) {
+    if (!password) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Please enter a valid password (at least 8 characters).',
+      });
+      console.log('Password validation failed');
+      return;
+    }
+
     setIsLoading(true);
-    Toast.show({
-      type: ALERT_TYPE.SUCCESS,
-      title: 'Signed In',
-      textBody: 'You have signed in (no backend check).',
-    });
-    setTimeout(() => {
-      router.replace('/(tabs)/map');
+
+    try {
+       const result = await login(email, password, 'evOwner');
+
+       Toast.show({
+        type: ALERT_TYPE.SUCCESS,
+        title: 'Success',
+        textBody: 'You have signed in successfully!',
+      });
+
+      console.log('User signed in successfully:', result.user);
+      setTimeout(() => {
+        router.replace('/(tabs)/map');
+      }, 1500);
+
+    }
+    catch (error) {
+      console.error('Network or unexpected error during sign-in:', error);
+       Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message || 'Failed to sign in. Please try again.',
+      });
+    }
+    finally {
       setIsLoading(false);
-    }, 1000);
+    }
+
   };
 
 
