@@ -140,10 +140,9 @@ const AddBooking = () => {
         ev_user_id: user._id,
         vehicle_id: selectedVehicle._id,
         charging_station_id: station._id,
-        charger_id: '68a6180887c199647d8a8f2e',
         connector_type_id: connector._id,
         booking_date_time: datetime.bookingStartTime,
-        no_of_slots: 5,
+        no_of_slots: datetime.numberOfSlots,
         status: 'upcoming'
       };
 
@@ -245,12 +244,18 @@ const AddBooking = () => {
             <MaterialCommunityIcons
               name="power-plug-outline"
               size={20}
-              color={selectedField === 'connector' ? colors.primary : colors.lightGray}
+              color={
+                selectedField === 'connector'? 
+                  colors.primary : !station || !selectedVehicle? 
+                    colors.lightestGray : colors.lightGray
+              }
             />
           }
           text={connector ? `${connector.connector.current_type} ${connector.connector.type_name}` : "Select Connector"}
+          disabled={!station || !selectedVehicle} // disables input if station or vehicle not selected
           active={selectedField === 'connector'}
           onPress={() => {
+            if (!station || !selectedVehicle) return; // do nothing if disabled
             setSelectedField('connector');
              router.push({
               pathname: '/pages/bookings/SelectConnector',
@@ -267,12 +272,18 @@ const AddBooking = () => {
             <MaterialCommunityIcons
               name="calendar-month-outline"
               size={20}
-              color={selectedField === 'datetime' ? colors.primary : colors.lightGray}
+              color={
+                selectedField === 'datetime' ? 
+                colors.primary : !station || !selectedVehicle? 
+                  colors.lightestGray : colors.lightGray
+                }
             />
           }
           text={datetime ? `${datetime.label}` : 'Select Date Time'}
+          disabled={!station || !selectedVehicle}
           active={selectedField === 'datetime'}
           onPress={() => {
+            if (!station || !selectedVehicle) return;
             setSelectedField('datetime');
             router.push({
               pathname: '/pages/bookings/SelectDateTime',
@@ -445,4 +456,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
+
+  disabledInput: {
+  backgroundColor: colors.danger,
+  opacity: 0.6,
+  },
+  disabledText: {
+  color: colors.danger, // dimmed text
+  },
+
 });

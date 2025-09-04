@@ -156,11 +156,11 @@ const SelectCharger = () => {
       <Text style={styles.sectionTitle}>Favourites</Text>
       <FlatList
         data={favouriteStations}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={{ paddingHorizontal: 16 }}
         renderItem={({ item }) => (
           <TouchableOpacity
-            key={item.id}
+            key={item._id}
             onPress={() => setSelectedStation(item)}
           >
             <View style={styles.card}>
@@ -168,6 +168,7 @@ const SelectCharger = () => {
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{item.station_name}</Text>
               <Text style={styles.cardSubtitle}>{item.address}</Text>
+              <Text style={styles.cardSubtitle}>{item.city}</Text>
             </View>
             <MaterialIcons name="bookmark" size={20} color={colors.primary} />
           </View>

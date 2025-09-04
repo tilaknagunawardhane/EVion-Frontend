@@ -18,6 +18,8 @@ const SelectConnector = () => {
   const [stationConnectors, setStationConnectors] = useState([]);
   const [compatibleConnectors, setCompatibleConnectors] = useState([]);
 
+  const [loadingConnectors, setLoadingConnectors] = useState(true);
+
   useEffect(() => {
 
     if(params.selectedVehicle){
@@ -55,6 +57,7 @@ const SelectConnector = () => {
 
     const fetchStationsConectors = async () => {
       try {
+        setLoadingConnectors(true);  // start loading
         const url = `${API_BASE_URL}/api/bookings/getConnectorsByStation?station_id=${selectedStation._id}`;
         console.log('Fetching from:', url);
 
@@ -80,6 +83,9 @@ const SelectConnector = () => {
         console.error('Fetch error:', error.message);
         console.error('Error stack:', error.stack);
       }
+      finally {
+      setLoadingConnectors(false); // stop loading
+    }
     };
 
     fetchStationsConectors();
@@ -131,18 +137,30 @@ const SelectConnector = () => {
       <Text style={styles.title}>Select Connector</Text>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        {compatibleConnectors.map((item) => (
-          <TouchableOpacity
-            key={item._id}
-            activeOpacity={0.9}
-            onPress={() => setSelectedConnector(item)}
-          >
-            <ConnectorCard
-              connector={item}
-              selected={selectedConnector?._id === item._id}
-            />
-          </TouchableOpacity>
-        ))}
+        {loadingConnectors ? (
+          <View style={styles.emptyWrapper}>
+            <Text style={styles.emptyText}>Loading connectors...</Text>
+          </View>
+        ) : compatibleConnectors.length > 0 ? (
+          compatibleConnectors.map((item) => (
+            <TouchableOpacity
+              key={item._id}
+              activeOpacity={0.9}
+              onPress={() => setSelectedConnector(item)}
+            >
+              <ConnectorCard
+                connector={item}
+                selected={selectedConnector?._id === item._id}
+              />
+            </TouchableOpacity>
+          ))
+        ) : (
+          <View style={styles.emptyWrapper}>
+            <Text style={styles.emptyText}>
+              No compatible connectors found for this vehicle at this station.
+            </Text>
+          </View>
+        )}
       </ScrollView>
 
       {/* SELECT BUTTON */}
@@ -209,4 +227,19 @@ const styles = StyleSheet.create({
   disabledText: {
     color: colors.secondaryText,
   },
+
+  emptyWrapper: {
+  flex: 1,
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingVertical: 40,
+},
+emptyText: {
+  fontSize: 15,
+  fontFamily: fonts.PlusJakartaSansMedium,
+  color: colors.secondaryText,
+  textAlign: 'center',
+  lineHeight: 22,
+},
+
 });

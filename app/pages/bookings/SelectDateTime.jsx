@@ -51,10 +51,7 @@ export default function SelectDateTime() {
     for (let i = 0; i < 24 * 60; i += SLOT_MINUTES) {
       const start = startOfDay.add(i, 'minute');
       const end = start.add(SLOT_MINUTES, 'minute');
-      list.push({
-        label: `${start.format('HH:mm')} – ${end.format('HH:mm')}`,
-        available: !(i < 240 || i === 180 || i === 210),
-      });
+      list.push({ start, end, label: `${start.format('HH:mm')} – ${end.format('HH:mm')}` });
     }
     return list.slice(0, 48); // Only first 48 slots
   }, []);
@@ -197,7 +194,16 @@ export default function SelectDateTime() {
         renderItem={({ item, index }) => {
           const actualIndex = page === 0 ? index : page === 1 ? index + 14 : index + 28;
           const chosen = selectedSlots.includes(actualIndex);
-          const dis = !item.available;
+
+          // Check availability only for today
+          const selectedDate = dates[selectedDateIdx];
+          const isToday = selectedDate.isSame(dayjs(), 'day');
+          const now = dayjs();
+          
+          // Add a 2-hour buffer
+          const cutoff = now.add(2, 'hour');
+          const dis = isToday ? !item.start.isAfter(cutoff) : false;
+
           return (
             <Pressable
               disabled={dis}

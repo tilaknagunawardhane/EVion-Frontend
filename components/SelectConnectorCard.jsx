@@ -23,26 +23,21 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
     <View style={[styles.card, selected && styles.selectedCard]}>
       {/* ---------- HEADER ---------- */}
       <View style={styles.headerRow}>
-        {/* Icon */}
-        <View style={styles.iconWrapper}>
-        <Image
-          source={getConnectorImage(connector.connector.image)} 
-          style={styles.currencyIcon}
-        />
-          <Text style={styles.typeText}>{connector.connector.current_type} - {connector.connector.type_name}</Text>
-        </View>
-
-        {/* Status + Type */}
-        <View style={styles.headerTextWrapper}>
-          <Text style={styles.typeText} numberOfLines={2}>
-            {/* {connector.label || connector.type_name} */}
+        {/* Icon + Name Row */}
+        <View style={styles.iconNameRow}>
+          <View style={styles.iconWrapper}>
+            <Image
+              source={getConnectorImage(connector.connector.image)} 
+              style={styles.currencyIcon}
+            />
+          </View>
+          <Text style={styles.typeText}>
+            {connector.connector.current_type} - {connector.connector.type_name}
           </Text>
         </View>
-        
-        <Text style={styles.statusText}>{connector.status}</Text>
 
-        {/* ID */}
-        {/* <Text style={styles.idText}>ID: {connector.connector._id}</Text> */}
+        {/* Status */}
+        <Text style={styles.statusText}>{connector.status}</Text>
       </View>
 
       {/* Divider */}
@@ -50,29 +45,14 @@ const SelectConnectorCard = ({ connector, selected = false }) => {
 
       {/* ---------- DETAILS ---------- */}
       <View style={styles.detailsRow}>
-        <Text style={styles.detailLabel}>Battery Gain:</Text>
+        <Text style={styles.detailLabel}>Battery Gain: xxx</Text>
         <Text style={styles.detailValue}>{connector.batteryGain}</Text>
       </View>
       <View style={styles.detailsRow}>
-        <Text style={styles.detailLabel}>Est. Time to 80%:</Text>
+        <Text style={styles.detailLabel}>Est. Time to 80%: xxx</Text>
         <Text style={styles.detailValue}>
           {connector.estTime ?? connector.estimatedTime}
         </Text>
-      </View>
-
-      {/* ---------- FOOTER ---------- */}
-      <View style={styles.footerRow}>
-        <View style={styles.priceBadge}>
-          <MaterialCommunityIcons name="flash" size={16} color={colors.black} />
-          <Text style={styles.powerText}>{connector.power}</Text>
-        </View>
-        <View style={styles.priceBadge}>
-        <Image
-          source={require('../assets/price.png')} 
-          style={styles.currencyIcon}
-        />
-          <Text style={styles.priceText}>{connector.price}</Text>
-        </View>
       </View>
     </View>
   );
@@ -102,7 +82,7 @@ const styles = StyleSheet.create({
   },
   iconWrapper: {
     backgroundColor: colors.lightGreen,
-    padding: 10,
+    padding: 2,
     borderRadius: 12,
     marginRight: 12,
   },
@@ -167,8 +147,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   currencyIcon: {
-    width: 20,
-    height: 20,
+    width: 32,
+    height: 32,
     resizeMode: 'contain',
   },  
   priceText: {
@@ -177,4 +157,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansSemiBold,
     color: colors.mainTextColor,
   },
+
+  iconNameRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  flex: 1,   // take remaining space so status text aligns right
+},
+
 });
