@@ -23,16 +23,38 @@ const BookingDetailsScreen = () => {
   const [infoVisible, setInfoVisible] = useState(false);
   const [cancelConfirmVisible, setCancelConfirmVisible] = useState(false);
 
+  const booking = params.booking ? JSON.parse(params.booking) : null;
+
   const {
-    stationName = 'Genso Charging Station',
-    address = 'Southern Highway, Welipenna, Matugama',
-    dateLabel = 'Jun 11, 2025',
-    duration = '1 Hr 30 Mins',
-    timeRange = '9:30 AM - 11:00 AM',
-    connectorType = 'CCS 2',
-    carName = 'Nissan Leaf 2020',
-    carImage = null,
-  } = params || {};
+  charging_station_id,
+  dateLabel: bookingDateLabel,
+  duration: bookingDuration,
+  startTime,
+  endTime,
+  connector,
+  vehicle,
+  charger,
+  no_of_slots,
+} = booking || {};
+
+const stationName = charging_station_id?.station_name ?? 'Unknown Station';
+const address = charging_station_id?.address ?? 'Unknown Address';
+const dateLabel = bookingDateLabel ?? 'Unknown Date';
+const duration = bookingDuration ?? 'Unknown Duration';
+const timeRange = startTime && endTime ? `${startTime} - ${endTime}` : 'Unknown Time';
+const timeInHours = no_of_slots *0.5 ?? 0;
+const chargerPowerType = charger?.power_type ?? 'Unknown Charger Type';
+const connectorType = connector?.type_name ?? 'Unknown Connector';
+const carName = vehicle ? `${vehicle.make.make} ${vehicle.model.model}` : 'Unknown Vehicle';
+const carImage = vehicle?.image ?? null;
+const vehicleBatteryCapacity = vehicle?.battery_capacity ?? 0;
+const vehicleBatteryHealth = vehicle?.battery_health ?? 0;
+const max_power_output = charger?.max_power_output;
+
+const batteryGainFor30 = (max_power_output/2) / (vehicleBatteryCapacity* (vehicleBatteryHealth/100)) *100;
+
+  const bookingprint = JSON.parse(params.booking); // convert back to object
+  console.log('booking:', JSON.stringify(bookingprint, null, 2));
 
   return (
     <ScrollView style={styles.container}>
@@ -146,14 +168,14 @@ const BookingDetailsScreen = () => {
         <View style={styles.row}>
           <MaterialCommunityIcons name="ev-station" size={24} color={colors.primary} />
           <Text style={styles.chargerType}>{connectorType}</Text>
-          <Text style={styles.chargerId}>ID: #E0299</Text>
+          {/* <Text style={styles.chargerId}>ID: #E0299</Text> */}
         </View>
         <Text style={styles.label}>Battery Gain:</Text>
-        <Text style={styles.value}>~35% in 30 mins</Text>
+        <Text style={styles.value}>~ +{batteryGainFor30.toFixed(2)}% in 30 mins</Text>
         <Text style={styles.label}>Est. Time to 80%:</Text>
         <Text style={styles.value}>~45 mins</Text>
         <View style={styles.infoRow}>
-          <Text style={styles.iconText}><Icon name="flash" size={20} /> 50kW (DC)</Text>
+          <Text style={styles.iconText}><Icon name="flash" size={20} /> {max_power_output}kWh ({chargerPowerType})</Text>
           <Text style={styles.iconText}><Icon name="cash" size={20} /> LKR 55.00 /kW</Text>
         </View>
       </View>
@@ -162,11 +184,11 @@ const BookingDetailsScreen = () => {
       <View style={styles.estimations}>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Energy Delivered:</Text>
-          <Text style={styles.estimateValue}>75kWh</Text>
+          <Text style={styles.estimateValue}>{max_power_output* timeInHours} kW</Text>
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Battery % Increase:</Text>
-          <Text style={styles.estimateValue}>+40%</Text>
+          <Text style={styles.estimateValue}>+{batteryGainFor30*no_of_slots}%</Text>
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Cost:</Text>

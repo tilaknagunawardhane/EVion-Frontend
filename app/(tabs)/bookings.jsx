@@ -50,13 +50,11 @@ const BookingsScreen = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          // Add any required headers, e.g., Authorization if needed
-          // 'Authorization': 'Bearer your-token-here',
         },
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', response.headers);
 
       // Check if response is JSON
     const contentType = response.headers.get('content-type');
@@ -66,7 +64,7 @@ const BookingsScreen = () => {
       throw new Error(`Server returned non-JSON response (status: ${response.status})`);
     }
       const data = await response.json();
-      console.log('API Response:', data);
+      // console.log('API Response:', data);
 
       if (response.ok) {
         setBookingsData((prev) => ({
@@ -130,7 +128,7 @@ const BookingsScreen = () => {
           onPress={() =>
             router.push({
               pathname: '/pages/bookings/BookingDetails',
-              params: booking,
+              params: { booking : JSON.stringify(booking) },
             })
           }
         >
