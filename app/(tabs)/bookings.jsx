@@ -79,7 +79,7 @@ const BookingsScreen = () => {
       console.error('Error stack:', error.stack);
     }
 
-    console.log('bookingsData: ', bookingsData);
+    console.log('bookingsDataActive: ', bookingsData[activeTab]);
   };
 
     fetchBookings();
