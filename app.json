@@ -60,6 +60,12 @@
           "locationPermission": "Allow EVion-Frontend to use your location"
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to attach images to reports."
+        }
+      ],
       "expo-secure-store"
     ],
     "extra": {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -15,84 +15,55 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { API_BASE_URL } from '@env';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import useUserData from '../../../hooks/useUserData';
+import useUserData from '../../hooks/useUserData';
 import * as SecureStore from 'expo-secure-store';
 
-import AppBar from '../../../components/AppBar';
-import CustomButton from '../../../components/CustomButton';
-import DropdownField from '../../../components/DropdownField';
-import InputField from '../../../components/InputField';
-import colors from '../../../constants/color';
-import fonts from '../../../constants/fonts';
+import AppBar from '../../components/AppBar';
+import CustomButton from '../../components/CustomButton';
+import DropdownField from '../../components/DropdownField';
+import InputField from '../../components/InputField';
+import colors from '../../constants/color';
+import fonts from '../../constants/fonts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const BookingReportScreen = () => {
+const ChargerReportScreen = () => {
     const { user, isLoading: isUserLoading } = useUserData();
     const router = useRouter();
     const params = useLocalSearchParams();
-    const { bookingId } = params;
 
-    const [bookingData, setBookingData] = useState(null);
+    // Get all parameters from previous screen
+    const {
+        stationId,
+        station_name,
+        station_address,
+        station_city,
+        chargerId,
+        charger_name,
+        connectorId,
+        connector_type,
+        connector_status,
+        connector_img
+    } = params;
+
+    // console.log('ChargerReportScreen params:', params);
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [description, setDescription] = useState('');
     const [attachments, setAttachments] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const bookingIssueCategories = [
-        { id: 'booking-1', label: 'Payment Issues' },
-        { id: 'booking-2', label: 'Booking Not Registered' },
-        { id: 'booking-3', label: 'Wrong Time Slots' },
-        { id: 'booking-4', label: 'Charger Not Available' },
-        { id: 'booking-5', label: 'Overcharging' },
-        { id: 'booking-6', label: 'Booking Cancellation Problems' },
-        { id: 'booking-7', label: 'Refund Issues' },
-        { id: 'booking-8', label: 'Technical Glitches' },
-        { id: 'booking-9', label: 'Customer Service Issues' },
-        { id: 'booking-10', label: 'Other Booking Issues' }
+    const chargerIssueCategories = [
+        { id: 'charger-1', label: 'Charger Not Working' },
+        { id: 'charger-2', label: 'Connector Damaged' },
+        { id: 'charger-3', label: 'Cable Issues' },
+        { id: 'charger-4', label: 'Slow Charging' },
+        { id: 'charger-5', label: 'Overheating' },
+        { id: 'charger-6', label: 'Error Messages Displayed' },
+        { id: 'charger-7', label: 'Payment Reader Not Working' },
+        { id: 'charger-8', label: 'Screen Display Problems' },
+        { id: 'charger-9', label: 'Unusual Noises' },
+        { id: 'charger-10', label: 'Other Charger Issues' }
     ];
-
-    const fetchBookingDetails = async () => {
-        try {
-            setIsLoading(true);
-            const token = await SecureStore.getItemAsync('accessToken');
-            
-            if (!token) {
-                throw new Error('Not authenticated');
-            }
-
-            const response = await fetch(`${API_BASE_URL}/api/reports/booking-details/${bookingId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                Toast.show({
-                    type: ALERT_TYPE.ERROR,
-                    title: 'Error',
-                    textBody: result.message || 'Failed to fetch booking details'
-                });
-                return;
-            }
-
-            setBookingData(result.data);
-        } catch (error) {
-            console.error('Fetch error:', error);
-            Toast.show({
-                type: ALERT_TYPE.DANGER,
-                title: 'Error',
-                textBody: error.message,
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const pickImage = async () => {
         try {
@@ -105,6 +76,36 @@ const BookingReportScreen = () => {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Images,
                 allowsEditing: true,
+                quality: 0.8,
+                allowsMultipleSelection: false,
+            });
+
+            if (!result.canceled) {
+                const newAttachment = {
+                    uri: result.assets[0].uri,
+                    fileName: result.assets[0].fileName || `attachment_${Date.now()}.jpg`,
+                    type: result.assets[0].type || 'image',
+                };
+                setAttachments(prev => [...prev, newAttachment]);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Failed to select image. Please try again.');
+        }
+    };
+
+    const pickSingleImage = async () => {
+        try {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permission required', 'Please allow access to your photos to attach images.');
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaType.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
                 quality: 0.8,
                 allowsMultipleSelection: false,
             });
@@ -149,7 +150,8 @@ const BookingReportScreen = () => {
                 throw new Error('User ID not found');
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/reports/submit-booking-report`, {
+            // Send charger report to backend
+            const response = await fetch(`${API_BASE_URL}/api/reports/submit-charger-report`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -158,7 +160,9 @@ const BookingReportScreen = () => {
                 },
                 body: JSON.stringify({
                     userId: user._id,
-                    bookingId,
+                    stationId,
+                    chargerId,
+                    connectorId,
                     category: selectedCategory.label,
                     description,
                     attachments: attachments.map(att => att.uri),
@@ -167,51 +171,47 @@ const BookingReportScreen = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to submit booking report');
+                throw new Error(errorData.message || 'Failed to submit charger report');
             }
 
             const data = await response.json();
             Toast.show({
                 type: ALERT_TYPE.SUCCESS,
                 title: 'Success',
-                textBody: 'Booking issue reported successfully!',
+                textBody: 'Charger issue reported successfully!',
             });
             router.back();
 
         } catch (error) {
-            console.error('Error submitting booking report:', error);
+            console.error('Error submitting charger report:', error);
             Toast.show({
                 type: ALERT_TYPE.DANGER,
                 title: 'Error',
-                textBody: error.message || 'Failed to submit booking report',
+                textBody: error.message || 'Failed to submit charger report',
             });
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    useEffect(() => {
-        if (bookingId) {
-            fetchBookingDetails();
-        }
-    }, [bookingId]);
-
-    if (isLoading) {
+    if (isUserLoading) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={styles.loadingText}>Loading booking details...</Text>
+                <Text style={styles.loadingText}>Loading user data...</Text>
             </View>
         );
     }
 
-    if (!bookingData) {
+    if (!user) {
         return (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Booking not found</Text>
+            <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Please sign in to report an issue</Text>
                 <CustomButton
-                    title="Go Back"
-                    onPress={() => router.back()}
+                    title="Go to Sign In"
+                    onPress={() => router.replace('/pages/SignInScreen')}
+                    type="primary"
+                    style={{ marginTop: 20 }}
                 />
             </View>
         );
@@ -219,135 +219,73 @@ const BookingReportScreen = () => {
 
     return (
         <View style={styles.container}>
-            <AppBar title="Report Booking Issue" showBackButton />
+            <AppBar title="Report Charger Issue" showBackButton />
 
             <ScrollView
                 style={styles.scrollView}
                 contentContainerStyle={styles.scrollContent}
                 showsVerticalScrollIndicator={false}
             >
-                {/* User Information */}
-                <View style={styles.infoCard}>
-                    <Text style={styles.sectionTitle}>User Information</Text>
-                    <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/avatar.png')} style={styles.infoIcon} />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Name</Text>
-                            <Text style={styles.infoValue}>{bookingData.user_id?.name || 'N/A'}</Text>
-                        </View>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/Massages.png')} style={styles.infoIcon} />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Email</Text>
-                            <Text style={styles.infoValue}>{bookingData.user_id?.email || 'N/A'}</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Vehicle Information */}
-                <View style={styles.infoCard}>
-                    <Text style={styles.sectionTitle}>Vehicle Information</Text>
-                    <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/car.png')} style={styles.infoIcon} />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Vehicle</Text>
-                            <Text style={styles.infoValue}>
-                                {bookingData.vehicle_id?.make || 'Unknown'} {bookingData.vehicle_id?.model || 'Vehicle'}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/battery.png')} style={styles.infoIcon} />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Battery Capacity</Text>
-                            <Text style={styles.infoValue}>
-                                {bookingData.vehicle_id?.battery_capacity ? `${bookingData.vehicle_id.battery_capacity}kWh` : 'N/A'}
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-
                 {/* Station Information */}
                 <View style={styles.infoCard}>
                     <Text style={styles.sectionTitle}>Station Information</Text>
-                    <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/stop.png')} style={styles.infoIcon} />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Station Name</Text>
-                            <Text style={styles.infoValue}>{bookingData.station_id?.station_name || 'N/A'}</Text>
-                        </View>
-                    </View>
-                    <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/location.png')} style={styles.infoIcon} />
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Address</Text>
-                            <Text style={styles.infoValue}>
-                                {bookingData.station_id?.address || 'N/A'}, {bookingData.station_id?.city || 'N/A'}
-                            </Text>
+                    <View style={styles.stationCard}>
+                        <View style={styles.stationHeader}>
+                            <Image
+                                source={require('../../assets/charging-station.png')}
+                                style={styles.stationIcon}
+                            />
+                            <View style={styles.stationInfo}>
+                                <Text style={styles.stationName}>{station_name}</Text>
+                                <Text style={styles.stationAddress}>{station_address}, {station_city}</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
 
-                {/* Charger & Connector Information */}
+                {/* Charger Information */}
                 <View style={styles.infoCard}>
-                    <Text style={styles.sectionTitle}>Charging Details</Text>
+                    <Text style={styles.sectionTitle}>Charger Information</Text>
                     <View style={styles.infoRow}>
-                        {/* <Image source={require('../../assets/charger.png')} style={styles.infoIcon} /> */}
+                        <Image
+                            source={require('../../assets/stop.png')}
+                            style={styles.infoIcon}
+                        />
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Charger</Text>
-                            <Text style={styles.infoValue}>
-                                {bookingData.charger_id?.charger_name || 'N/A'} ({bookingData.charger_id?.power_type || 'N/A'})
-                            </Text>
+                            <Text style={styles.infoLabel}>Charger Name</Text>
+                            <Text style={styles.infoValue}>{charger_name}</Text>
                         </View>
                     </View>
                     <View style={styles.infoRow}>
-                        {/* <Image source={require('../../assets/connector.png')} style={styles.infoIcon} /> */}
+                        {connector_img ? (
+                            <Image
+                                source={{ uri: `${API_BASE_URL}${connector_img.replace(/\\/g, '/')}` }}
+                                style={[styles.infoIcon, styles.connectorImage]}
+                                resizeMode="contain"
+                            />
+                        ) : (
+                            <Image
+                                source={require('../../assets/type2.png')}
+                                style={styles.infoIcon}
+                            />
+                        )}
                         <View style={styles.infoContent}>
                             <Text style={styles.infoLabel}>Connector Type</Text>
-                            <Text style={styles.infoValue}>{bookingData.connector_id?.type_name || 'N/A'} </Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Booking Details */}
-                <View style={styles.infoCard}>
-                    <Text style={styles.sectionTitle}>Booking Details</Text>
-                    <View style={styles.infoRow}>
-                        {/* <Image source={require('../../assets/calendar.png')} style={styles.infoIcon} /> */}
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Booking Date</Text>
-                            <Text style={styles.infoValue}>
-                                {new Date(bookingData.booking_date).toLocaleDateString()}
-                            </Text>
+                            <Text style={styles.infoValue}>{connector_type}</Text>
                         </View>
                     </View>
                     <View style={styles.infoRow}>
-                        <Image source={require('../../../assets/clock-icon.png')} style={styles.infoIcon} />
+                        {/* <Image
+                            source={require('../../assets/stop.png')}
+                            style={styles.infoIcon}
+                        /> */}
                         <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Time Slot</Text>
-                            <Text style={styles.infoValue}>
-                                {new Date(bookingData.start_time).toLocaleTimeString()} - {new Date(bookingData.end_time).toLocaleTimeString()}
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.infoRow}>
-                        {/* <Image source={require('../../assets/status.png')} style={styles.infoIcon} /> */}
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Status</Text>
-                            <Text style={[styles.infoValue, 
-                                bookingData.status === 'completed' ? styles.statusCompleted : 
-                                bookingData.status === 'confirmed' ? styles.statusConfirmed : styles.statusCancelled
+                            <Text style={styles.infoLabel}>Current Connector Status</Text>
+                            <Text style={[styles.infoValue,
+                            connector_status === 'available' ? styles.statusAvailable : styles.statusUnavailable
                             ]}>
-                                {bookingData.status}
+                                {connector_status}
                             </Text>
-                        </View>
-                    </View>
-                    <View style={styles.infoRow}>
-                        {/* <Image source={require('../../assets/money.png')} style={styles.infoIcon} /> */}
-                        <View style={styles.infoContent}>
-                            <Text style={styles.infoLabel}>Total Cost</Text>
-                            <Text style={styles.infoValue}>LKR {bookingData.cost || '0.00'}</Text>
                         </View>
                     </View>
                 </View>
@@ -361,7 +299,7 @@ const BookingReportScreen = () => {
                     selectedValue={selectedCategory}
                     onValueChange={setSelectedCategory}
                     placeholder="Select the category"
-                    options={bookingIssueCategories}
+                    options={chargerIssueCategories}
                     displayProperty="label"
                     style={styles.dropdown}
                 />
@@ -371,7 +309,7 @@ const BookingReportScreen = () => {
                     label="Description"
                     value={description}
                     onChangeText={setDescription}
-                    placeholder="Describe the issue with your booking..."
+                    placeholder="Describe the issue in detail..."
                     placeholderTextColor={colors.secondaryText}
                     multiline={true}
                     numberOfLines={4}
@@ -387,13 +325,15 @@ const BookingReportScreen = () => {
 
                     <TouchableOpacity
                         style={styles.attachmentButton}
-                        onPress={pickImage}
+                        onPress={Platform.OS === 'ios' ? pickSingleImage : pickImage}
                     >
                         <Image
-                            source={require('../../../assets/Attached.png')}
+                            source={require('../../assets/Attached.png')}
                             style={styles.attachmentIcon}
                         />
-                        <Text style={styles.attachmentButtonText}>Add Photos</Text>
+                        <Text style={styles.attachmentButtonText}>
+                            {Platform.OS === 'ios' ? 'Add Photo' : 'Add Photos'}
+                        </Text>
                     </TouchableOpacity>
 
                     {attachments.length > 0 && (
@@ -409,7 +349,7 @@ const BookingReportScreen = () => {
                                         onPress={() => removeAttachment(index)}
                                     >
                                         <Image
-                                            source={require('../../../assets/Closeaffordance.png')}
+                                            source={require('../../assets/Closeaffordance.png')}
                                             style={styles.removeIcon}
                                         />
                                     </TouchableOpacity>
@@ -450,29 +390,6 @@ const styles = StyleSheet.create({
         padding: SCREEN_WIDTH * 0.06,
         paddingBottom: SCREEN_HEIGHT * 0.05,
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.background,
-    },
-    loadingText: {
-        marginTop: 16,
-        fontFamily: fonts.PlusJakartaSans,
-        color: colors.mainTextColor,
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    emptyText: {
-        fontSize: 16,
-        fontFamily: fonts.PlusJakartaSans,
-        color: colors.secondaryText,
-        marginBottom: 20,
-    },
     infoCard: {
         backgroundColor: colors.background,
         borderRadius: 12,
@@ -486,6 +403,36 @@ const styles = StyleSheet.create({
         fontFamily: fonts.PlusJakartaSansBold,
         color: colors.mainTextColor,
         marginBottom: SCREEN_HEIGHT * 0.015,
+    },
+    stationCard: {
+        backgroundColor: colors.background,
+        borderRadius: 12,
+        padding: SCREEN_WIDTH * 0.04,
+        marginBottom: SCREEN_HEIGHT * 0.01,
+    },
+    stationHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    stationIcon: {
+        width: SCREEN_WIDTH * 0.1,
+        height: SCREEN_WIDTH * 0.1,
+        marginRight: SCREEN_WIDTH * 0.04,
+    },
+    stationInfo: {
+        flex: 1,
+    },
+    stationName: {
+        fontSize: SCREEN_WIDTH * 0.045,
+        fontFamily: fonts.PlusJakartaSansBold,
+        color: colors.mainTextColor,
+        marginBottom: 4,
+    },
+    stationAddress: {
+        fontSize: SCREEN_WIDTH * 0.035,
+        fontFamily: fonts.PlusJakartaSans,
+        color: colors.secondaryText,
+        lineHeight: 20,
     },
     infoRow: {
         flexDirection: 'row',
@@ -512,13 +459,15 @@ const styles = StyleSheet.create({
         fontFamily: fonts.PlusJakartaSans,
         color: colors.mainTextColor,
     },
-    statusCompleted: {
-        color: colors.success,
+    connectorImage: {
+        width: SCREEN_WIDTH * 0.06,
+        height: SCREEN_WIDTH * 0.06,
+        borderRadius: 4, // Optional: add slight rounding if needed
     },
-    statusConfirmed: {
+    statusAvailable: {
         color: colors.primary,
     },
-    statusCancelled: {
+    statusUnavailable: {
         color: colors.danger,
     },
     divider: {
@@ -611,6 +560,17 @@ const styles = StyleSheet.create({
     submitButton: {
         marginTop: SCREEN_HEIGHT * 0.02,
     },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.background,
+    },
+    loadingText: {
+        marginTop: 16,
+        fontFamily: fonts.PlusJakartaSans,
+        color: colors.mainTextColor,
+    },
 });
 
-export default BookingReportScreen;
+export default ChargerReportScreen;

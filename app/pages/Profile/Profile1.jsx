@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Modal,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import colors from '../../../constants/color';
@@ -70,6 +71,7 @@ const Profile1 = () => {
   // Security states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showRecoveryPhoneModal, setShowRecoveryPhoneModal] = useState(false);
+  const [recoveryPhone, setRecoveryPhone] = useState('+94');
   const [focusedPasswordField, setFocusedPasswordField] = useState(null);
 
   const [userInfo, setUserInfo] = useState({
@@ -376,54 +378,67 @@ const Profile1 = () => {
 
   // Refactor RecoveryPhoneModal to use local state
   const RecoveryPhoneModal = () => {
-    const [recoveryPhone, setRecoveryPhone] = useState('+94 71 653 5');
     const isRecoveryPhoneValid = () => {
       const cleanPhone = recoveryPhone.replace(/\s/g, '');
       return cleanPhone.length >= 12 && cleanPhone.startsWith('+94');
     };
+    const handlePhoneChange = (text) => {
+      // Allow only numbers and a single leading '+'
+      if (text === '' || text === '+') {
+        setRecoveryPhone(text);
+        return;
+      }
+      // If starts with +, keep it, else just numbers
+      let formatted = text;
+      if (text.startsWith('+')) {
+        formatted = '+' + text.slice(1).replace(/[^0-9]/g, '');
+      } else {
+        formatted = text.replace(/[^0-9]/g, '');
+      }
+      setRecoveryPhone(formatted);
+    };
     return (
-      <CustomModal
+      <Modal
         visible={showRecoveryPhoneModal}
-        onClose={() => setShowRecoveryPhoneModal(false)}
-        title="Recovery Phone"
-        subtitle="You'll use this number to recover your account"
-        footerContent={
-          <TouchableOpacity
-            style={[
-              styles.updatePhoneButton,
-              {
-                backgroundColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText,
-                opacity: isRecoveryPhoneValid() ? 1 : 0.8,
-              }
-            ]}
-            onPress={isRecoveryPhoneValid() ? () => {
-              setShowRecoveryPhoneModal(false);
-              Alert.alert('Success', 'Recovery phone number updated successfully');
-            } : null}
-            disabled={!isRecoveryPhoneValid()}
-            activeOpacity={isRecoveryPhoneValid() ? 0.7 : 1}
-          >
-            <Text style={[
-              styles.updatePhoneButtonText,
-              { color: colors.background }
-            ]}>
-              Update
-            </Text>
-          </TouchableOpacity>
-        }
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowRecoveryPhoneModal(false)}
       >
-        <InputField
-          label="Phone Number"
-          value={recoveryPhone}
-          onChangeText={setRecoveryPhone}
-          placeholder="+94"
-          keyboardType="phone-pad"
-          required
-        />
-        <Text style={styles.phoneNote}>
-          A verification code will be sent to this email
-        </Text>
-      </CustomModal>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.05)' }}>
+          <View style={{ width: '100%', maxWidth: 400, backgroundColor: '#fff', borderRadius: 20, paddingHorizontal: 24, paddingTop: 40, paddingBottom: 32, alignSelf: 'center' }}>
+            <TouchableOpacity style={{ alignSelf: 'flex-start', marginBottom: 16 }} onPress={() => setShowRecoveryPhoneModal(false)}>
+              <Text style={{ fontSize: 24, color: colors.mainTextColor }}>‹</Text>
+            </TouchableOpacity>
+            <Text style={{ fontSize: 24, fontWeight: '700', color: colors.mainTextColor, marginBottom: 6 }}>Recovery Phone</Text>
+            <Text style={{ fontSize: 15, color: colors.secondaryText, marginBottom: 32 }}>You'll use this number to recover your account</Text>
+            <View style={{ width: '100%', marginBottom: 18 }}>
+              <Text style={{ fontSize: 15, color: colors.mainTextColor, marginBottom: 8 }}>Phone Number*</Text>
+              <View style={{ borderWidth: 1, borderColor: isRecoveryPhoneValid() ? colors.primary : colors.secondaryText, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#FAFAFA' }}>
+                <TextInput
+                  value={recoveryPhone}
+                  onChangeText={handlePhoneChange}
+                  placeholder="+94"
+                  keyboardType="phone-pad"
+                  style={{ fontSize: 17, color: colors.mainTextColor, minWidth: 220, fontWeight: '500' }}
+                  maxLength={15}
+                  placeholderTextColor={colors.secondaryText}
+                />
+              </View>
+            </View>
+            <Text style={{ fontSize: 14, color: colors.secondaryText, marginBottom: 28, alignSelf: 'flex-start' }}>A verification code will be sent to this email</Text>
+            <TouchableOpacity
+              style={{ width: '100%', backgroundColor: isRecoveryPhoneValid() ? colors.primary : '#E0E0E0', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: 8 }}
+              onPress={isRecoveryPhoneValid() ? () => {
+                setShowRecoveryPhoneModal(false);
+                Alert.alert('Success', 'Recovery phone number updated successfully');
+              } : null}
+              disabled={!isRecoveryPhoneValid()}
+            >
+              <Text style={{ color: isRecoveryPhoneValid() ? colors.background : colors.secondaryText, fontSize: 16, fontWeight: '600' }}>Update</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     );
   };
 
@@ -631,12 +646,12 @@ const Profile1 = () => {
 
         {activeTab === 'Signin Info' && (
           <View style={styles.signinInfoContainer}>
-            <TouchableOpacity onPress={handleEmailEdit}>
+            <TouchableOpacity onPress={() => router.push('/pages/Profile/ManageAccount/UpdateEmailScreen')}>
               <View style={styles.signinInfoItem}>
                 <Text style={styles.signinInfoLabel}>Email Address</Text>
                 <View style={styles.signinInfoRow}>
                   <Text style={styles.signinInfoValue}>{userInfo.email}</Text>
-                  <TouchableOpacity onPress={handleEmailEdit}>
+                  <TouchableOpacity onPress={() => router.push('/pages/Profile/ManageAccount/UpdateEmailScreen')}>
                     <Text style={styles.signinInfoArrow}>›</Text>
                   </TouchableOpacity>
                 </View>
@@ -647,7 +662,7 @@ const Profile1 = () => {
 
         {activeTab === 'Security' && (
           <View style={styles.securityContainer}>
-            <TouchableOpacity onPress={() => setShowPasswordModal(true)}>
+            <TouchableOpacity onPress={() => router.push('/pages/ResetPW')}>
               <View style={styles.securityItem}>
                 <Text style={styles.securityLabel}>Password</Text>
                 <Text style={styles.securityArrow}>›</Text>
@@ -656,7 +671,7 @@ const Profile1 = () => {
 
             <View style={styles.securityDivider} />
 
-            <TouchableOpacity onPress={() => setShowRecoveryPhoneModal(true)}>
+            <TouchableOpacity onPress={() => router.push('/pages/Profile/RecoveryPhoneScreen')}>
               <View style={styles.securityItem}>
                 <Text style={styles.securityLabel}>Recovery Phone Number</Text>
                 <Text style={styles.securityArrow}>›</Text>

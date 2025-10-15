@@ -19,18 +19,20 @@ const ActivityScreen = () => {
   };
 
   const handleSessionHistory = () => {
-    // Use relative path for file-based routing
-    router.push('./SessionHistory');
+    console.log('Navigation to SessionHistory triggered');
+    // Use absolute path for file-based routing
+    router.push('/pages/Profile/Activity/SessionHistory');
+    console.log('Router.push called for SessionHistory');
   };
 
   const handleTripHistory = () => {
-    // Use relative path for file-based routing
-    router.push('./TripHistory');
+    // Use absolute path for file-based routing
+    router.push('/pages/Profile/Activity/TripHistory');
   };
 
   const handleBookingHistory = () => {
-    // Use relative path for file-based routing
-    router.push('./BookingHistory');
+    // Use absolute path for file-based routing
+    router.push('/pages/Profile/Activity/BookingHistory');
   };
 
   const activityOptions = [
