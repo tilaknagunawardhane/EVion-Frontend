@@ -11,11 +11,14 @@ import {
   Text
 } from "react-native";
 import { useRouter } from "expo-router";
+import { API_BASE_URL } from '@env';
 import * as ImagePicker from 'expo-image-picker';
 import colors from "../../../constants/color";
 import fonts from "../../../constants/fonts";
 import YourThoughtsHeader from "../../../components/community/YourThoughtsHeader";
 import CustomTextInput from "../../../components/CustomTextInput";
+const BACKEND_URL = API_BASE_URL;
+
 
 const YourThoughts = () => {
   const [title, setTitle] = useState("");
@@ -24,7 +27,7 @@ const YourThoughts = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-   useEffect(() => {
+  useEffect(() => {
     (async () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
@@ -91,7 +94,7 @@ const YourThoughts = () => {
       Alert.alert("Error", "Please add a title for your discussion");
       return;
     }
-    
+
     if (!description.trim()) {
       Alert.alert("Error", "Please add a description for your discussion");
       return;
@@ -101,20 +104,33 @@ const YourThoughts = () => {
 
     try {
       const hashtags = extractHashtags(description);
-      
+
       const discussionData = {
+        user: "Jhon Joe", // replace with actual logged-in user if available
         title,
         description,
         hashtags,
-        images: selectedImages,
-        userName: "Current User",
-        timeAgo: "Just now",
+        images: selectedImages
       };
 
-      console.log("Posting discussion:", discussionData);
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log("Posting discussion to backend:", discussionData);
+
+      const response = await fetch(
+        `${BACKEND_URL}/api/discussions/create-discussion`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(discussionData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to post discussion");
+      }
+
+      console.log("Response from backend:", data);
 
       Alert.alert("Success", "Your discussion has been posted!", [
         {
@@ -124,8 +140,8 @@ const YourThoughts = () => {
             setDescription("");
             setSelectedImages([]);
             router.push("/(tabs)/Community");
-          }
-        }
+          },
+        },
       ]);
     } catch (error) {
       console.error("Error posting discussion:", error);
@@ -140,7 +156,6 @@ const YourThoughts = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
     >
-      {/* Header with attach button */}
       <YourThoughtsHeader
         title="Your Thoughts"
         onBack={handleBack}
@@ -154,7 +169,6 @@ const YourThoughts = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Title Input */}
         <CustomTextInput
           placeholder="Add title here"
           value={title}
@@ -166,7 +180,6 @@ const YourThoughts = () => {
           inputStyle={styles.titleInput}
         />
 
-        {/* Description Input */}
         <CustomTextInput
           placeholder="Add description here (Use '#' to add keywords eg: #ChargingStations)"
           value={description}
@@ -177,7 +190,6 @@ const YourThoughts = () => {
           maxLength={1000}
         />
 
-        {/* Hashtag Preview */}
         {extractHashtags(description).length > 0 && (
           <View style={styles.hashtagContainer}>
             <Text style={styles.hashtagTitle}>Tags:</Text>
@@ -191,7 +203,6 @@ const YourThoughts = () => {
           </View>
         )}
 
-        {/* Image Upload Section */}
         {selectedImages.length > 0 && (
           <View style={styles.imagesContainer}>
             <Text style={styles.sectionTitle}>Attached Images ({selectedImages.length}/4)</Text>
@@ -227,7 +238,6 @@ const YourThoughts = () => {
           </View>
         )}
 
-        {/* Add Image Button (when no images are selected) */}
         {selectedImages.length === 0 && (
           <TouchableOpacity 
             style={styles.attachButton}
@@ -241,7 +251,6 @@ const YourThoughts = () => {
           </TouchableOpacity>
         )}
 
-        {/* Add more content space for scrolling */}
         <View style={styles.spacer} />
       </ScrollView>
     </KeyboardAvoidingView>
@@ -249,114 +258,114 @@ const YourThoughts = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { 
+    flex: 1, 
     backgroundColor: colors.background,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
+  content: { 
+    flex: 1, 
+    paddingHorizontal: 16, 
   },
-  titleInput: {
-    fontSize: 18,
-    fontFamily: fonts.PlusJakartaSansBold,
-    marginBottom: 16,
+  titleInput: { 
+    fontSize: 18, 
+    fontFamily: fonts.PlusJakartaSansBold, 
+    marginBottom: 16, 
   },
-  descriptionInput: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    lineHeight: 20,
+  descriptionInput: { 
+    fontSize: 14, 
+    fontFamily: fonts.PlusJakartaSans, 
+    lineHeight: 20, 
     paddingTop: 16,
   },
-  hashtagContainer: {
-    marginTop: 8,
+  hashtagContainer: { 
+    marginTop: 8, 
     marginBottom: 16,
   },
-  hashtagTitle: {
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.secondaryText,
-    marginBottom: 4,
+  hashtagTitle: { 
+    fontSize: 12, 
+    fontFamily: fonts.PlusJakartaSansMedium, 
+    color: colors.secondaryText, 
+    marginBottom: 4, 
   },
-  hashtagList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  hashtagList: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
   },
-  hashtagPill: {
-    backgroundColor: colors.stroke,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginRight: 8,
-    marginBottom: 8,
+  hashtagPill: { 
+    backgroundColor: colors.stroke, 
+    borderRadius: 12, 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    marginRight: 8, 
+    marginBottom: 8, 
   },
-  hashtagText: {
-    fontSize: 12,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.primary,
+  hashtagText: { 
+    fontSize: 12, 
+    fontFamily: fonts.PlusJakartaSans, 
+    color: colors.primary, 
   },
-  imagesContainer: {
-    marginBottom: 20,
+  imagesContainer: { 
+    marginBottom: 20, 
   },
-  sectionTitle: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginBottom: 12,
+  sectionTitle: { 
+    fontSize: 14, 
+    fontFamily: fonts.PlusJakartaSansMedium, 
+    color: colors.mainTextColor, 
+    marginBottom: 12, 
   },
-  imagesScrollContainer: {
-    paddingBottom: 8,
+  imagesScrollContainer: { 
+    paddingBottom: 8, 
   },
-  imageWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginRight: 12,
-    position: 'relative',
+  imageWrapper: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 8, 
+    marginRight: 12, 
+    position: 'relative', 
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
+  image: { 
+    width: '100%', 
+    height: '100%', 
+    borderRadius: 8, 
   },
-  removeImageButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: colors.error,
-    justifyContent: 'center',
-    alignItems: 'center',
+  removeImageButton: { 
+    position: 'absolute', 
+    top: -8, 
+    right: -8, 
+    width: 24, 
+    height: 24, 
+    borderRadius: 12, 
+    backgroundColor: colors.error, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
   },
-  removeImageText: {
-    color: colors.background,
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansBold,
-    lineHeight: 20,
-    marginTop: -2,
+  removeImageText: { 
+    color: colors.background, 
+    fontSize: 16, 
+    fontFamily: fonts.PlusJakartaSansBold, 
+    lineHeight: 20, 
+    marginTop: -2, 
   },
-  addImageButton: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    justifyContent: 'center',
-    alignItems: 'center',
+  addImageButton: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: colors.stroke, 
+    justifyContent: 'center', 
+    alignItems: 'center', 
   },
-  addImageText: {
-    fontSize: 24,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.secondaryText,
+  addImageText: { 
+    fontSize: 24, 
+    fontFamily: fonts.PlusJakartaSansBold, 
+    color: colors.secondaryText, 
   },
-  spacer: {
-    height: 100,
+  spacer: { 
+    height: 100, 
   },
-  attachIcon:{
-    width: 16,
-    height: 16
+  attachIcon: { 
+    width: 16, 
+    height: 16, 
   }
 });
 
