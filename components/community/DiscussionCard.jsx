@@ -25,8 +25,8 @@ const DiscussionCard = ({
   isPinned = false,
   userAvatar,
   onPinToggle,
-  comments = [], // Array of comment objects
-  onAddComment, // Function to add new comment
+  comments = [],
+  onAddComment,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -34,6 +34,7 @@ const DiscussionCard = ({
   const [newComment, setNewComment] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [showFlagModal, setShowFlagModal] = useState(false);
+  const [pinned, setPinned] = useState(isPinned); // Local pin state
 
   const flagReasons = [
     "Spam or unwanted commercial content",
@@ -47,8 +48,9 @@ const DiscussionCard = ({
 
   const handlePinToggle = () => {
     setShowMenu(false);
+    setPinned(prev => !prev);
     if (onPinToggle) {
-      onPinToggle();
+      onPinToggle(!pinned);
     }
   };
 
@@ -66,7 +68,7 @@ const DiscussionCard = ({
         onAddComment({
           id: Math.random().toString(36).substring(7),
           text: newComment,
-          userName: "Current User", // You would replace this with actual user
+          userName: "Current User",
           timeAgo: "Just now",
           replies: [],
           replyingTo: replyingTo,
@@ -110,7 +112,7 @@ const DiscussionCard = ({
       {/* Menu Modal */}
       <Modal
         visible={showMenu}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setShowMenu(false)}
       >
@@ -126,7 +128,7 @@ const DiscussionCard = ({
                 style={styles.menuIcon}
               />
               <Text style={styles.menuText}>
-                {isPinned ? "Unpin Post" : "Pin Post"}
+                {pinned ? "Unpin Post" : "Pin Post"}
               </Text>
             </TouchableOpacity>
           </View>
@@ -148,7 +150,7 @@ const DiscussionCard = ({
       {/* Title and Pin Badge */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
-        {isPinned && (
+        {pinned && (
           <View style={styles.pinnedBadge}>
             <Image
               source={require("../../assets/pin.png")}
@@ -193,14 +195,6 @@ const DiscussionCard = ({
 
       {/* Interaction Buttons */}
       <View style={styles.interactionRow}>
-        <TouchableOpacity style={styles.interactionButton}>
-          <Image
-            source={require("../../assets/Massages.png")}
-            style={styles.likeIcon}
-          />
-          <Text style={styles.interactionText}>{likes}</Text>
-        </TouchableOpacity>
-        
         <TouchableOpacity 
           style={styles.interactionButton} 
           onPress={toggleComments}
@@ -230,7 +224,6 @@ const DiscussionCard = ({
       {/* Comments Section */}
       {showComments && (
         <View style={styles.commentsSection}>
-          {/* Comments List */}
           {comments.length > 0 ? (
             <ScrollView style={styles.commentsList}>
               {comments.map((comment) => (
@@ -253,7 +246,6 @@ const DiscussionCard = ({
                     <Text style={styles.replyButtonText}>Reply</Text>
                   </TouchableOpacity>
                   
-                  {/* Replies to this comment */}
                   {comment.replies && comment.replies.length > 0 && (
                     <View style={styles.repliesContainer}>
                       {comment.replies.map((reply) => (
@@ -280,7 +272,6 @@ const DiscussionCard = ({
             <Text style={styles.noCommentsText}>No comments yet</Text>
           )}
 
-          {/* Add Comment Input */}
           <View style={styles.addCommentContainer}>
             {replyingTo && (
               <Text style={styles.replyingToText}>
@@ -308,7 +299,7 @@ const DiscussionCard = ({
       {/* Flag Modal */}
       <Modal
         visible={showFlagModal}
-        transparent={true}
+        transparent
         animationType="fade"
         onRequestClose={() => setShowFlagModal(false)}
       >
@@ -343,6 +334,7 @@ const DiscussionCard = ({
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   card: {
@@ -379,43 +371,44 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondaryText,
     marginVertical: 1,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor:colors.mainTextColor,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  menuDropdown: {
-    backgroundColor: colors.background,
-    borderRadius: 8,
-    paddingVertical: 8,
-    minWidth: 150,
-    shadowColor:colors.stroke,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  menuIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 12,
-    tintColor: colors.primary,
-  },
-  menuText: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor,
-  },
+menuOverlay: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+},
+menuDropdown: {
+  position: "absolute",
+  top: 40,  // adjust relative to three dots button
+  right: 16,
+  backgroundColor: colors.background,
+  borderRadius: 12,
+  paddingVertical: 4,
+  minWidth: 180,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.1,
+  shadowRadius: 8,
+  elevation: 6,
+},
+menuItem: {
+  flexDirection: "row",
+  alignItems: "center",
+  paddingVertical: 12,
+  paddingHorizontal: 16,
+},
+menuIcon: {
+  width: 18,
+  height: 18,
+  marginRight: 12,
+  tintColor: colors.mainTextColor,
+},
+menuText: {
+  fontSize: 15,
+  fontFamily: fonts.PlusJakartaSansMedium,
+  color: colors.mainTextColor,
+},
   hashtagContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -711,7 +704,7 @@ const styles = StyleSheet.create({
   cancelButton: {
     marginTop: 16,
     paddingVertical: 12,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: colors.stroke,
     borderRadius: 8,
     alignItems: 'center',
   },
