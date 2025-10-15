@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import colors from '../constants/color.js';
 import fonts from '../constants/fonts.js';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { API_BASE_URL } from '@env';
 
 
 const CompletedBookingCard = ({ 
@@ -11,13 +12,70 @@ const CompletedBookingCard = ({
   time,
   cost, 
   stationName, 
+  charging_station_id,
   address, 
-  carImage, 
+  carImage,
+  vehicle,
   carName, 
   connectorType,
+  connector,
+  connector_type_id,
   iconColor = colors.primary // Use primary color from constants as default
 }) => {
     const router = useRouter();
+
+  console.log('connector_type_id: ', connector_type_id);
+
+  const [connectorDetails, setConnectorDetails] = useState(null);
+
+  // Fetching the station connectors
+    useEffect(() => {   
+  
+      if (!charging_station_id?._id) return;  //stop if station is null
+  
+      const fetchConnector = async () => {
+        try {
+          const url = `${API_BASE_URL}/api/bookings/getConnectorsByStation?station_id=${charging_station_id._id}`;
+          console.log('Fetching from:', url);
+  
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+  
+          console.log('Response status:', response.status);
+  
+        const data = await response.json();
+        if (response.ok) {
+          console.log('Samples: ', data);
+          const connector = data.find(item => item._id === connector_type_id);
+          setConnectorDetails(connector);
+        }
+        else{
+          console.error('Error:', data.message || 'No message provided');
+        }
+  
+        } catch (error) {
+          console.error('Fetch error:', error.message);
+          console.error('Error stack:', error.stack);
+        }
+      };
+  
+      fetchConnector();
+  
+    }, []);
+
+    useEffect(() => {
+      console.log('connector Details: ', connectorDetails);
+    },[connectorDetails])
+
+  const buildNavigationParams = () => ({
+    ...(charging_station_id && { selectedStation: JSON.stringify(charging_station_id) }),
+    ...(vehicle && { selectedVehicle: JSON.stringify(vehicle) }),
+    ...(connectorDetails && { selectedConnector: JSON.stringify(connectorDetails) }),
+  });
   
   return (
     <View style={styles.card}>
@@ -26,15 +84,20 @@ const CompletedBookingCard = ({
           <View style={styles.costContainer}>
             <Text style={styles.costText}>LKR {cost}</Text>
           </View>
-          <TouchableOpacity style={styles.bookAgainButton} onPress={() => router.push('/pages/bookings/AddBooking')}>
+          <TouchableOpacity style={styles.bookAgainButton} 
+            onPress={() => 
+            router.push({
+              pathname: '/pages/bookings/AddBooking',
+              params: buildNavigationParams(),
+              })}>
             <Text style={styles.bookAgainText}>Book Again</Text>
           </TouchableOpacity>
         </View>
       <View style={styles.separator} />
       <View style={styles.middleRow}>
         <View style={styles.stationContainer}>
-          <Text style={styles.stationName}>{stationName}</Text>
-          <Text style={styles.address}>{address}</Text>
+          <Text style={styles.stationName}>{charging_station_id.station_name}</Text>
+          <Text style={styles.address}>{charging_station_id.address}</Text>
         </View>
         <TouchableOpacity>
           <MaterialIcons name="navigation" size={28} color={iconColor} />
@@ -44,11 +107,11 @@ const CompletedBookingCard = ({
       <View style={styles.bottomRow}>
         <View style={styles.carContainer}>
           <Image source={carImage} style={styles.carImage} />
-          <Text style={styles.carName}>{carName}</Text>
+          <Text style={styles.carName}>{vehicle.make.make} {vehicle.model.model}</Text>
         </View>
         <View style={styles.connectorContainer}>
           <MaterialCommunityIcons name="ev-plug-ccs2" size={24} color={colors.mainTextColor} />
-          <Text style={styles.connector}>{connectorType}</Text>
+          <Text style={styles.connector}>{connector.type_name} - {connector.current_type}</Text>
         </View>
       </View>
     </View>

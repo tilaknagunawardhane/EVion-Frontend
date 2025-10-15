@@ -56,8 +56,8 @@ const AddBooking = () => {
           },
         });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', response.headers);
 
       // Check if response is JSON
     const contentType = response.headers.get('content-type');
@@ -67,12 +67,12 @@ const AddBooking = () => {
       throw new Error(`Server returned non-JSON response (status: ${response.status})`);
     }
       const data = await response.json();
-      console.log('API Response:', data);
+      // console.log('API Response:', data);
       // console.log('Array.isArray(data):', Array.isArray(data));
 
       if(response.ok) {
         setOwnedVehicles(Array.isArray(data) ? data : data.vehicles || []);
-        console.log('ownedVehicles: ', ownedVehicles);
+        // console.log('ownedVehicles: ', ownedVehicles);
       }
       else{
         console.error('Error:', data.message || 'No message provided');
@@ -97,8 +97,7 @@ const AddBooking = () => {
       setSelectedVehicle(JSON.parse(params.selectedVehicle));
     }
     if(params.selectedDateTime){
-      console.log('dddddddddd ', params.selectedDateTime);
-      setDatetime((params.selectedDateTime));
+      setDatetime(JSON.parse(params.selectedDateTime));
     }
 
     console.log('user: ', user);
@@ -112,16 +111,71 @@ const AddBooking = () => {
   }, [ownedVehicles]);
 
   useEffect(()=> {
+    console.log('selectedStation: ', station);
+  }, [station]);
+
+  useEffect(()=> {
     console.log('selectedVEhicel: ', selectedVehicle);
   }, [selectedVehicle]);
+
+  useEffect(()=> {
+    console.log('Connector: ', connector);
+  }, [connector]);
+  
+  useEffect(()=> {
+    console.log('selecteddatetime: ', datetime);
+  }, [datetime]);
 
 
   const isFormComplete = station && selectedVehicle && connector && datetime;
 
+  const handleSubmit = async () => {
+    if (!isFormComplete){
+      console.log('Form is not completed!!');
+      return;
+    }
+    console.log('ZZZselecteddatetime: ', datetime.bookingStartTime);
+    try {
+      const newBooking = {
+        ev_user_id: user._id,
+        vehicle_id: selectedVehicle._id,
+        charging_station_id: station._id,
+        connector_type_id: connector._id,
+        booking_date_time: datetime.bookingStartTime,
+        no_of_slots: datetime.numberOfSlots,
+        status: 'upcoming'
+      };
 
-  const handleSubmit = () => {
-    if (!isFormComplete) return;
-    console.log('Booking submitted');
+      console.log('Submitting booking:', newBooking);
+
+      const response = await fetch(`${API_BASE_URL}/api/bookings/addBooking`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newBooking),
+      });
+
+      console.log('Response status:', response.status);
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text);
+        throw new Error(`Server returned non-JSON response (status: ${response.status})`);
+      }
+
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if (response.ok) {
+        console.log('✅ Booking submitted successfully');
+      } else {
+        console.error('❌ Error:', data.message || 'Failed to submit booking');
+      }
+    } catch (error) {
+      console.error('Submit error:', error.message);
+    }
   };
 
   const buildNavigationParams = () => ({
@@ -154,7 +208,7 @@ const AddBooking = () => {
               color={selectedField === 'station' ? colors.primary : colors.lightGray}
             />
           }
-          text={station ? station.name : "Select Charging Station"}
+          text={station ? station.station_name : "Select Charging Station"}
           active={selectedField === 'station'}
           onPress={() => {
             setSelectedField('station');
@@ -190,12 +244,18 @@ const AddBooking = () => {
             <MaterialCommunityIcons
               name="power-plug-outline"
               size={20}
-              color={selectedField === 'connector' ? colors.primary : colors.lightGray}
+              color={
+                selectedField === 'connector'? 
+                  colors.primary : !station || !selectedVehicle? 
+                    colors.lightestGray : colors.lightGray
+              }
             />
           }
-          text={connector ? `${connector.current_type} ${connector.type_name}` : "Select Connector"}
+          text={connector ? `${connector.connector.current_type} ${connector.connector.type_name}` : "Select Connector"}
+          disabled={!station || !selectedVehicle} // disables input if station or vehicle not selected
           active={selectedField === 'connector'}
           onPress={() => {
+            if (!station || !selectedVehicle) return; // do nothing if disabled
             setSelectedField('connector');
              router.push({
               pathname: '/pages/bookings/SelectConnector',
@@ -212,12 +272,18 @@ const AddBooking = () => {
             <MaterialCommunityIcons
               name="calendar-month-outline"
               size={20}
-              color={selectedField === 'datetime' ? colors.primary : colors.lightGray}
+              color={
+                selectedField === 'datetime' ? 
+                colors.primary : !station || !selectedVehicle? 
+                  colors.lightestGray : colors.lightGray
+                }
             />
           }
-          text={datetime ? `${datetime}` : 'Select Date Time'}
+          text={datetime ? `${datetime.label}` : 'Select Date Time'}
+          disabled={!station || !selectedVehicle}
           active={selectedField === 'datetime'}
           onPress={() => {
+            if (!station || !selectedVehicle) return;
             setSelectedField('datetime');
             router.push({
               pathname: '/pages/bookings/SelectDateTime',
@@ -390,4 +456,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fonts.PlusJakartaSansMedium,
   },
+
+  disabledInput: {
+  backgroundColor: colors.danger,
+  opacity: 0.6,
+  },
+  disabledText: {
+  color: colors.danger, // dimmed text
+  },
+
 });
