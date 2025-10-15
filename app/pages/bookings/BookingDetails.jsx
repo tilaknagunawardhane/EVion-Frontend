@@ -172,8 +172,6 @@ const batteryGainFor30 = (max_power_output/2) / (vehicleBatteryCapacity* (vehicl
         </View>
         <Text style={styles.label}>Battery Gain:</Text>
         <Text style={styles.value}>~ +{batteryGainFor30.toFixed(2)}% in 30 mins</Text>
-        <Text style={styles.label}>Est. Time to 80%:</Text>
-        <Text style={styles.value}>~45 mins</Text>
         <View style={styles.infoRow}>
           <Text style={styles.iconText}><Icon name="flash" size={20} /> {max_power_output}kWh ({chargerPowerType})</Text>
           <Text style={styles.iconText}><Icon name="cash" size={20} /> LKR 55.00 /kW</Text>
@@ -188,7 +186,7 @@ const batteryGainFor30 = (max_power_output/2) / (vehicleBatteryCapacity* (vehicl
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Battery % Increase:</Text>
-          <Text style={styles.estimateValue}>+{batteryGainFor30*no_of_slots}%</Text>
+          <Text style={styles.estimateValue}>+{Math.min(batteryGainFor30 * no_of_slots, 100)}%</Text>
         </View>
         <View style={styles.estimateRow}>
           <Text style={styles.estimateLabel}>Estimated Cost:</Text>
