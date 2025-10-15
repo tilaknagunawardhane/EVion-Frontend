@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,83 +9,84 @@ import {
   Platform,
   StatusBar,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import DiscussionCard from "../../components/community/DiscussionCard";
-// import BottomNavigation from "../../components/BottomNavigation";
 import CustomButton from "../../components/CustomButton";
 import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
 import { router } from "expo-router";
+import { API_BASE_URL } from "@env";
 
+const fallbackDiscussions = [
+  {
+    id: 1,
+    hashtags: ["EVrange", "realworldperformance"],
+    title: "Realistic Range vs. Manufacturer Claimed Range - What Are You Getting?",
+    user: "John Doe",
+    createdAt: new Date().toISOString(),
+    description:
+      "Hi everyone, I recently bought an EV and noticed that the real-world range...",
+    likes: 18,
+    isPinned: false,
+    comments: [
+      {
+        id: "c1",
+        text: "I have the same experience with my EV.",
+        user: "Sarah Johnson",
+        timeAgo: "2 hrs ago",
+        replies: [],
+      },
+    ],
+  },
+];
 
 const Discussions = () => {
-  const [activeTab, setActiveTab] = useState("Pins");
+  const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");
-const [discussionsData, setDiscussionsData] = useState([
-    {
-      id: 1,
-      hashtags: ["EVrange", "realworldperformance"],
-      title: "Realistic Range vs. Manufacturer Claimed Range - What Are You Getting?",
-      userName: "John Doe",
-      timeAgo: "3 hrs ago",
-      content: "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. For example, my EV is supposed to do 450 km per charge, but I barely get 320 km, even with careful driving. I'm trying to understand what factors actually affect this - things like AC usage, passenger load, or terrain. Can other EV users share their experiences? How much range are you realistically getting, and what are your driving conditions like? Also, any tips to improve range would be great.",
-      likes: 18,
-      replies: 2,
-      isPinned: false,
-      comments: [
-        {
-          id: "c1",
-          text: "I have the same experience with my EV. The advertised range is always under ideal conditions.",
-          userName: "Sarah Johnson",
-          timeAgo: "2 hrs ago",
-          replies: [
-            {
-              id: "r1",
-              text: "Exactly! They test these in perfect weather with no AC.",
-              userName: "Mike Chen",
-              timeAgo: "1 hr ago"
-            }
-          ]
-        },
-        {
-          id: "c2",
-          text: "Try reducing your speed on highways. I get 20% more range at 100km/h vs 120km/h.",
-          userName: "Raj Patel",
-          timeAgo: "1 hr ago",
-          replies: []
+  const [currentUser] = useState("John Doe"); // Replace with auth user later
+  const [discussionsData, setDiscussionsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch discussions from backend
+  useEffect(() => {
+    const fetchDiscussions = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/discussions/get-discussions`
+        );
+        const json = await response.json();
+        if (json.success) {
+          setDiscussionsData(json.data);
+        } else {
+          setDiscussionsData(fallbackDiscussions);
         }
-      ]
-    },
-    {
-      id: 2,
-      hashtags: ["chargingissues", "bugs", "crowcharging"],
-      title: "BYD Atto 3 vs Nissan Leaf - Which is Better for Long Trips?",
-      userName: "John Doe",
-      timeAgo: "3 hrs ago",
-      content: "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. Read More",
-      likes: 18,
-      replies: 0,
-      isPinned: true,
-      comments: []
-    },
-  ]);
+      } catch (error) {
+        console.error("Error fetching discussions:", error);
+        setDiscussionsData(fallbackDiscussions);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDiscussions();
+  }, []);
 
   const handleAddComment = (discussionId, newComment) => {
-    setDiscussionsData(prevData => 
-      prevData.map(discussion => {
+    setDiscussionsData((prevData) =>
+      prevData.map((discussion) => {
         if (discussion.id === discussionId) {
           const updatedComments = [
             ...discussion.comments,
             {
               ...newComment,
               id: Math.random().toString(36).substring(7),
-            }
+              replies: [],
+            },
           ];
           return {
             ...discussion,
             comments: updatedComments,
-            replies: updatedComments.length + 
-                    updatedComments.reduce((sum, c) => sum + (c.replies?.length || 0), 0)
           };
         }
         return discussion;
@@ -94,9 +95,46 @@ const [discussionsData, setDiscussionsData] = useState([
   };
 
   const renderContent = () => {
-    const filteredDiscussions = activeTab === "Pins" 
-      ? discussionsData.filter(discussion => discussion.isPinned)
-      : discussionsData;
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading all discussions...</Text>
+        </View>
+      );
+    }
+
+    let filteredDiscussions = discussionsData;
+
+    if (activeTab === "Pins") {
+      filteredDiscussions = discussionsData.filter((d) => d.isPinned);
+    } else if (activeTab === "My Discussions") {
+      filteredDiscussions = discussionsData.filter(
+        (d) => d.user === currentUser
+      );
+    }
+
+    if (searchText) {
+      filteredDiscussions = filteredDiscussions.filter((d) =>
+        d.title.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    if (filteredDiscussions.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>
+            {activeTab === "Pins"
+              ? "No pinned discussions yet"
+              : activeTab === "My Discussions"
+              ? "You haven't started any discussions yet"
+              : searchText
+              ? "No discussions found with that title"
+              : "No discussions found"}
+          </Text>
+        </View>
+      );
+    }
 
     return (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -105,11 +143,11 @@ const [discussionsData, setDiscussionsData] = useState([
             key={discussion.id}
             hashtags={discussion.hashtags}
             title={discussion.title}
-            userName={discussion.userName}
-            timeAgo={discussion.timeAgo}
-            content={discussion.content}
+            userName={discussion.user}
+            timeAgo={new Date(discussion.createdAt).toLocaleString()}
+            content={discussion.description}
             likes={discussion.likes}
-            replies={discussion.replies}
+            replies={discussion.comments?.length || 0}
             isPinned={discussion.isPinned}
             comments={discussion.comments}
             onAddComment={(comment) => handleAddComment(discussion.id, comment)}
@@ -131,7 +169,7 @@ const [discussionsData, setDiscussionsData] = useState([
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Keywords"
+          placeholder="Search by title"
           placeholderTextColor={colors.secondaryText}
           value={searchText}
           onChangeText={setSearchText}
@@ -152,12 +190,21 @@ const [discussionsData, setDiscussionsData] = useState([
           style={styles.startDiscussionButton}
           textStyle={styles.startDiscussionText}
           icon={require("../../assets/Pencil.png")}
-          onPress={()=> router.push('/pages/Community/StartDiscussion')}
+          onPress={() => router.push("/pages/Community/StartDiscussion")}
         />
       </View>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "All" && styles.activeTab]}
+          onPress={() => setActiveTab("All")}
+        >
+          <Text style={[styles.tabText, activeTab === "All" && styles.activeTabText]}>
+            All Discussions
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.tab, activeTab === "Pins" && styles.activeTab]}
           onPress={() => setActiveTab("Pins")}
@@ -167,32 +214,24 @@ const [discussionsData, setDiscussionsData] = useState([
               source={require("../../assets/pin.png")}
               style={[
                 styles.pinIcon,
-                { tintColor: activeTab === "Pins" ? colors.primary : colors.secondaryText },
+                {
+                  tintColor:
+                    activeTab === "Pins" ? colors.primary : colors.secondaryText,
+                },
               ]}
             />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "Pins" && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "Pins" && styles.activeTabText]}>
               Pins
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === "My Discussions" && styles.activeTab,
-          ]}
+          style={[styles.tab, activeTab === "My Discussions" && styles.activeTab]}
           onPress={() => setActiveTab("My Discussions")}
         >
           <Text
-            style={[
-              styles.tabText,
-              activeTab === "My Discussions" && styles.activeTabText,
-            ]}
+            style={[styles.tabText, activeTab === "My Discussions" && styles.activeTabText]}
           >
             My Discussions
           </Text>
@@ -201,9 +240,6 @@ const [discussionsData, setDiscussionsData] = useState([
 
       {/* Content */}
       {renderContent()}
-
-      {/* Bottom Navigation */}
-      {/* <BottomNavigation activeTab="Community" /> */}
     </View>
   );
 };
@@ -239,10 +275,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -251,10 +284,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     top: 14,
-  },
-  searchIconText: {
-    fontSize: 16,
-    color: colors.secondaryText,
   },
   searchIconImage: {
     width: 40,
@@ -284,11 +313,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     marginBottom: 20,
+    justifyContent: "space-between",
   },
   tab: {
     paddingVertical: 8,
     paddingHorizontal: 4,
-    marginRight: 24,
   },
   activeTab: {
     borderBottomWidth: 2,
@@ -312,6 +341,27 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 100,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: colors.secondaryText,
+    fontFamily: fonts.PlusJakartaSans,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    marginTop: 50,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.secondaryText,
   },
 });
 
