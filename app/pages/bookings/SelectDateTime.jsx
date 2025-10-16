@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,25 @@ export default function SelectDateTime() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
+  const [selectedStation, setSelectedStation] = useState(null);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [selectedConnector, setSelectedConnector] = useState(null);
+
+  useEffect(() => {
+    if(params.selectedStation){
+    const station = JSON.parse(params.selectedStation);
+    setSelectedStation(station);
+  }
+  if(params.selectedVehicle){
+    const vehicle = JSON.parse(params.selectedVehicle);
+    setSelectedVehicle(vehicle);
+  }
+  if(params.selectedConnector){
+    const Connector = JSON.parse(params.selectedConnector);
+    setSelectedConnector(Connector);
+  }
+  }, []);
+
   const dates = useMemo(
     () => Array.from({ length: DAY_COUNT }).map((_, i) => dayjs().add(i, 'day')),
     [],
@@ -32,16 +51,17 @@ export default function SelectDateTime() {
     for (let i = 0; i < 24 * 60; i += SLOT_MINUTES) {
       const start = startOfDay.add(i, 'minute');
       const end = start.add(SLOT_MINUTES, 'minute');
-      list.push({
-        label: `${start.format('HH:mm a')} – ${end.format('HH:mm a')}`,
-        available: !(i < 240 || i === 180 || i === 210),
-      });
+      list.push({ start, end, label: `${start.format('HH:mm')} – ${end.format('HH:mm')}` });
     }
     return list.slice(0, 48); // Only first 48 slots
   }, []);
 
-  const [selectedSlotIdx, setSelectedSlotIdx] = useState(null);
+  const [selectedSlots, setSelectedSlots] = useState([]); // array of indices
   const [page, setPage] = useState(0);
+
+  useEffect(() => {
+    console.log('Selected Slots: ', selectedSlots);
+  },[selectedSlots])
 
   const paginatedSlots = useMemo(() => {
     if (page === 0) return allSlots.slice(0, 14);
@@ -49,23 +69,66 @@ export default function SelectDateTime() {
     return allSlots.slice(28, 48);
   }, [page, allSlots]);
 
-  const handleContinue = () => {
-    if (selectedSlotIdx === null) return;
-    const date = dates[selectedDateIdx].format('YYYY-MM-DD');
-    const time = allSlots[selectedSlotIdx].label;
+  const handleSlotPress = (index) => {
+    if (selectedSlots.length === 0) {
+      setSelectedSlots([index]);
+    } else {
+      const min = Math.min(...selectedSlots);
+      const max = Math.max(...selectedSlots);
 
-    const navigationParams = {
-      selectedDateTime: `${date} ${time}`,
-      ...(params.selectedStation && { selectedStation: params.selectedStation }),
-      ...(params.selectedVehicle && { selectedVehicle: params.selectedVehicle }),
-      ...(params.selectedConnector && { selectedConnector: params.selectedConnector }),
-    };
-
-    router.replace({
-      pathname: '/pages/bookings/AddBooking',
-      params: navigationParams,
-    });
+      if (
+        (index === max + 1 || index === min - 1) &&
+        selectedSlots.length < 4
+      ) {
+        // extend selection if consecutive and < 4
+        setSelectedSlots([...selectedSlots, index].sort((a, b) => a - b));
+      } else {
+        // reset selection
+        setSelectedSlots([index]);
+      }
+    }
   };
+
+
+  const buildNavigationParams = (selectedDateTime) => ({
+    ...(selectedVehicle && { selectedVehicle: JSON.stringify(selectedVehicle) }),
+    ...(selectedConnector && { selectedConnector: JSON.stringify(selectedConnector) }),
+    ...(selectedStation && { selectedStation: JSON.stringify(selectedStation)}),
+    ...(selectedDateTime && { selectedDateTime: JSON.stringify(selectedDateTime)}),
+    });
+
+
+  const handleContinue = () => {
+  if (selectedSlots.length === 0) return;
+
+  const date = dates[selectedDateIdx]; // dayjs object
+
+  const firstSlot = allSlots[selectedSlots[0]];
+  const lastSlot = allSlots[selectedSlots[selectedSlots.length - 1]];
+
+  const dateStr = date.format('YYYY-MM-DD');
+  const firstTime = firstSlot.label.split('–')[0].trim();
+  const lastTime = lastSlot.label.split('–')[1].trim();
+
+  const [startHour, startMinute] = firstTime.split(':').map(Number);
+  const bookingStartTime = date.hour(startHour).minute(startMinute).format("YYYY-MM-DDTHH:mm:ss");
+
+  const numberOfSlots = selectedSlots.length;
+
+  const selectedDateTime = {
+    label: `${dateStr} ${firstTime} - ${lastTime}`,
+    bookingStartTime,
+    numberOfSlots,
+  };
+
+  console.log('Selected DateTime:', selectedDateTime);
+
+  router.replace({
+    pathname: '/pages/bookings/AddBooking',
+    params: buildNavigationParams(selectedDateTime),
+  });
+};
+
 
   return (
     <View style={s.container}>
@@ -92,7 +155,7 @@ export default function SelectDateTime() {
             <Pressable
               onPress={() => {
                 setSelectedDateIdx(index);
-                setSelectedSlotIdx(null);
+                setSelectedSlots([]);
               }}
               style={[
                 s.dateBox,
@@ -130,12 +193,21 @@ export default function SelectDateTime() {
         showsVerticalScrollIndicator={false}
         renderItem={({ item, index }) => {
           const actualIndex = page === 0 ? index : page === 1 ? index + 14 : index + 28;
-          const chosen = actualIndex === selectedSlotIdx;
-          const dis = !item.available;
+          const chosen = selectedSlots.includes(actualIndex);
+
+          // Check availability only for today
+          const selectedDate = dates[selectedDateIdx];
+          const isToday = selectedDate.isSame(dayjs(), 'day');
+          const now = dayjs();
+          
+          // Add a 2-hour buffer
+          const cutoff = now.add(2, 'hour');
+          const dis = isToday ? !item.start.isAfter(cutoff) : false;
+
           return (
             <Pressable
               disabled={dis}
-              onPress={() => setSelectedSlotIdx(actualIndex)}
+              onPress={() => handleSlotPress(actualIndex)}
               style={[
                 s.slotBox,
                 dis && s.slotDisabled,
@@ -160,10 +232,7 @@ export default function SelectDateTime() {
           <Pressable
             key={i}
             onPress={() => setPage(i)}
-            style={[
-              s.dot,
-              page === i && { backgroundColor: colors.primary },
-            ]}
+            style={[s.dot, page === i && { backgroundColor: colors.primary }]}
           />
         ))}
       </View>
@@ -172,14 +241,14 @@ export default function SelectDateTime() {
       <TouchableOpacity
         style={[
           s.cta,
-          selectedSlotIdx === null && { backgroundColor: colors.lightestGray },
+          selectedSlots.length === 0 && { backgroundColor: colors.lightestGray },
         ]}
-        disabled={selectedSlotIdx === null}
+        disabled={selectedSlots.length === 0}
         onPress={handleContinue}>
         <Text
           style={[
             s.ctaTxt,
-            selectedSlotIdx === null && { color: colors.secondaryText },
+            selectedSlots.length === 0 && { color: colors.secondaryText },
           ]}>
           Continue
         </Text>
@@ -280,9 +349,9 @@ const s = StyleSheet.create({
   /* dots */
   dotsWrap: { flexDirection: 'row', justifyContent: 'center', marginVertical: 12 },
   dot: {
-    width: 10,
-    height: 6,
-    borderRadius: 3,
+    width: 20,
+    height: 12,
+    borderRadius: 6,
     marginHorizontal: 4,
     backgroundColor: colors.lightGray,
   },

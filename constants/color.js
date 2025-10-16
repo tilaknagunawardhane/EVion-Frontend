@@ -8,18 +8,18 @@ const colors = {
   white: '#ffffff',
   black: '#000000',
   lightGray: '#888888',
+  gray: '#888888',              // alias for lightGray
   lightestGray: '#eeeeee',
   tagBackground: '#ffe6b3',
   tagText: '#d18800',
   cardBackground: '#f2fdfb',
   danger: '#ff3b30',
+  success: '#00b894',           // alias for primary
   rescheduleBg: '#e6faf7',
   HighlightText: '#D68400', //orange
   bgGreen: '#E0F3EF',
   border: '#E9E9E9', //light gray for borders
   star: '#F5B223',
-
-
 };
 
 export default colors;

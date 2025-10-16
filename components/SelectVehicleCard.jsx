@@ -5,11 +5,13 @@ import fonts from '../constants/fonts';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import dolphine from '../assets/vehicles/dolphin.png'
 import ccs1 from '../assets/connectors/ccs1.png';
+import ccs2 from '../assets/connectors/ccs2.png';
 import type2 from '../assets/connectors/type2.png';
 
 const connectorImages = {
   'connectors/type2.png': type2,
   'connectors/ccs1.png': ccs1,
+  'connectors/ccs2.png': ccs2,
 };
 
 const vehicleImages = {
@@ -114,5 +116,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.mainTextColor,
     alignItems: 'center',
+  },
+  portIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 5,
+    marginRight: 5,
   },
 });

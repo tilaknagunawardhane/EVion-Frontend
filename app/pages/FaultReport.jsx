@@ -1,106 +1,241 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
+  Platform,
   Modal,
+  ActivityIndicator,
+  RefreshControl
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import AppBar from "../../components/AppBar";
 import FaultReportCard from "../../components/FaultReportCard";
 import InputField from "../../components/InputField";
 import CustomButton from "../../components/CustomButton";
 import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
+import { API_BASE_URL } from '@env';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import useUserData from '../../hooks/useUserData';
+import * as SecureStore from 'expo-secure-store';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const FaultReport = () => {
-  const [activeTab, setActiveTab] = useState("reported");
+  const { user, isLoading: isUserLoading } = useUserData();
+  const [activeTab, setActiveTab] = useState("under-review");
   const [showReportModal, setShowReportModal] = useState(false);
-  const [stationId, setStationId] = useState("");
-  const [chargerId, setChargerId] = useState("");
-  const [connector, setConnector] = useState("");
-  const [date, setDate] = useState("");
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
 
-  const reportedByYouData = [
-    {
-      id: 1,
-      title: "Charger occupied by another vehicle",
-      referenceNumber: "EVR3456",
-      description:
-        "The booked charger is occupied by another vehicle, preventing me from starting my session.",
-      timestamp: "01 Jul 2025, 09:53 AM",
-      status: "Processing",
-    },
+  const tabs = [
+    { id: "under-review", label: "Under Review" },
+    { id: "resolved", label: "Resolved" },
+    { id: "rejected", label: "Rejected" }
   ];
 
-  const resolvedByYouData = [
-    {
-      id: 1,
-      title: "Charger occupied by another vehicle",
-      referenceNumber: "EVR3456",
-      description:
-        "You received a compensation credit for the charger issue during your booking.",
-      timestamp: "01 Jul 2025, 09:53 AM",
-      status: "Resolved",
-    },
-    {
-      id: 2,
-      title: "Charger not working",
-      referenceNumber: "EVR3456",
-      description:
-        "You received a compensation credit for the charger issue during your booking.",
-      timestamp: "01 Jul 2025, 09:53 AM",
-      status: "Resolved",
-    },
-    {
-      id: 3,
-      title: "Charger occupied by another vehicle",
-      referenceNumber: "EVR3456",
-      description:
-        "Your report related concerns. False reports may result in action.",
-      timestamp: "01 Jul 2025, 09:53 AM",
-      status: "Rejected",
-    },
-  ];
+  useEffect(() => {
+    if (user?._id) {
+      fetchReports();
+    }
+  }, [user, activeTab]);
 
-  const handleSubmitReport = () => {
-    // Handle report submission logic here
-    setShowReportModal(false);
-    // Navigate to home page
-    router.push("/(tabs)");
+  const fetchReports = async (loadMore = false) => {
+    try {
+      if (!loadMore) {
+        setLoading(true);
+        setPage(1);
+      }
+
+      const token = await SecureStore.getItemAsync('token');
+      const response = await fetch(
+        `${API_BASE_URL}/api/reports/get-evowner-reports/${user._id}?status=${activeTab}&page=${loadMore ? page + 1 : 1}&limit=10`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch reports');
+
+      const data = await response.json();
+      console.log(data);
+      if (data.success) {
+        if (loadMore) {
+          setReports(prev => [...prev, ...data.data]);
+          setPage(prev => prev + 1);
+          console.log('Load more:', page + 1);
+        } else {
+          setReports(data.data);
+          setPage(1);
+        }
+        setHasMore(data.pagination.currentPage < data.pagination.totalPages);
+      }
+
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: 'Failed to load reports'
+      });
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchReports();
+  };
+
+  const loadMore = () => {
+    if (hasMore && !loading) {
+      fetchReports(true);
+    }
+  };
+
+  const handleReportPress = (report) => {
+    router.push({
+      pathname: '/pages/FaultReportDetails',
+      params: {
+        reportId: report._id,
+        type: report.type,
+        title: report.title
+      }
+    });
+  };
+
+  const getReportDescription = (report) => {
+    switch (report.type) {
+      case 'station':
+        return `Station: ${report.station_id?.station_name || 'Unknown station'}`;
+      case 'charger':
+        return `Charger: ${report.charger_name || report.charger_details?.charger_name || 'Unknown charger'} at ${report.station_id?.station_name || 'Unknown station'}`;
+      case 'booking':
+        return `Booking at ${report.booking_id?.charging_station_id?.station_name || 'Unknown station'}`;
+      default:
+        return report.description || 'No description available';
+    }
   };
 
   const renderContent = () => {
-    const data =
-      activeTab === "reported" ? reportedByYouData : resolvedByYouData;
+    if (isUserLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading user data...</Text>
+        </View>
+      );
+    }
 
-    if (data.length === 0) {
+    if (!user) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Please sign in to view your reports</Text>
+          <CustomButton
+            title="Go to Sign In"
+            onPress={() => router.replace('/pages/SignInScreen')}
+            type="primary"
+            style={{ marginTop: 20 }}
+          />
+        </View>
+      );
+    }
+
+    if (loading && reports.length === 0) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading reports...</Text>
+        </View>
+      );
+    }
+
+    if (reports.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>No fault reports found</Text>
+          <Text style={styles.emptyStateText}>
+            {activeTab === 'under-review' ? 'No reports under review' :
+             activeTab === 'resolved' ? 'No resolved reports' :
+             'No rejected reports'}
+          </Text>
         </View>
       );
     }
 
     return (
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>
-          {activeTab === "reported" ? "Processing" : "Resolved"}
-        </Text>
-        {data.map((item) => (
-          <FaultReportCard
-            key={item.id}
-            title={item.title}
-            referenceNumber={item.referenceNumber}
-            description={item.description}
-            timestamp={item.timestamp}
-            status={item.status}
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[colors.primary]}
           />
+        }
+        onScroll={({ nativeEvent }) => {
+          if (isCloseToBottom(nativeEvent) && hasMore && !loading) {
+            loadMore();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
+        {reports.map((report) => (
+          <TouchableOpacity
+            key={report._id}
+            onPress={() => handleReportPress(report)}
+            activeOpacity={0.7}
+          >
+            <FaultReportCard
+              title={report.title}
+              referenceNumber={report._id}
+              description={getReportDescription(report)}
+              timestamp={new Date(report.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+              status={getStatusText(report.status)}
+            />
+          </TouchableOpacity>
         ))}
+        
+        {loading && reports.length > 0 && (
+          <View style={styles.loadingMore}>
+            <ActivityIndicator size="small" color={colors.primary} />
+            <Text style={styles.loadingMoreText}>Loading more reports...</Text>
+          </View>
+        )}
       </ScrollView>
     );
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'under-review': return 'Processing';
+      case 'resolved': return 'Resolved';
+      case 'rejected': return 'Rejected';
+      default: return 'Processing';
+    }
+  };
+
+  const isCloseToBottom = ({ layoutMeasurement, contentOffset, contentSize }) => {
+    const paddingToBottom = 20;
+    return layoutMeasurement.height + contentOffset.y >=
+      contentSize.height - paddingToBottom;
   };
 
   return (
@@ -111,104 +246,25 @@ const FaultReport = () => {
       />
 
       <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "reported" && styles.activeTab]}
-          onPress={() => setActiveTab("reported")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "reported" && styles.activeTabText,
-            ]}
+        {tabs.map((tab) => (
+          <TouchableOpacity
+            key={tab.id}
+            style={[styles.tab, activeTab === tab.id && styles.activeTab]}
+            onPress={() => setActiveTab(tab.id)}
           >
-            Reported by you
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "resolved" && styles.activeTab]}
-          onPress={() => setActiveTab("resolved")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "resolved" && styles.activeTabText,
-            ]}
-          >
-            Resolved by you
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === tab.id && styles.activeTabText,
+              ]}
+            >
+              {tab.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
 
       {renderContent()}
-
-      {/* Floating Action Button */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowReportModal(true)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-
-      {/* Report Modal */}
-      <Modal
-        visible={showReportModal}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowReportModal(false)}
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Report Fault</Text>
-            <TouchableOpacity
-              onPress={() => setShowReportModal(false)}
-              style={styles.closeButton}
-            >
-              <Text style={styles.closeButtonText}>×</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={styles.modalContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <InputField
-              label="Station Id"
-              value={stationId}
-              onChangeText={setStationId}
-              placeholder="Enter station ID"
-            />
-
-            <InputField
-              label="Charger Id"
-              value={chargerId}
-              onChangeText={setChargerId}
-              placeholder="Enter charger ID"
-            />
-
-            <InputField
-              label="Connector"
-              value={connector}
-              onChangeText={setConnector}
-              placeholder="Enter connector"
-            />
-
-            <InputField
-              label="Date"
-              value={date}
-              onChangeText={setDate}
-              placeholder="Enter date"
-            />
-
-            <CustomButton
-              title="Submit Report"
-              onPress={handleSubmitReport}
-              style={styles.submitButton}
-            />
-          </ScrollView>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -222,6 +278,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     marginBottom: 20,
+    backgroundColor: colors.background,
   },
   tab: {
     flex: 1,
@@ -245,12 +302,17 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
-  sectionTitle: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
     fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.mainTextColor,
-    marginHorizontal: 16,
-    marginBottom: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginTop: 12,
   },
   emptyState: {
     flex: 1,
@@ -263,6 +325,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     textAlign: "center",
+  },
+  loadingMore: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingMoreText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginTop: 8,
   },
   fab: {
     position: "absolute",
@@ -287,11 +359,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.background,
-    textAlignVertical: 'center', // Add this
-    includeFontPadding: false,   // Add this to remove extra padding
+    textAlignVertical: 'center',
+    includeFontPadding: false,
     lineHeight: 30,
     marginTop: -6,
-
   },
   modalContainer: {
     flex: 1,
@@ -324,9 +395,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    textAlignVertical: 'center', // Add this
-    includeFontPadding: false,   // Add this to remove extra padding
-    lineHeight: 18,              // Match lineHeight with fontSize
+    textAlignVertical: 'center',
+    includeFontPadding: false,
+    lineHeight: 18,
     marginTop: -6,
   },
   modalContent: {
