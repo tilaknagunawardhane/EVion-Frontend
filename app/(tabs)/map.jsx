@@ -16,6 +16,7 @@ import colors from '../../constants/color';
 
 // Import your API key from environment variables
 import { OPEN_CHARGE_MAP_API_KEY } from '@env';
+import { API_BASE_URL } from '@env';
 
 // Components
 import SearchContainer from '../../components/maps/SearchContainer';
@@ -37,9 +38,11 @@ export default function MapScreen() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [chargingStations, setChargingStations] = useState([]);
+  const [partneredChargingStations, setPartneredChargingStations] = useState([]);
   const [selectedStation, setSelectedStation] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [stationsLoaded, setStationsLoaded] = useState(false);
+  const [partneredStationsLoaded, setPartneredStationsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Get user location on component mount
@@ -51,8 +54,9 @@ export default function MapScreen() {
   useEffect(() => {
     if (location && !stationsLoaded) {
       loadChargingStations();
+      loadPartneredStations();
     }
-  }, [location, stationsLoaded]);
+  }, [location, stationsLoaded, partneredStationsLoaded]);
 
   // Center map on user location when map is ready
   useEffect(() => {
@@ -176,6 +180,41 @@ export default function MapScreen() {
       setStationsLoaded(true);
     }
   };
+
+  const loadPartneredStations = async () => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/stations/map/stations`);
+    // console.log('response: ', response.data.data);
+    const stations = response.data.data.map(station => ({
+        id: station._id,
+        title: station.station_name || 'Charging Station',
+        description: 'No description available',
+        latitude: station.latitude,
+        longitude: station.longitude,
+        address: station.address,
+        town: station.city,
+        // postcode: station.AddressInfo?.Postcode,
+        // country: station.AddressInfo?.Country?.Title,
+        // operatorInfo: station.OperatorInfo,
+        // connections: station.Connections,
+        // usageType: station.UsageType,
+        // statusType: station.StatusType,
+        // numberOfPoints: station.NumberOfPoints,
+        // phone: station.AddressInfo?.ContactTelephone1,
+        // website: station.AddressInfo?.RelatedURL
+      })).filter(station => station.latitude && station.longitude);
+
+    console.log(`Loaded ${stations.length} partnered charging stations`);
+    setPartneredChargingStations(stations);
+    setPartneredStationsLoaded(true);
+
+  } catch (error) {
+    console.error('Error loading partnered stations:', error);
+    Alert.alert('Error', 'Failed to load charging stations');
+    setPartneredStationsLoaded(true);
+  }
+};
+
 
   const centerMapOnUserLocation = () => {
     if (!location || !mapRef.current) return;
@@ -316,6 +355,17 @@ export default function MapScreen() {
             isSelected={selectedStation?.id === station.id}
           />
         ))}
+
+        {/* Partnered Charging Station Markers */}
+        {partneredChargingStations.map(station => (
+          <ChargingStationMarker
+            key={station.id}
+            station={station}
+            onPress={() => handleMarkerPress(station)}
+            isSelected={selectedStation?.id === station.id}
+          />
+        ))}
+
       </MapView>
 
       {/* Map Loading Overlay */}
