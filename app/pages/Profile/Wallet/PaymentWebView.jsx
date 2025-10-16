@@ -9,7 +9,8 @@ import {
   BackHandler,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
@@ -20,8 +21,10 @@ import { API_BASE_URL } from '@env';
 
 const PaymentWebView = () => {
   const navigation = useNavigation();
-  const route = useRoute();
-  const { paymentData, sandbox, amount } = route.params;
+  const params = useLocalSearchParams();
+  const paymentData = params.paymentData ? JSON.parse(params.paymentData) : params.paymentData;
+  const sandbox = params.sandbox === 'true' || params.sandbox === true;
+  const amount = params.amount;
   
   const [loading, setLoading] = useState(true);
   const [webViewKey, setWebViewKey] = useState(0);
@@ -94,13 +97,13 @@ const PaymentWebView = () => {
     const { url, title } = navState;
     
     // Check for success URLs (PayHere return URLs)
-    if (url && (url.includes('/payment/success') || url.includes('success'))) {
+    if (url && (url.includes('/payment/success') || url.includes('success') || url.includes('status=SUCCESS'))) {
       handlePaymentSuccess();
       return;
     }
     
     // Check for cancel URLs
-    if (url && (url.includes('/payment/cancel') || url.includes('cancel'))) {
+    if (url && (url.includes('/payment/cancel') || url.includes('cancel') || url.includes('status=CANCELLED') || url.includes('status=FAILED'))) {
       handlePaymentCancel();
       return;
     }
