@@ -16,6 +16,7 @@ import fonts from '../../constants/fonts';
 import CircularProgress from '../../components/CircularProgress';
 import ChargingInfoCard from '../../components/ChargingInfoCard';
 import { API_BASE_URL } from '@env';
+import io from 'socket.io-client';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -31,35 +32,42 @@ const StartChargeWalkInScreen = () => {
 
   const [isCharging, setIsCharging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState('right');
-  const [seconds, setSeconds] = useState(0);
   const vehicleName = 'Kia EV6';
 
-  // 🧠 Fetch backend simulated data every 10s when charging is active
+  // ⚡ Socket.IO setup for real-time OCPP data
   useEffect(() => {
-    let interval;
-    if (isCharging) {
-      interval = setInterval(async () => {
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/ocpp/data`);
-          const data = await response.json();
-          console.log('⚡ OCPP update:', data);
+    const socket = io(API_BASE_URL, {
+      transports: ['websocket'],
+      reconnection: true,
+    });
 
-          setChargingData(prev => ({
-            ...prev,
-            chargingPower: `${data.power.toFixed(1)} kW`,
-            cost: (parseFloat(data.totalEnergy) * 120).toFixed(2), // simulate LKR cost
-            chargingTime: new Date(data.timeElapsed * 1000).toISOString().substr(11, 8),
-            batteryPercentage: Math.min(prev.batteryPercentage + 1, 100)
-          }));
-        } catch (err) {
-          console.error('Failed to fetch OCPP data:', err);
-        }
-      }, 10_000);
-    } else {
-      clearInterval(interval);
-    }
-    return () => clearInterval(interval);
-  }, [isCharging]);
+    socket.on('connect', () => {
+      console.log('✅ Connected to backend OCPP socket:', socket.id);
+    });
+
+    socket.on('powerUpdate', (data) => {
+      console.log('⚡ Live power update:', data);
+      setChargingData(prev => ({
+        ...prev,
+        chargingPower: `${parseFloat(data.totalPower).toFixed(2)} kW`,
+        cost: (parseFloat(data.totalPower) * 120).toFixed(2), // Simulated cost
+        chargingTime: new Date(data.elapsed * 1000).toISOString().substr(11, 8),
+        batteryPercentage: Math.min(prev.batteryPercentage + 1, 100)
+      }));
+    });
+
+    socket.on('chargingStopped', (summary) => {
+      console.log('⚠️ Charging stopped:', summary);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('❌ Disconnected from socket.');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   // 🔘 Swipe handler to start/stop charging
   const handleSwipeComplete = async (direction) => {
