@@ -7,30 +7,25 @@ import fonts from '../../constants/fonts';
 import AppBar from '../../components/AppBar';
 import { API_BASE_URL } from '@env';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import useUserData from '../../hooks/useUserData';
+import * as SecureStore from 'expo-secure-store';
 import { router } from 'expo-router';
 
 const ResetPasswordScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [user, setUser] = useState(null);
-    const [error, setError] = useState('');
-  
-
-  useEffect(() => {
-    async function getUser() {
-      const user = await AsyncStorage.getItem('user');
-      if (user) {
-        // console.log(user);
-        setUser(JSON.parse(user));
-      }
-    }
-    getUser();
-  }, []);
+  const { user } = useUserData();
+  const [error, setError] = useState('');
 
   const handleResetPassword = async () =>{
+    if (currentPassword.trim().length === 0) {
+      Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: 'Please enter your current password' });
+      return;
+    }
+
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
       return;
@@ -46,42 +41,42 @@ const ResetPasswordScreen = ({ navigation }) => {
     }
 
     try {
-    const userEmail = user.email;
+      // get token and user id
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) throw new Error('Not authenticated');
+      if (!user || !user._id) throw new Error('User not found');
 
-      const response = await fetch(`${API_BASE_URL}/api/evowners/reset-password`, {
+      const response = await fetch(`${API_BASE_URL}/api/evowners/profile/${user._id}/change-password`, {
         method: 'POST',
         headers: {
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: userEmail, password: password, confirmPassword: confirmPassword }),
+        body: JSON.stringify({ currentPassword: currentPassword, newPassword: password }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: data.message || 'Password reset failed',
-        });
+      const text = await response.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn('Non-JSON response change-password:', response.status, text);
+        Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: `Server error (status ${response.status})` });
         return;
       }
 
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: 'Success',
-        textBody: 'Password updated successfully!',
-      });
+      if (!response.ok) {
+        Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: data.message || 'Password change failed' });
+        return;
+      }
 
+      Toast.show({ type: ALERT_TYPE.SUCCESS, title: 'Success', textBody: data.message || 'Password updated successfully!' });
+      // After password change, navigate to sign in
       router.replace('/pages/SignInScreen');
 
     } catch (error) {
       console.error('Reset password error:', error);
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: error.message || 'Something went wrong.',
-      });
+      Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: error.message || 'Something went wrong.' });
     }
 
   }
@@ -98,6 +93,16 @@ const ResetPasswordScreen = ({ navigation }) => {
         <View style={styles.mainContent}>
           <Text style={styles.title}>Reset Password</Text>
           <Text style={styles.subtitle}>Create your new password.</Text>
+          <InputField
+            label="Current Password*"
+            value={currentPassword}
+            onChangeText={setCurrentPassword}
+            placeholder="Current password"
+            secureTextEntry={!showPassword}
+            showPassword={showPassword}
+            setShowPassword={setShowPassword}
+            isPassword
+          />
 
           {/* Input Fields */}
           <InputField
