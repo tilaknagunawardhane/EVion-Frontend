@@ -20,6 +20,7 @@ import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { API_BASE_URL } from '@env';
 import useUserData from '../../../../hooks/useUserData';
 import { useRouter } from 'expo-router';
+import PayHere from '@payhere/payhere-mobilesdk-reactnative';
 
 const AddPaymentMethodScreen = () => {
   const navigation = useNavigation();
@@ -31,6 +32,9 @@ const AddPaymentMethodScreen = () => {
   const [cardholderName, setCardholderName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // No initialization needed - PayHere SDK doesn't require it
+  // Sandbox mode is controlled by the 'sandbox' property in payment object
 
   const formatCardNumber = (text) => {
     const cleaned = text.replace(/\D/g, '');
@@ -51,7 +55,6 @@ const AddPaymentMethodScreen = () => {
     try {
       setIsLoading(true);
       if (!user?._id) {
-        // user not available yet
         Toast.show({
           type: ALERT_TYPE.WARNING,
           title: 'User not ready',
@@ -60,6 +63,7 @@ const AddPaymentMethodScreen = () => {
         setIsLoading(false);
         return;
       }
+
       const token = await SecureStore.getItemAsync('accessToken');
       if (!token) {
         throw new Error('Not authenticated');
@@ -68,6 +72,7 @@ const AddPaymentMethodScreen = () => {
       // Use minimal amount (100 LKR) just to trigger card saving
       const minimalAmount = 100;
 
+      console.log('Initiating card addition for user:', user._id);
       const response = await fetch(`${API_BASE_URL}/api/wallet/topup/initiate/${user._id}`, {
         method: 'POST',
         headers: {
@@ -83,20 +88,82 @@ const AddPaymentMethodScreen = () => {
       const result = await response.json();
 
       if (!response.ok) {
+        console.error('Failed to initiate card addition:', result);
         throw new Error(result.message || 'Failed to initiate card addition');
       }
 
       if (result.success) {
-        // Navigate to PaymentWebView with card saving enabled
-        router.push({
-          pathname: '/pages/Profile/Wallet/PaymentWebView',
-          params: {
-            paymentData: JSON.stringify(result.payment_data),
-            sandbox: String(result.sandbox),
-            amount: String(minimalAmount),
-            isAddingCard: 'true', // flag
+        console.log('Payment data received:', result.payment_data);
+        
+        // Prepare PayHere payment object
+        const paymentObject = {
+          sandbox: result.sandbox, // true for sandbox, false for production
+          merchant_id: result.payment_data.merchant_id,
+          notify_url: result.payment_data.notify_url,
+          order_id: result.payment_data.order_id,
+          items: result.payment_data.items,
+          amount: parseFloat(result.payment_data.amount),
+          currency: result.payment_data.currency,
+          first_name: result.payment_data.first_name,
+          last_name: result.payment_data.last_name,
+          email: result.payment_data.email,
+          phone: result.payment_data.phone,
+          address: result.payment_data.address,
+          city: result.payment_data.city,
+          country: result.payment_data.country,
+          delivery_address: result.payment_data.address,
+          delivery_city: result.payment_data.city,
+          delivery_country: result.payment_data.country,
+          custom_1: result.payment_data.custom_1,
+          custom_2: result.payment_data.custom_2,
+          hash: result.payment_data.hash,
+        };
+
+        // Add recurring payment fields if present (for card tokenization)
+        if (result.payment_data.recurrence) {
+          paymentObject.recurrence = result.payment_data.recurrence;
+          paymentObject.duration = result.payment_data.duration;
+        }
+
+        console.log('Starting PayHere payment...');
+        console.log('Sandbox mode:', paymentObject.sandbox);
+
+        // Start PayHere payment
+        PayHere.startPayment(
+          paymentObject,
+          (paymentId) => {
+            console.log('Payment successful with ID:', paymentId);
+            Toast.show({
+              type: ALERT_TYPE.SUCCESS,
+              title: 'Card Added Successfully',
+              textBody: 'Your card has been securely saved.',
+            });
+            setIsLoading(false);
+            
+            // Wait a bit before navigating back
+            setTimeout(() => {
+              router.back();
+            }, 1500);
           },
-        });
+          (error) => {
+            console.error('Payment error:', error);
+            Toast.show({
+              type: ALERT_TYPE.DANGER,
+              title: 'Payment Failed',
+              textBody: error || 'Failed to add card. Please try again.',
+            });
+            setIsLoading(false);
+          },
+          () => {
+            console.log('Payment dismissed by user');
+            Toast.show({
+              type: ALERT_TYPE.WARNING,
+              title: 'Payment Cancelled',
+              textBody: 'You cancelled the payment process.',
+            });
+            setIsLoading(false);
+          }
+        );
       }
 
     } catch (error) {
@@ -106,7 +173,6 @@ const AddPaymentMethodScreen = () => {
         title: 'Error',
         textBody: error.message,
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -157,7 +223,6 @@ const AddPaymentMethodScreen = () => {
   };
 
   const handleQuickAdd = () => {
-    // Skip card preview and go directly to payment gateway
     Alert.alert(
       'Quick Card Add',
       'You will be redirected to our secure payment partner to add your card. A temporary authorization of LKR 100 will be made and immediately refunded.',
@@ -178,7 +243,8 @@ const AddPaymentMethodScreen = () => {
     <View style={styles.container}>
       <AppBar title="Add New Card" />
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -305,7 +371,7 @@ const AddPaymentMethodScreen = () => {
 
         {/* Add Card Button */}
         <CustomButton 
-          title={isLoading ? "Redirecting..." : "Continue to Secure Payment"} 
+          title={isLoading ? "Processing..." : "Continue to Secure Payment"} 
           type="primary" 
           onPress={handleSave}
           disabled={isLoading}
