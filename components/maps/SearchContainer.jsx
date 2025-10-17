@@ -52,7 +52,7 @@ export default function SearchContainer({
             input: input,
             key: GOOGLE_MAPS_API_KEY,
             components: 'country:lk', // Restrict to Sri Lanka
-            types: '(cities)', // Focus on cities and places
+            // types: '(cities)', // Focus on cities and places
           }
         }
       );

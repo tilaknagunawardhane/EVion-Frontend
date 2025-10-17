@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Text
 } from 'react-native';
 import axios from 'axios';
 import * as Location from 'expo-location';
@@ -17,6 +18,7 @@ import colors from '../../constants/color';
 // Import your API key from environment variables
 import { OPEN_CHARGE_MAP_API_KEY } from '@env';
 import { API_BASE_URL } from '@env';
+import { GOOGLE_MAPS_API_KEY } from '@env';
 
 // Components
 import SearchContainer from '../../components/maps/SearchContainer';
@@ -27,6 +29,7 @@ import ChargingStationMarker from '../../components/maps/ChargingStationMarker';
 
 // Utils
 import { getDistanceFromLatLonInKm } from '../../utils/mapUtils';
+import polyline from '@mapbox/polyline';
 
 const OPEN_CHARGE_MAP_API_URL = 'https://api.openchargemap.io/v3/poi';
 
@@ -44,6 +47,17 @@ export default function MapScreen() {
   const [stationsLoaded, setStationsLoaded] = useState(false);
   const [partneredStationsLoaded, setPartneredStationsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  // const [routePolyline, setRoutePolyline] = useState(null);
+
+  useEffect(() => {
+    console.log('heh: ', selectedLocation);
+  }, [selectedLocation]);
+
+  useEffect(() => {
+    // chargingStations.forEach(station => console.log(station.address));
+    console.log('Charging Stations: ', chargingStations.length);
+  }, [chargingStations]);
 
   // Get user location on component mount
   useEffect(() => {
@@ -56,7 +70,7 @@ export default function MapScreen() {
       loadChargingStations();
       loadPartneredStations();
     }
-  }, [location, stationsLoaded, partneredStationsLoaded]);
+  }, [location]);
 
   // Center map on user location when map is ready
   useEffect(() => {
@@ -215,6 +229,50 @@ export default function MapScreen() {
   }
 };
 
+  const handleGetRoute = async (destination) => {
+    if (!destination || !location) return;
+
+    let filteredStations = [];
+
+    try {
+      setStationsLoaded(false);
+
+    // route polyline from Google Directions API
+    const googleDirectionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${location.latitude},${location.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+    const directionsResponse = await axios.get(googleDirectionsUrl);
+    
+    if (
+      !directionsResponse.data.routes ||
+      directionsResponse.data.routes.length === 0
+    ) {
+      Alert.alert('Error', 'No route found');
+      return;
+    }
+
+    // encoded polyline
+    const encodedPolyline = directionsResponse.data.routes[0].overview_polyline.points;
+    console.log('encodedPolyline: ', encodedPolyline)
+
+    const response = await axios.post(`${API_BASE_URL}/api/common/filteredChargingStations`, {
+        startLat: location.latitude,
+        startLng: location.longitude,
+        endLat: destination.latitude,
+        endLng: destination.longitude,
+        polyline: encodedPolyline,
+    });
+
+    filteredStations = response.data;
+    console.log('Filtered charging stations:', filteredStations.length);
+
+    } catch (error) {
+      console.error('Failed to fetch filtered stations:', error);
+      Alert.alert('Error', 'Failed to get route with charging stations');
+    } finally {
+      console.log('finally');
+      setChargingStations(filteredStations);
+      setStationsLoaded(true);
+    }
+  };
 
   const centerMapOnUserLocation = () => {
     if (!location || !mapRef.current) return;
@@ -244,7 +302,7 @@ export default function MapScreen() {
 
   const handleSearch = async (query) => {
     if (!query.trim()) return;
-
+    console.log('query: ', query);
     try {
       // First, check if query matches any charging station
       const matchingStation = chargingStations.find(station =>
@@ -259,6 +317,7 @@ export default function MapScreen() {
 
       // If no station found, geocode the location
       const geocoded = await Location.geocodeAsync(query);
+      console.log('geocoded: ', geocoded);
       if (geocoded.length === 0) {
         Alert.alert('No results found', 'Please try a different search term');
         return;
@@ -271,6 +330,14 @@ export default function MapScreen() {
         latitudeDelta: 0.05,
         longitudeDelta: 0.05,
       }, 1000);
+
+      // Select this location on the map
+      setSelectedStation(null); // clear any station selection
+      setSelectedLocation({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        name: query, //display name
+      });
 
       // Find nearby stations to the searched location
       const nearbyStations = chargingStations.filter(station =>
@@ -289,7 +356,7 @@ export default function MapScreen() {
           getDistanceFromLatLonInKm(coords.latitude, coords.longitude, current.latitude, current.longitude)
             ? prev : current
         );
-        setSelectedStation(closestStation);
+        // setSelectedStation(closestStation);
       }
 
     } catch (error) {
@@ -366,6 +433,14 @@ export default function MapScreen() {
           />
         ))}
 
+        {selectedLocation && (
+        <Marker
+          coordinate={selectedLocation}
+          pinColor="blue"
+          title={selectedLocation.name || "Selected Location"}
+        />
+      )}
+
       </MapView>
 
       {/* Map Loading Overlay */}
@@ -390,6 +465,19 @@ export default function MapScreen() {
           onClose={handleCloseModal}
           isVisible={!!selectedStation}
         />
+      )}
+
+      {/* get-route button */}
+      {selectedLocation && !selectedStation && (
+        <View style={styles.routeButtonContainer}>
+          <TouchableOpacity
+            style={styles.routeButton}
+            onPress={() => handleGetRoute(selectedLocation)}
+          >
+            <MaterialIcons name="alt-route" size={22} color="#fff" />
+            <Text style={styles.routeButtonText}>Get Route with Charging Stations</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {/* Floating Action Buttons */}
@@ -472,4 +560,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+
+routeButtonContainer: {
+  position: 'absolute',
+  bottom: 30,
+  left: 20,
+  right: 20,
+  alignItems: 'center',
+},
+
+routeButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'center',
+  backgroundColor: colors.primary,
+  paddingVertical: 14,
+  paddingHorizontal: 20,
+  borderRadius: 30,
+  elevation: 5,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 3.84,
+},
+
+routeButtonText: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: '600',
+  marginLeft: 8,
+},
+
 });
