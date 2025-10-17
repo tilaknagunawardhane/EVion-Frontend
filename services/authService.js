@@ -202,15 +202,39 @@ export const register = async (name, email, password, userType) => {
 export const storeUserData = async (userData) => {
   try {
     if (!userData) return;
-    const safeUserData = {
-      _id: userData._id,
-      email: userData.email,
-      name: userData.name,
-      // include common profile fields so UI can show updated basic info
-      contact_number: userData.contact_number || userData.contactNumber || null,
-      home_address: userData.home_address || userData.homeAddress || null,
+    // Load existing stored user (if any) and merge to avoid overwriting with partial objects
+    let existing = null;
+    try {
+      const existingStr = await SecureStore.getItemAsync('user');
+      if (existingStr) existing = JSON.parse(existingStr);
+    } catch (err) {
+      // ignore parse errors and continue with null existing
+      console.warn('Failed to parse existing stored user while merging:', err);
+      existing = null;
+    }
+
+    const merged = {
+      ...(existing || {}),
+      ...(userData || {}),
     };
+
+    const safeUserData = {
+      _id: merged._id,
+      email: merged.email,
+      name: merged.name,
+      contact_number: merged.contact_number || merged.contactNumber || null,
+      home_address: merged.home_address || merged.homeAddress || null,
+    };
+
     await SecureStore.setItemAsync('user', JSON.stringify(safeUserData));
+    // Persist userID string if available
+    if (safeUserData._id) {
+      try {
+        await SecureStore.setItemAsync('userID', String(safeUserData._id));
+      } catch (err) {
+        console.warn('Failed to persist userID as string:', err);
+      }
+    }
   } catch (error) {
     console.error('User data storage error:', error);
     throw error;

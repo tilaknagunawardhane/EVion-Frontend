@@ -1,7 +1,11 @@
-// hooks/useUserData.js
+// Lightweight hook wrapper for user data. This preserves the original hook API
+// but delegates storage access to the auth service. Keeping the hook file in
+// place ensures all existing imports continue to work while simplifying the
+// implementation.
 import { useState, useEffect } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { getCachedUserData } from '../services/authService';
 
 export default function useUserData() {
   const [user, setUser] = useState(null);
@@ -9,48 +13,34 @@ export default function useUserData() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const loadUser = async () => {
+    let mounted = true;
+    const load = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-        
-        // Get both user data and ID for consistency check
-        const [userString, userId] = await Promise.all([
-          SecureStore.getItemAsync('user'),
-          SecureStore.getItemAsync('userID')
-        ]);
-
-        if (userString && userId) {
-          try {
-            const userObj = JSON.parse(userString);
-            
-            // Validate that stored ID matches user data
-            if (userObj._id === userId) {
-              setUser(userObj);
-            } else {
-              console.warn('User ID mismatch - clearing data');
-              await clearUserData();
-            }
-          } catch (parseError) {
-            console.error('Failed to parse user data:', parseError);
-            await clearUserData();
-          }
-        }
-      } catch (error) {
-        console.error('User data load error:', error);
-        setError(error);
-        Toast.show({
-          type: ALERT_TYPE.DANGER,
-          title: 'Error',
-          textBody: 'Failed to load user data',
-        });
+        const cached = await getCachedUserData();
+        if (!mounted) return;
+        if (cached) setUser(cached);
+      } catch (err) {
+        console.error('useUserData load error:', err);
+        setError(err);
+        Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: 'Failed to load user data' });
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
-
-    loadUser();
+    load();
+    return () => { mounted = false; };
   }, []);
+
+  const refreshUserData = async () => {
+    try {
+      const cached = await getCachedUserData();
+      if (cached) setUser(cached);
+      else setUser(null);
+    } catch (err) {
+      console.error('useUserData refresh error:', err);
+    }
+  };
 
   const clearUserData = async () => {
     try {
@@ -59,27 +49,11 @@ export default function useUserData() {
         SecureStore.deleteItemAsync('userID')
       ]);
       setUser(null);
-    } catch (error) {
-      console.error('Failed to clear user data:', error);
+    } catch (err) {
+      console.error('useUserData clear error:', err);
+      Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: 'Failed to clear user data' });
     }
   };
 
-  const refreshUserData = async () => {
-    try {
-      const userString = await SecureStore.getItemAsync('user');
-      if (userString) {
-        setUser(JSON.parse(userString));
-      }
-    } catch (error) {
-      console.error('Failed to refresh user data:', error);
-    }
-  };
-
-  return {
-    user,
-    isLoading,
-    error,
-    clearUserData,
-    refreshUserData
-  };
+  return { user, isLoading, error, clearUserData, refreshUserData };
 }

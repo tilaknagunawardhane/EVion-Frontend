@@ -75,6 +75,9 @@ const Profile1 = () => {
       // Also refresh profile from server to keep authoritative state
       if (user?._id) fetchProfile();
     }
+    if (params.activeTab) {
+      setActiveTab(params.activeTab);
+    }
   }, [params.homeAddress, params.updatedEmail]);
   const router = useRouter();
   const { user, isLoading: isUserLoading, refreshUserData } = useUserData();
