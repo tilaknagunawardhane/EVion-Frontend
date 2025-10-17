@@ -91,19 +91,19 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   title: {
-    fontSize: 32,
+  fontSize: 20,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 15,
+  fontSize: 13,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     marginBottom: 20,
   },
   note: {
-    fontSize: 13,
+  fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
     marginTop: 8,

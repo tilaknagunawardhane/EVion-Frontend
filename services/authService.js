@@ -206,6 +206,9 @@ export const storeUserData = async (userData) => {
       _id: userData._id,
       email: userData.email,
       name: userData.name,
+      // include common profile fields so UI can show updated basic info
+      contact_number: userData.contact_number || userData.contactNumber || null,
+      home_address: userData.home_address || userData.homeAddress || null,
     };
     await SecureStore.setItemAsync('user', JSON.stringify(safeUserData));
   } catch (error) {

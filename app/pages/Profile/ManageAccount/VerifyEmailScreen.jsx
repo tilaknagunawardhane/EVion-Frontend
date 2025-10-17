@@ -12,6 +12,7 @@ import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { API_BASE_URL } from '@env';
 import useUserData from '../../../../hooks/useUserData';
+import { storeUserData } from '../../../../services/authService';
 import AppBar from '../../../../components/AppBar';
 import CustomButton from '../../../../components/CustomButton';
 import colors from '../../../../constants/color';
@@ -19,7 +20,7 @@ import fonts from '../../../../constants/fonts';
 
 const VerifyEmailScreen = () => {
   const { email } = useLocalSearchParams();
-  const { user } = useUserData();
+  const { user, refreshUserData } = useUserData();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +74,22 @@ const VerifyEmailScreen = () => {
 
       Toast.show({ type: ALERT_TYPE.SUCCESS, title: 'Success', textBody: result.message || 'Email verified' });
       setSuccess(true);
-      setTimeout(() => router.back(), 1500);
+      // Try to extract updated email from response (fall back to the email the user entered)
+      const updatedEmail = result?.data?.email || result?.email || email;
+      // If backend returned updated user data, persist and refresh
+      const updatedUser = result?.data || result;
+      try {
+        if (updatedUser) {
+          await storeUserData(updatedUser);
+          if (typeof refreshUserData === 'function') await refreshUserData();
+        }
+      } catch (err) {
+        console.warn('Failed to persist verified email locally:', err);
+      }
+      // Navigate to Manage Account and pass updatedEmail so the UI refreshes
+      setTimeout(() => {
+        router.push({ pathname: '/pages/Profile/Profile1', params: { updatedEmail } });
+      }, 600);
     } catch (error) {
       console.error('Verify OTP error:', error);
       Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: error.message || 'OTP verification failed' });
@@ -188,20 +204,20 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   title: {
-    fontSize: 32,
+  fontSize: 20,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 15,
+  fontSize: 13,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     marginBottom: 24,
     lineHeight: 22,
   },
   otpLabel: {
-    fontSize: 16,
+  fontSize: 14,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     marginBottom: 12,
@@ -213,13 +229,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   otpInput: {
-    width: 45,
-    height: 50,
-    borderWidth: 1,
-    borderRadius: 8,
-    borderColor: '#E0E0E0',
-    backgroundColor: colors.white,
-    fontSize: 20,
+  width: 45,
+  height: 50,
+  borderWidth: 1,
+  borderRadius: 8,
+  borderColor: '#E0E0E0',
+  backgroundColor: colors.white,
+  fontSize: 18,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     textAlign: 'center',
@@ -229,7 +245,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F9FF',
   },
   resendText: {
-    fontSize: 14,
+    fontSize: 12,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     textAlign: 'center',

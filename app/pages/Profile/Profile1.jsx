@@ -16,6 +16,7 @@ import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { API_BASE_URL } from '@env';
 import useUserData from '../../../hooks/useUserData';
+import { storeUserData } from '../../../services/authService';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import CustomButton from '../../../components/CustomButton';
@@ -68,9 +69,15 @@ const Profile1 = () => {
         homeAddress: params.homeAddress
       }));
     }
-  }, [params.homeAddress]);
+    if (params.updatedEmail) {
+      // When returning from email verification, update the UI and optionally re-fetch from backend
+      setUserInfo(prev => ({ ...prev, email: params.updatedEmail }));
+      // Also refresh profile from server to keep authoritative state
+      if (user?._id) fetchProfile();
+    }
+  }, [params.homeAddress, params.updatedEmail]);
   const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUserData();
+  const { user, isLoading: isUserLoading, refreshUserData } = useUserData();
   const [activeTab, setActiveTab] = useState('Basic Info');
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(null);
@@ -167,7 +174,7 @@ const Profile1 = () => {
       const token = await SecureStore.getItemAsync('accessToken');
       if (!token) throw new Error('Not authenticated');
 
-      const response = await fetch(`${API_BASE_URL}/api/evowner/profile/${user._id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/evowners/profile/${user._id}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -217,7 +224,7 @@ const Profile1 = () => {
       const token = await SecureStore.getItemAsync('accessToken');
       if (!token) throw new Error('Not authenticated');
 
-      const response = await fetch(`${API_BASE_URL}/api/evowner/profile/${user._id}`, {
+  const response = await fetch(`${API_BASE_URL}/api/evowners/profile/${user._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -239,6 +246,24 @@ const Profile1 = () => {
       if (!response.ok) {
         Toast.show({ type: ALERT_TYPE.ERROR, title: 'Error', textBody: result.message || 'Failed to update profile' });
         return { ok: false, result };
+      }
+
+      // Persist updated user data locally so other screens (and next login) show updated info
+      const updated = result.data || result;
+      try {
+        // If backend returned an updated user object, store minimal user info
+        const userToStore = {
+          _id: updated._id || user?._id,
+          email: updated.email || user?.email,
+          name: updated.name || user?.name,
+        };
+        await storeUserData(userToStore);
+        // Ask hook to refresh its cached value
+        if (typeof refreshUserData === 'function') {
+          await refreshUserData();
+        }
+      } catch (err) {
+        console.warn('Failed to persist updated user locally:', err);
       }
 
       Toast.show({ type: ALERT_TYPE.SUCCESS, title: 'Success', textBody: result.message || 'Profile updated' });
