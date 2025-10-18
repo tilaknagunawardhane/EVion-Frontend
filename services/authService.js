@@ -12,6 +12,22 @@ if (!SecureStore) {
   throw new Error('SecureStore module not found');
 }
 
+// Helper to ensure SecureStore only receives strings. If value is an object
+// it will be JSON.stringified. Null/undefined values are skipped.
+const safeSetItemAsync = async (key, value) => {
+  if (value === null || value === undefined) return;
+  try {
+    if (typeof value === 'string') {
+      await SecureStore.setItemAsync(key, value);
+    } else {
+      await SecureStore.setItemAsync(key, JSON.stringify(value));
+    }
+  } catch (err) {
+    console.error(`SecureStore failed to set ${key}:`, err);
+    throw err;
+  }
+};
+
 export const getAuthToken = async () => {
   try {
     const token = await SecureStore.getItemAsync('accessToken');
@@ -28,7 +44,7 @@ export const getAuthToken = async () => {
 
 export const setAuthToken = async (token) => {
   try {
-    await SecureStore.setItemAsync('accessToken', token);
+    await safeSetItemAsync('accessToken', token);
     Toast.show({
       type: ALERT_TYPE.SUCCESS,
       title: 'Session Updated',
@@ -47,36 +63,77 @@ export const setAuthToken = async (token) => {
 
 export const login = async (email, password, userType) => {
   try {
-    const endpoint = `/${userType}/login`;
+    // Normalize userType to the backend's expected resource path.
+    // Frontend passes values like 'evOwner' but backend routes use 'evowners'.
+    const userTypeMap = {
+      evOwner: 'evowners',
+    };
+    const resource = userTypeMap[userType] || String(userType).toLowerCase();
+  const endpoint = `/${resource}/login`;
     Toast.show({
       type: ALERT_TYPE.INFO,
       title: 'Logging In',
       textBody: 'Authenticating your credentials...',
       autoClose: 1500,
     });
-    const response = await fetch(`${API_BASE_URL}/api/auth${endpoint}`, {
+    // Some backend routes live under /api/evowners (not under /api/auth).
+    // Pick the correct base path depending on resource.
+    const authBase = (resource === 'evowners') ? `/api/${resource}` : `/api/auth/${resource}`;
+    const requestUrl = `${API_BASE_URL}${authBase}/login`;
+    // Debug: print the request URL and a masked payload to help backend troubleshooting
+    try {
+      const masked = { email, password: password ? '*****' : password };
+      console.log('[authService] POST', requestUrl, 'payload:', masked);
+    } catch (e) { /* ignore logging errors */ }
+
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
     });
-    const data = await response.json();
+    // Guard against non-JSON responses (e.g., HTML error pages) which cause
+    // JSON.parse errors. Read content-type first and parse accordingly.
+    let data = {};
+    try {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+        console.log('[authService] login response JSON:', data);
+      } else {
+        // Read text (could be HTML) to surface useful debug info
+        const text = await response.text();
+        console.warn('[authService] Non-JSON response from login endpoint:', text);
+        data = { message: text };
+      }
+    } catch (parseError) {
+      // If parsing fails for any reason, capture raw text
+      try {
+        const raw = await response.text();
+        console.warn('Failed to parse response as JSON, raw response:', raw);
+        data = { message: raw };
+      } catch (e) {
+        data = { message: 'Unable to read server response' };
+      }
+    }
+
     if (!response.ok) {
+      const message = data?.message || `Login failed: ${response.status} ${response.statusText}`;
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Login Failed',
-        textBody: data.message || 'Invalid credentials',
+        textBody: typeof message === 'string' ? message : 'Invalid credentials',
       });
-      throw new Error(data.message || 'Login failed');
+      throw new Error(typeof message === 'string' ? message : 'Login failed');
     }
-    await SecureStore.setItemAsync('accessToken', data.accessToken);
-    await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+    await safeSetItemAsync('accessToken', data.accessToken);
+    await safeSetItemAsync('refreshToken', data.refreshToken);
     if (data.user?._id) {
-      await SecureStore.setItemAsync('userID', String(data.user._id));
+      await safeSetItemAsync('userID', String(data.user._id));
     }
     if (data.user) {
-      await SecureStore.setItemAsync('user', JSON.stringify(data.user));
+      await safeSetItemAsync('user', data.user);
     }
     Toast.show({
       type: ALERT_TYPE.SUCCESS,
@@ -146,36 +203,71 @@ export const logout = async () => {
 
 export const register = async (name, email, password, userType) => {
   try {
-    const endpoint = `/${userType}/register`;
+    // Normalize userType to the backend's expected resource path.
+    const userTypeMap = {
+      evOwner: 'evowners',
+    };
+    const resource = userTypeMap[userType] || String(userType).toLowerCase();
+  const endpoint = `/${resource}/register`;
     Toast.show({
       type: ALERT_TYPE.INFO,
       title: 'Creating Account',
       textBody: 'Setting up your new account...',
       autoClose: 1500,
     });
-    const response = await fetch(`${API_BASE_URL}/api/auth${endpoint}`, {
+    // Use the appropriate base path for registration as well.
+    const regBase = (resource === 'evowners') ? `/api/${resource}` : `/api/auth/${resource}`;
+    const requestUrl = `${API_BASE_URL}${regBase}/register`;
+    try {
+      const masked = { name, email, password: password ? '*****' : password };
+      console.log('[authService] POST', requestUrl, 'payload:', masked);
+    } catch (e) { }
+
+    const response = await fetch(requestUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name, email, password }),
     });
-    const data = await response.json();
+    // See login: handle non-JSON responses gracefully and surface server text
+    let data = {};
+    try {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+        console.log('[authService] register response JSON:', data);
+      } else {
+        const text = await response.text();
+        console.warn('[authService] Non-JSON response from register endpoint:', text);
+        data = { message: text };
+      }
+    } catch (parseError) {
+      try {
+        const raw = await response.text();
+        console.warn('Failed to parse register response as JSON, raw response:', raw);
+        data = { message: raw };
+      } catch (e) {
+        data = { message: 'Unable to read server response' };
+      }
+    }
+
     if (!response.ok) {
+      const message = data?.message || `Registration failed: ${response.status} ${response.statusText}`;
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Registration Failed',
-        textBody: data.message || 'Account creation failed',
+        textBody: typeof message === 'string' ? message : 'Account creation failed',
       });
-      throw new Error(data.message || 'Registration failed');
+      throw new Error(typeof message === 'string' ? message : 'Registration failed');
     }
-    await SecureStore.setItemAsync('accessToken', data.accessToken);
-    await SecureStore.setItemAsync('refreshToken', data.refreshToken);
+    await safeSetItemAsync('accessToken', data.accessToken);
+    await safeSetItemAsync('refreshToken', data.refreshToken);
     if (data.user?._id) {
-      await SecureStore.setItemAsync('userID', String(data.user._id));
+      await safeSetItemAsync('userID', String(data.user._id));
     }
     if (data.user) {
-      await SecureStore.setItemAsync('user', JSON.stringify(data.user));
+      await safeSetItemAsync('user', data.user);
     }
     Toast.show({
       type: ALERT_TYPE.SUCCESS,
@@ -226,11 +318,11 @@ export const storeUserData = async (userData) => {
       home_address: merged.home_address || merged.homeAddress || null,
     };
 
-    await SecureStore.setItemAsync('user', JSON.stringify(safeUserData));
+    await safeSetItemAsync('user', safeUserData);
     // Persist userID string if available
     if (safeUserData._id) {
       try {
-        await SecureStore.setItemAsync('userID', String(safeUserData._id));
+        await safeSetItemAsync('userID', String(safeUserData._id));
       } catch (err) {
         console.warn('Failed to persist userID as string:', err);
       }
