@@ -10,27 +10,13 @@ const BookingCard = ({
   duration,
   startTime,
   endTime,
-  stationName,
+  charging_station_id,
   address,
   carImage,
-  carName,
-  connectorType,
+  vehicle,
+  connector,
   iconColor = colors.primary
 }) => {
-  // const navigation = useNavigation(); // 👈 Use navigation hook
-
-  // const handlePress = () => {
-  //   navigation.navigate('BookingDetails', {
-  //     dateLabel,
-  //     duration,
-  //     time,
-  //     stationName,
-  //     address,
-  //     carImage,
-  //     carName,
-  //     connectorType,
-  //   });
-  // };
 
   return (
     <View style={styles.card}>
@@ -46,8 +32,8 @@ const BookingCard = ({
 
       <View style={styles.middleRow}>
         <View style={styles.stationContainer}>
-          <Text style={styles.stationName}>{stationName}</Text>
-          <Text style={styles.address}>{address}</Text>
+          <Text style={styles.stationName}>{charging_station_id.station_name}</Text>
+          <Text style={styles.address}>{charging_station_id.address}</Text>
         </View>
         <TouchableOpacity>
           <MaterialIcons name="navigation" size={28} color={iconColor} />
@@ -59,11 +45,11 @@ const BookingCard = ({
       <View style={styles.bottomRow}>
         <View style={styles.carContainer}>
           <Image source={carImage} style={styles.carImage} />
-          <Text style={styles.carName}>{carName}</Text>
+          <Text style={styles.carName}>{vehicle.make.make} {vehicle.model.model}</Text>
         </View>
         <View style={styles.connectorContainer}>
           <MaterialCommunityIcons name="ev-plug-ccs2" size={24} color={colors.mainTextColor} />
-          <Text style={styles.connector}>{connectorType}</Text>
+          <Text style={styles.connector}>{connector.type_name} - {connector.current_type}</Text>
         </View>
       </View>
     </View>
