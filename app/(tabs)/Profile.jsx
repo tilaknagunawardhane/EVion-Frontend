@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -12,6 +12,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import useUserData from '../../hooks/useUserData';
 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -26,13 +28,21 @@ const ProfileScreen1 = () => {
   const isSmallScreen = SCREEN_WIDTH < 375;
   const avatarSize = SCREEN_WIDTH < 375 ? 60 : 80;
 
+  const { user, isLoading, refreshUserData } = useUserData();
+
+  // When this tab gains focus, refresh cached user data so the card shows
+  // the most recent name/email after changes on the profile screen.
+  useFocusEffect(
+    useCallback(() => {
+      if (typeof refreshUserData === 'function') refreshUserData();
+    }, [refreshUserData])
+  );
+
   const userData = {
-    name: 'Vishwani Vilochaṇa',
-    email: 'vishwani2002@gmail.com',
+    name: user?.name || 'Guest User',
+    email: user?.email || 'Please sign in',
     profileImage: null,
-    vehicles: [
-      { id: 1, name: 'BYD', image: require('../../assets/byd.png') },
-    ],
+    vehicles: user?.vehicles || [ { id: 1, name: 'BYD', image: require('../../assets/byd.png') } ],
     walletBalance: 2500,
     recentActivity: 12,
   };
