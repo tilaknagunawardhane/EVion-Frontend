@@ -14,6 +14,7 @@ import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
+import MapViewDirections from 'react-native-maps-directions';
 
 // Import your API key from environment variables
 import { OPEN_CHARGE_MAP_API_KEY } from '@env';
@@ -29,7 +30,7 @@ import ChargingStationMarker from '../../components/maps/ChargingStationMarker';
 
 // Utils
 import { getDistanceFromLatLonInKm } from '../../utils/mapUtils';
-import polyline from '@mapbox/polyline';
+// import polyline from '@mapbox/polyline';
 
 const OPEN_CHARGE_MAP_API_URL = 'https://api.openchargemap.io/v3/poi';
 
@@ -48,11 +49,13 @@ export default function MapScreen() {
   const [partneredStationsLoaded, setPartneredStationsLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
-  // const [routePolyline, setRoutePolyline] = useState(null);
+  const [startLocation, setStartLocation] = useState(null);
+  const [routePolyline, setRoutePolyline] = useState(null);
 
   useEffect(() => {
-    console.log('heh: ', selectedLocation);
-  }, [selectedLocation]);
+    console.log('startLocation: ', startLocation);
+    console.log('selectedLocation: ', selectedLocation);
+  }, [startLocation, selectedLocation]);
 
   useEffect(() => {
     // chargingStations.forEach(station => console.log(station.address));
@@ -92,6 +95,10 @@ export default function MapScreen() {
           latitude: 6.9271,
           longitude: 79.8612,
         });
+        setStartLocation({
+          latitude: 6.9271,
+          longitude: 79.8612,
+        }); // setting user location as the starting location
         return;
       }
 
@@ -123,12 +130,22 @@ export default function MapScreen() {
           longitude: 79.8612,
           accuracy: loc.coords.accuracy,
         });
+        setStartLocation({
+          latitude: 6.9271, // Colombo
+          longitude: 79.8612,
+          accuracy: loc.coords.accuracy,
+        }); // setting user location as the starting location
       } else {
         setLocation({
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
           accuracy: loc.coords.accuracy,
         });
+        setStartLocation({
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          accuracy: loc.coords.accuracy,
+        }); // setting user location as the starting location
       }
       
       setErrorMsg(null);
@@ -230,7 +247,7 @@ export default function MapScreen() {
 };
 
   const handleGetRoute = async (destination) => {
-    if (!destination || !location) return;
+    if (!destination || !startLocation) return;
 
     let filteredStations = [];
 
@@ -238,7 +255,7 @@ export default function MapScreen() {
       setStationsLoaded(false);
 
     // route polyline from Google Directions API
-    const googleDirectionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${location.latitude},${location.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+    const googleDirectionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.latitude},${startLocation.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
     const directionsResponse = await axios.get(googleDirectionsUrl);
     
     if (
@@ -254,8 +271,8 @@ export default function MapScreen() {
     console.log('encodedPolyline: ', encodedPolyline)
 
     const response = await axios.post(`${API_BASE_URL}/api/common/filteredChargingStations`, {
-        startLat: location.latitude,
-        startLng: location.longitude,
+        startLat: startLocation.latitude,
+        startLng: startLocation.longitude,
         endLat: destination.latitude,
         endLng: destination.longitude,
         polyline: encodedPolyline,
@@ -434,12 +451,29 @@ export default function MapScreen() {
         ))}
 
         {selectedLocation && (
-        <Marker
-          coordinate={selectedLocation}
-          pinColor="blue"
-          title={selectedLocation.name || "Selected Location"}
-        />
-      )}
+          <Marker
+            coordinate={selectedLocation}
+            pinColor="blue"
+            title={selectedLocation.name || "Selected Location"}
+          />
+        )}
+
+        {startLocation && selectedLocation && (
+          <MapViewDirections
+            origin={startLocation}
+            destination={selectedLocation}
+            apikey={GOOGLE_MAPS_API_KEY}
+            strokeWidth={4}
+            strokeColor="blue"
+            onReady={result => {
+              console.log(`Distance: ${result.distance} km`);
+              console.log(`Duration: ${result.duration} min`);
+            }}
+            onError={errorMessage => {
+              console.error(errorMessage);
+            }}
+          />
+        )}
 
       </MapView>
 
