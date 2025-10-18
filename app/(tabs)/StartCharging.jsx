@@ -1,34 +1,79 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import BarcodeScanner from '../../components/BarcodeScanner';
 import { useNavigation } from "@react-navigation/native";
+import useUserData from '../../hooks/useUserData';
+import { API_BASE_URL } from '@env';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const StartChargingScreen = () => {
   const navigation = useNavigation();
   const router = useRouter();
+  const { user } = useUserData(); // Get logged-in user
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [chargerId, setChargerId] = useState('');
 
+  // API call function
+  const connectCharger = async (connectorId) => {
+    if (!user?._id) {
+      Alert.alert('Error', 'User not found. Please log in again.');
+      return;
+    }
+
+    const payload = {
+      connectorId,
+      ev_owner_id: user._id
+    };
+
+    try {
+      console.log('Connecting charger with payload:', payload);
+      const response = await fetch(`${API_BASE_URL}/api/ocpp/connect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert('Failed to connect charger', data.error || 'Unknown error');
+        return;
+      }
+
+      Alert.alert('Success', 'Charger connected successfully!');
+      router.push({
+        pathname: '/pages/WaitingConnection',
+        params: { 
+          userId: user._id, 
+          connectorId 
+  }
+});
+ // Navigate to waiting connection
+    } catch (error) {
+      console.error('API error:', error);
+      Alert.alert('Error', 'Failed to connect charger. Please try again.');
+    }
+  };
+
   const handleBarCodeScanned = (data) => {
     setIsCameraActive(false);
-    alert(`QR Code Scanned: ${data}`);
-    router.push('/pages/WaitingConnection');
+    if (data) connectCharger(data); // Use scanned QR as chargerId
   };
 
   const handleManualSubmit = () => {
     if (!chargerId.trim()) {
-      alert('Please enter a charger ID');
+      Alert.alert('Error', 'Please enter a charger ID');
       return;
     }
-    alert(`Charger ID Entered: ${chargerId}`);
-    router.push('/pages/WaitingConnection');
+    connectCharger(chargerId.trim());
   };
 
   return (
@@ -62,9 +107,7 @@ const StartChargingScreen = () => {
               onScanned={handleBarCodeScanned}
             />
           ) : (
-            <>
-              <Text style={styles.tapText}>Tap to open camera</Text>
-            </>
+            <Text style={styles.tapText}>Tap to open camera</Text>
           )}
 
           {/* Corners */}

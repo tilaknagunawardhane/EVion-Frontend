@@ -1,22 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import colors from '../../constants/color';
-import { useEffect } from 'react';
 import fonts from '../../constants/fonts';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ChargeConnectedScreen = () => {
   const router = useRouter();
+  const { userId, connectorId } = useLocalSearchParams(); // ✅ get params from previous page
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push('/pages/StartChargeWalk-In');
+      router.push({
+        pathname: '/pages/StartChargeWalk-In',
+        params: { userId, connectorId } // ✅ send both IDs forward
+      });
     }, 3000);
     return () => clearTimeout(timeout);
-  }, []);
+  }, [userId, connectorId]);
 
   return (
     <View style={styles.container}>
@@ -85,7 +88,6 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
     textAlign: 'center',
-    // marginBottom: SCREEN_HEIGHT * 0.04,
     lineHeight: SCREEN_HEIGHT * 0.025,
   },
   centerContent: {

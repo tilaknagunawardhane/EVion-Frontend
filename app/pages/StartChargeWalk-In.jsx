@@ -1,118 +1,139 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  Animated,
-  Easing,
-  PanResponder,
-  Alert
-} from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet, Dimensions, Animated, Easing, PanResponder, Alert } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CircularProgress from '../../components/CircularProgress';
 import ChargingInfoCard from '../../components/ChargingInfoCard';
 import { API_BASE_URL } from '@env';
-import io from 'socket.io-client';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+const POLL_INTERVAL = 3000; // Poll every 3 seconds
+const batteryCapacity = 77; 
+
 const StartChargeWalkInScreen = () => {
   const router = useRouter();
+  const { connectorId, userId } = useLocalSearchParams();
 
   const [chargingData, setChargingData] = useState({
-    batteryPercentage: 17,
-    chargingPower: '0 kW',
-    chargingTime: '00:00:00',
-    cost: '00.00'
-  });
+  totalEnergy: 0, // total kWh delivered
+  chargingPower: '0 kW',
+  chargingTime: '00:00:00',
+  cost: '0.00',
+});
+
 
   const [isCharging, setIsCharging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState('right');
   const vehicleName = 'Kia EV6';
 
-  // ⚡ Socket.IO setup for real-time OCPP data
+  // 🔘 Poll charging data when charging is active
   useEffect(() => {
-    const socket = io(API_BASE_URL, {
-      transports: ['websocket'],
-      reconnection: true,
-    });
+  let interval;
+  if (isCharging && connectorId && userId) {
+    interval = setInterval(async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ocpp/data?connectorId=${connectorId}`);
+        const text = await response.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          console.error('❌ Invalid JSON response:', text);
+          return;
+        }
 
-    socket.on('connect', () => {
-      console.log('✅ Connected to backend OCPP socket:', socket.id);
-    });
+        setChargingData({
+          totalEnergy: parseFloat(data.totalEnergy || 0).toFixed(2),// ⚡ total energy in kWh
+          chargingPower: `${parseFloat(data.power || 0).toFixed(2)} kW`,
+          chargingTime: new Date((data.timeElapsed || 0) * 1000).toISOString().substr(11, 8),
+          cost: parseFloat(data.cost || 0).toFixed(2),
+        });
+      } catch (err) {
+        console.error('Error fetching charging status:', err);
+      }
+    }, POLL_INTERVAL);
+  }
 
-    socket.on('powerUpdate', (data) => {
-      console.log('⚡ Live power update:', data);
-      setChargingData(prev => ({
-        ...prev,
-        chargingPower: `${parseFloat(data.totalPower).toFixed(2)} kW`,
-        cost: (parseFloat(data.totalPower) * 120).toFixed(2), // Simulated cost
-        chargingTime: new Date(data.elapsed * 1000).toISOString().substr(11, 8),
-        batteryPercentage: Math.min(prev.batteryPercentage + 1, 100)
-      }));
-    });
+  return () => {
+    if (interval) clearInterval(interval);
+  };
+}, [isCharging, connectorId, userId]);
 
-    socket.on('chargingStopped', (summary) => {
-      console.log('⚠️ Charging stopped:', summary);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('❌ Disconnected from socket.');
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
 
   // 🔘 Swipe handler to start/stop charging
   const handleSwipeComplete = async (direction) => {
-    console.log('handleSwipeComplete called with direction:', direction);
+  if (!connectorId || !userId) return console.warn('⚠️ Missing IDs for charging request.');
 
-    if (direction === 'right') {
-      console.log('Starting charging...');
-      setIsCharging(true);
-      setSwipeDirection('left');
+  if (direction === 'right') {
+    setIsCharging(true);
+    setSwipeDirection('left');
 
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/ocpp/start`, { method: 'POST' });
-        const data = await response.json();
-        console.log('OCPP start response:', data);
-      } catch (err) {
-        console.error('Error starting OCPP server:', err);
-      }
-    } else {
-      console.log('Stopping charging...');
-      setIsCharging(false);
-      setSwipeDirection('right');
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ocpp/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectorId, ev_owner_id: userId }),
+      });
+      const data = await response.json();
+      console.log('OCPP start response:', data);
+    } catch (err) {
+      console.error('Error starting OCPP server:', err);
+    }
 
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/ocpp/stop`, { method: 'POST' });
-        const data = await response.json();
-        console.log('OCPP stop response:', data);
-      } catch (err) {
-        console.error('Error stopping OCPP server:', err);
-      }
+  } else {
+    setIsCharging(false);
+    setSwipeDirection('right');
 
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ocpp/stop`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectorId, ev_owner_id: userId }),
+      });
+      const data = await response.json();
+      console.log('OCPP stop response:', data);
+
+      // 🔹 Show alert AFTER data is received
       Alert.alert(
         'Charging Stopped',
         'Your charging session has been ended.',
         [
-          { text: 'View Summary', onPress: () => router.push('/pages/ChargingStoped') },
-          { text: 'OK', style: 'cancel' }
+          {
+            text: 'View Summary',
+            onPress: () =>
+              router.push({
+                pathname: '/pages/ChargingStoped',
+                params: {
+                  stationName: data.station_name,
+                  message: data.message,
+                  startTime: data.start_time,
+                  endTime: data.end_time,
+                  date: data.date,
+                  totalEnergy: data.total_energy_kwh,
+                  costPerKwh: data.cost_per_kwh,
+                  totalCost: data.total_cost,
+                  durationMinutes: data.duration_minutes,
+                },
+              }),
+          },
+          { text: 'OK', style: 'cancel' },
         ],
         { cancelable: false }
       );
+
+    } catch (err) {
+      console.error('Error stopping OCPP server:', err);
     }
-  };
+  }
+};
+
 
   const chargingInfoItems = [
     { icon: 'flash', label: 'Charging Power', value: chargingData.chargingPower },
-    { icon: 'time', label: 'Charging Time', value: chargingData.chargingTime }
+    { icon: 'time', label: 'Charging Time', value: chargingData.chargingTime },
   ];
 
   return (
@@ -121,25 +142,21 @@ const StartChargeWalkInScreen = () => {
         <View style={{ width: SCREEN_WIDTH * 0.08 }} />
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>{vehicleName}</Text>
-          <Text style={styles.headerSubtitle}>
-            {isCharging ? 'Charging' : 'Ready to charge'}
-          </Text>
+          <Text style={styles.headerSubtitle}>{isCharging ? 'Charging' : 'Ready to charge'}</Text>
         </View>
         <View style={{ width: SCREEN_WIDTH * 0.08 }} />
       </View>
 
       <View style={styles.content}>
         <View style={styles.batteryContainer}>
-          <CircularProgress
-            percentage={Math.floor(chargingData.batteryPercentage)}
-            size={SCREEN_WIDTH * 0.5}
-            additionalText={`${Math.floor(chargingData.batteryPercentage)}%`}
-            strokeWidth={12}
-            activeColor={isCharging ? colors.primary : colors.secondaryText}
-          />
-          <Text style={styles.batteryStatus}>
-            {isCharging ? 'Charging...' : 'Charging not started'}
-          </Text>
+                <CircularProgress
+                  percentage={(chargingData.totalEnergy / batteryCapacity) * 100}
+                  size={SCREEN_WIDTH * 0.5}
+                  additionalText={`${chargingData.totalEnergy} kWh`} // show total power
+                  strokeWidth={12}
+                  activeColor={isCharging ? colors.primary : colors.secondaryText}
+                />
+          <Text style={styles.batteryStatus}>{isCharging ? 'Charging...' : 'Charging not started'}</Text>
         </View>
 
         <ChargingInfoCard items={chargingInfoItems} />
@@ -154,17 +171,13 @@ const StartChargeWalkInScreen = () => {
       </View>
 
       <View style={styles.buttonContainer}>
-        <SwipeButton
-          direction={swipeDirection}
-          isCharging={isCharging}
-          onSwipeComplete={handleSwipeComplete}
-        />
+        <SwipeButton direction={swipeDirection} isCharging={isCharging} onSwipeComplete={handleSwipeComplete} />
       </View>
     </View>
   );
 };
 
-// ⚙️ Swipe Button Component
+// ⚙️ Swipe Button Component (unchanged)
 const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
   const buttonWidth = SCREEN_WIDTH * 0.8;
   const thumbWidth = SCREEN_HEIGHT * 0.08;
@@ -173,11 +186,7 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
 
   useEffect(() => {
     currentDirectionRef.current = direction;
-    if (direction === 'right') {
-      pan.setValue(0);
-    } else {
-      pan.setValue(buttonWidth - thumbWidth - 10);
-    }
+    pan.setValue(direction === 'right' ? 0 : buttonWidth - thumbWidth - 10);
   }, [direction, buttonWidth, thumbWidth]);
 
   const panResponder = useRef(
@@ -224,23 +233,12 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
         {...panResponder.panHandlers}
         style={[
           styles.swipeThumb,
-          {
-            transform: [{ translateX: pan }],
-            width: thumbWidth,
-            height: thumbWidth,
-            borderRadius: thumbWidth / 2
-          }
+          { transform: [{ translateX: pan }], width: thumbWidth, height: thumbWidth, borderRadius: thumbWidth / 2 },
         ]}
       >
-        <Ionicons
-          name={direction === 'right' ? "arrow-forward" : "arrow-back"}
-          size={24}
-          color="white"
-        />
+        <Ionicons name={direction === 'right' ? 'arrow-forward' : 'arrow-back'} size={24} color="white" />
       </Animated.View>
-      <Text style={styles.swipeText}>
-        {direction === 'right' ? 'Swipe to start charging' : 'Swipe to stop charging'}
-      </Text>
+      <Text style={styles.swipeText}>{direction === 'right' ? 'Swipe to start charging' : 'Swipe to stop charging'}</Text>
     </View>
   );
 };
