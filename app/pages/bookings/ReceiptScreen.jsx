@@ -15,6 +15,9 @@ import * as Sharing from 'expo-sharing';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import CustomButton from '../../../components/CustomButton';
+import * as MailComposer from 'expo-mail-composer';
+import useUserData from '../../../hooks/useUserData';
+
 
 const { width } = Dimensions.get('window');
 
@@ -23,14 +26,49 @@ const ReceiptScreen = () => {
   const route = useRoute();
   const data = route.params || {};
 
+  // Helper: Convert ISO timestamp to human-readable format
+const formatDateTime = (isoString) => {
+  if (!isoString) return '–';
+  try {
+    const date = new Date(isoString);
+    return date.toLocaleString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return isoString;
+  }
+};
+
+const formatDuration = (minutesValue) => {
+  if (!minutesValue && minutesValue !== 0) return '–';
+
+  const totalSeconds = Math.round(minutesValue * 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  let result = '';
+  if (hours > 0) result += `${hours} Hr `;
+  if (minutes > 0) result += `${minutes} Min `;
+  if (seconds > 0) result += `${seconds} Sec`;
+  return result.trim();
+};
+
+
   // Destructure values from params, fallback to existing hardcoded defaults if missing
   const sessionId = data.sessionId || 'EVCS–GS3–2–5462';
-  const dateTime = data.dateTime || 'Jun 11, 2025 9:37 AM';
+  const dateTime = data.startTime ? formatDateTime(data.startTime) : 'Jun 11, 2025 9:37 AM';
   const stationName = data.stationName || 'Genso Charging Station,\nSouthern Highway, Welipenna';
   const vehicle = data.vehicle || 'Hyundai Kona Electric (SUV)';
-  const startTime = data.startTime || '9:37 AM';
-  const endTime = data.endTime || '10:00 AM';
-  const duration = data.durationMinutes ? `${data.durationMinutes} Mins` : '1 Hr 23 Mins';
+  const startTime = data.startTime ? formatDateTime(data.startTime) : '9:37 AM';
+const endTime = data.endTime ? formatDateTime(data.endTime) : '10:00 AM';
+
+  const duration = data.durationMinutes ? formatDuration(data.durationMinutes): '1 Hr 23 Mins';
   const energy = data.totalEnergy ? `${data.totalEnergy} kWh` : '69.17 kWh';
   const costPerKwh = data.costPerKwh ? `LKR ${data.costPerKwh}` : 'LKR 55.00';
   const subtotal = data.totalCost ? `${data.totalCost}` : 'LKR 3,806.35';
@@ -256,6 +294,7 @@ const ReceiptScreen = () => {
           )}
         </ScrollView>
       </View>
+            {/* Buttons Row */}
 
       {/* Download Button */}
       <CustomButton
@@ -265,7 +304,15 @@ const ReceiptScreen = () => {
         style={styles.downloadButton}
         textStyle={styles.downloadText}
       />
+      <CustomButton
+        title="Done"
+        type="primary"
+        onPress={() => navigation.navigate('Ratings1')}
+        style={styles.doneButton}
+        textStyle={styles.doneText}
+      />
     </View>
+            
   );
 };
 
@@ -353,10 +400,23 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   downloadText: {
     color: colors.white,
+    fontFamily: fonts.PlusJakartaSansBold,
+    fontSize: 14,
+  },
+  doneButton: {
+    backgroundColor: colors.lightestGray,
+    marginHorizontal: 20,
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  doneText: {
+    color: colors.black,
     fontFamily: fonts.PlusJakartaSansBold,
     fontSize: 14,
   },

@@ -105,7 +105,7 @@ const StartChargeWalkInScreen = () => {
             text: 'View Summary',
             onPress: () =>
               router.push({
-                pathname: '/pages/ChargingStoped',
+                pathname: '/pages/bookings/ReceiptScreen',
                 params: {
                   stationName: data.station_name,
                   message: data.message,
