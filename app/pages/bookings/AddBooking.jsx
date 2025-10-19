@@ -170,6 +170,7 @@ const AddBooking = () => {
 
       if (response.ok) {
         console.log('✅ Booking submitted successfully');
+        router.push('/(tabs)/bookings');
       } else {
         console.error('❌ Error:', data.message || 'Failed to submit booking');
       }

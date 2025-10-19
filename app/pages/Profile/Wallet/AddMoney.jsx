@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,48 +7,94 @@ import {
   ScrollView,
   TextInput,
   Image,
+  ActivityIndicator,
+  Alert,
+  Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as SecureStore from 'expo-secure-store';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+
 import colors from '../../../../constants/color';
 import fonts from '../../../../constants/fonts';
 import { useNavigation } from "@react-navigation/native";
-
-
-const visaLogo = require('../../../../assets/visa.png');
-const mastercardLogo = require('../../../../assets/mastercard.png');
+import { useRouter } from 'expo-router';
+import { API_BASE_URL } from '@env';
+import useUserData from '../../../../hooks/useUserData';
 
 const AddMoneyScreen = () => {
   const [amount, setAmount] = useState('');
-  const [selectedCardId, setSelectedCardId] = useState(1);
-    const navigation = useNavigation();
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveCard, setSaveCard] = useState(false);
+  const navigation = useNavigation();
+  const { user, isLoading: isUserLoading } = useUserData();
+  const router = useRouter();
 
-  const cards = [
-    {
-      id: 1,
-      brand: 'Visa',
-      last4: '4532',
-      expiry: '12/27',
-      logo: visaLogo,
-    },
-    {
-      id: 2,
-      brand: 'Mastercard',
-      last4: '8901',
-      expiry: '09/26',
-      logo: mastercardLogo,
-    },
-  ];
-
-  const presetAmounts = [1000, 3000, 5000, 10000];
+  const presetAmounts = [500, 1000, 2000, 5000];
 
   const handleAmountPress = (value) => {
     setAmount(value.toString());
   };
 
-  const handleAddMoney = () => {
-    // Handle the actual money addition logic here
+  const handleAddMoney = async () => {
+    const topUpAmount = parseFloat(amount);
+    
+    if (!topUpAmount || topUpAmount < 100) {
+      Toast.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Invalid Amount',
+        textBody: 'Minimum top-up amount is LKR 100',
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Simulate API call to add money
+      const response = await fetch(`${API_BASE_URL}/api/wallet/topup/local/${user._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          amount: topUpAmount
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to add money');
+      }
+
+      if (result.success) {
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: `LKR ${topUpAmount.toLocaleString()} added to your wallet successfully!`,
+        });
+        
+        // Navigate back after success
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      }
+    } catch (error) {
+      console.error('Add money error:', error);
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    // Remove card-related functionality
+  }, []);
 
   const formatAmount = (val) => {
     const num = Number(val || 0);
@@ -71,7 +117,7 @@ const AddMoneyScreen = () => {
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>Enter Amount</Text>
           <View style={styles.amountBox}>
-            <Text style={styles.dollarSign}>LKR </Text>
+            <Text style={styles.currencySign}>LKR </Text>
             <TextInput
               style={styles.amountInput}
               value={amount}
@@ -86,37 +132,43 @@ const AddMoneyScreen = () => {
             {presetAmounts.map((value) => (
               <TouchableOpacity
                 key={value}
-                style={styles.presetBtn}
+                style={[
+                  styles.presetBtn,
+                  amount === value.toString() && styles.presetBtnActive
+                ]}
                 onPress={() => handleAmountPress(value)}
               >
-                <Text style={styles.presetText}>LKR {value.toLocaleString()}</Text>
+                <Text style={[
+                  styles.presetText,
+                  amount === value.toString() && styles.presetTextActive
+                ]}>
+                  LKR {value.toLocaleString()}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
         </View>
 
-        {/* Payment Method */}
+        {/* Payment Method Info */}
         <View style={styles.card}>
           <Text style={styles.sectionLabel}>Payment Method</Text>
-          {cards.map((card) => (
-            <TouchableOpacity
-              key={card.id}
-              style={[
-                styles.paymentCard,
-                selectedCardId === card.id && styles.selectedCard,
-              ]}
-              onPress={() => setSelectedCardId(card.id)}
-            >
-              <Image source={card.logo} style={styles.cardLogo} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.cardNumber}>•••• {card.last4}</Text>
-                <Text style={styles.expiry}>Expires {card.expiry}</Text>
-              </View>
-              <View style={styles.radio}>
-                {selectedCardId === card.id && <View style={styles.radioSelected} />}
-              </View>
-            </TouchableOpacity>
-          ))}
+          <View style={styles.paymentInfo}>
+            <Ionicons name="wallet-outline" size={24} color={colors.primary} />
+            <View style={styles.paymentTextContainer}>
+              <Text style={styles.paymentTitle}>Direct Wallet Top-up</Text>
+              <Text style={styles.paymentSubtitle}>
+                Amount will be added directly to your wallet balance
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Security Notice */}
+        <View style={styles.securityNotice}>
+          <Ionicons name="lock-closed" size={16} color={colors.primary} />
+          <Text style={styles.securityText}>
+            Your transaction is secure
+          </Text>
         </View>
       </ScrollView>
 
@@ -124,14 +176,18 @@ const AddMoneyScreen = () => {
       <TouchableOpacity
         style={[
           styles.addButton,
-          (!amount || parseFloat(amount) === 0) && styles.disabledButton,
+          (!amount || parseFloat(amount) === 0 || isLoading) && styles.disabledButton,
         ]}
         onPress={handleAddMoney}
-        disabled={!amount || parseFloat(amount) === 0}
+        disabled={!amount || parseFloat(amount) === 0 || isLoading}
       >
-        <Text style={styles.addButtonText}>
-          Add LKR {formatAmount(amount)} to Wallet
-        </Text>
+        {isLoading ? (
+          <ActivityIndicator size="small" color={colors.white} />
+        ) : (
+          <Text style={styles.addButtonText}>
+            Add LKR {formatAmount(amount)} to Wallet
+          </Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -161,7 +217,7 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
   sectionLabel: {
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
     marginBottom: 12,
     color: colors.mainTextColor,
@@ -171,26 +227,34 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     marginBottom: 16,
+    shadowColor: colors.black,
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
   },
   amountBox: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#DEE2E6',
+    borderColor: colors.stroke,
     borderRadius: 12,
-    padding: 12,
+    padding: 16,
     marginBottom: 16,
+    backgroundColor: colors.white,
   },
-  dollarSign: {
-    fontSize: 22,
-    color: '#ADB5BD',
+  currencySign: {
+    fontSize: 20,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
     marginRight: 8,
   },
   amountInput: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: fonts.PlusJakartaSansBold,
     flex: 1,
     color: colors.mainTextColor,
+    padding: 0,
   },
   presetRow: {
     flexDirection: 'row',
@@ -199,59 +263,61 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   presetBtn: {
-    backgroundColor: '#F1F3F5',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    backgroundColor: colors.lightestGray,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 12,
+    flex: 1,
+    minWidth: '22%',
+    alignItems: 'center',
+  },
+  presetBtnActive: {
+    backgroundColor: colors.primary,
   },
   presetText: {
     fontSize: 14,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
-  paymentCard: {
+  presetTextActive: {
+    color: colors.white,
+  },
+  paymentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#DEE2E6',
-    marginBottom: 12,
+    padding: 12,
   },
-  selectedCard: {
-    backgroundColor: '#E6FAF0',
-    borderColor: colors.primary,
+  paymentTextContainer: {
+    flex: 1,
+    marginLeft: 12,
   },
-  cardLogo: {
-    width: 40,
-    height: 30,
-    resizeMode: 'contain',
-    marginRight: 12,
-  },
-  cardNumber: {
+  paymentTitle: {
     fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
+    marginBottom: 4,
   },
-  expiry: {
-    fontSize: 13,
+  paymentSubtitle: {
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
+    lineHeight: 18,
   },
-  radio: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    justifyContent: 'center',
+  securityNotice: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 8,
+    borderColor: colors.primary,
+    borderWidth: 1,
   },
-  radioSelected: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
+  securityText: {
+    fontSize: 12,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.primary,
+    marginLeft: 8,
   },
   addButton: {
     position: 'absolute',
@@ -263,13 +329,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   disabledButton: {
-    backgroundColor: '#CED4DA',
+    backgroundColor: colors.lightGray,
+    shadowColor: colors.black,
+    shadowOpacity: 0.1,
   },
   addButtonText: {
     color: colors.white,
-    fontSize: 15,
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
   },
 });

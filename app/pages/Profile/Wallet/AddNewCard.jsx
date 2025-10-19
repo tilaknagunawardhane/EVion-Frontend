@@ -5,8 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  CheckBox,
-  Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import InputField from '../../../../components/InputField';
 import CustomButton from '../../../../components/CustomButton';
@@ -15,52 +15,156 @@ import fonts from '../../../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import AppBar from '../../../../components/AppBar';
 import { Ionicons } from '@expo/vector-icons';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { CardStorageHelper } from '../../../../utils/cardStorageHelper';
 
 const AddPaymentMethodScreen = () => {
+  const navigation = useNavigation();
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardholderName, setCardholderName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSave = () => {
-    // handle save logic
+  const formatCardNumber = (text) => {
+    const cleaned = text.replace(/\D/g, '');
+    const formatted = cleaned.replace(/(\d{4})(?=\d)/g, '$1 ');
+    return formatted.slice(0, 19);
+  };
+
+  const formatExpiry = (text) => {
+    const cleaned = text.replace(/\D/g, '');
+    if (cleaned.length >= 2) {
+      return `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}`;
+    }
+    return cleaned;
+  };
+
+  const handleSave = async () => {
+    // Validate card number
+    if (!CardStorageHelper.validateCardNumber(cardNumber)) {
+      Toast.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Invalid Card',
+        textBody: 'Please enter a valid card number',
+      });
+      return;
+    }
+
+    // Validate expiry date
+    if (!CardStorageHelper.validateExpiry(expiry)) {
+      Toast.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Invalid Expiry',
+        textBody: 'Please enter a valid expiry date (MM/YY)',
+      });
+      return;
+    }
+
+    // Validate CVV
+    if (!cvv || cvv.length < 3) {
+      Toast.show({
+        type: ALERT_TYPE.WARNING,
+        title: 'Invalid CVV',
+        textBody: 'Please enter a valid CVV',
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const cardData = {
+        cardNumber: cardNumber.replace(/\s/g, ''),
+        expiry,
+        cvv,
+        cardholderName,
+        isDefault,
+        lastFour: cardNumber.slice(-4),
+        type: CardStorageHelper.getCardType(cardNumber),
+        displayNumber: CardStorageHelper.formatCardDisplay(cardNumber)
+      };
+
+      const cardId = await CardStorageHelper.saveCard(cardData);
+      
+      if (cardId) {
+        // If this is default, update other cards
+        if (isDefault) {
+          await CardStorageHelper.setDefaultCard(cardId);
+        }
+
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: 'Card saved successfully!',
+        });
+        
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      } else {
+        throw new Error('Failed to save card');
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <AppBar title="Add New Card" />
 
-      <ScrollView contentContainerStyle={styles.scrollContainer}
+      <ScrollView 
+        contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Card Input Section */}
+        {/* Card Details Form */}
         <View style={styles.cardContainer}>
+          <Text style={styles.sectionTitle}>Card Details</Text>
+          <Text style={styles.sectionSubtitle}>
+            Your card details are stored securely on your device
+          </Text>
+
           <InputField
-            label="Card Number*"
+            label="Card Number"
             value={cardNumber}
-            onChangeText={setCardNumber}
+            onChangeText={(text) => setCardNumber(formatCardNumber(text))}
             placeholder="1234 5678 9012 3456"
             keyboardType="number-pad"
+            maxLength={19}
+            editable={!isLoading}
           />
 
           <View style={styles.row}>
             <View style={styles.halfWidth}>
               <InputField
-                label="Expiry Date*"
+                label="Expiry Date"
                 value={expiry}
-                onChangeText={setExpiry}
+                onChangeText={(text) => setExpiry(formatExpiry(text))}
                 placeholder="MM/YY"
                 keyboardType="number-pad"
+                maxLength={5}
+                editable={!isLoading}
               />
             </View>
             <View style={styles.halfWidth}>
               <InputField
-                label="CVV*"
+                label="CVV"
                 value={cvv}
-                onChangeText={setCvv}
+                onChangeText={(text) => setCvv(text.replace(/\D/g, '').slice(0, 4))}
                 placeholder="123"
                 keyboardType="number-pad"
+                maxLength={4}
+                secureTextEntry
+                editable={!isLoading}
               />
             </View>
           </View>
@@ -71,33 +175,62 @@ const AddPaymentMethodScreen = () => {
             onChangeText={setCardholderName}
             placeholder="John Doe"
             keyboardType="default"
+            autoCapitalize="words"
+            editable={!isLoading}
           />
 
-          {/* Checkbox */}
+          {/* Default Card Checkbox */}
           <TouchableOpacity
             style={styles.checkboxContainer}
-            onPress={() => setIsDefault(!isDefault)}
+            onPress={() => !isLoading && setIsDefault(!isDefault)}
+            disabled={isLoading}
           >
-            <View style={[styles.checkbox, isDefault && styles.checkedBox]}>
+            <View style={[
+              styles.checkbox, 
+              isDefault && styles.checkedBox,
+              isLoading && styles.disabledCheckbox
+            ]}>
               {isDefault && <Ionicons name="checkmark" size={14} color="#fff" />}
             </View>
-            <Text style={styles.checkboxLabel}>Set as default payment method</Text>
+            <Text style={[
+              styles.checkboxLabel,
+              isLoading && styles.disabledText
+            ]}>
+              Set as default payment method
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Secure Payment Info */}
+        {/* Security Info */}
         <View style={styles.secureBox}>
-          <Ionicons name="shield-checkmark-outline" size={20} color={colors.primary} />
-          <View style={{ marginLeft: 8 }}>
-            <Text style={styles.secureTitle}>Secure Payment</Text>
-            <Text style={styles.secureText}>
-              Your card information is encrypted and stored securely.
-            </Text>
+          <View style={styles.secureHeader}>
+            <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
+            <Text style={styles.secureTitle}>Secure Storage</Text>
+          </View>
+          <View style={styles.secureFeatures}>
+            <View style={styles.featureItem}>
+              <Ionicons name="phone-portrait-outline" size={14} color={colors.primary} />
+              <Text style={styles.featureText}>Card details stored locally on your device</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Ionicons name="lock-closed" size={14} color={colors.primary} />
+              <Text style={styles.featureText}>Encrypted using secure storage</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <Ionicons name="cloud-offline" size={14} color={colors.primary} />
+              <Text style={styles.featureText}>No card data sent to our servers</Text>
+            </View>
           </View>
         </View>
 
-        {/* Add Card Button */}
-        <CustomButton title="Save Card" type="primary" onPress={handleSave} />
+        {/* Save Card Button */}
+        <CustomButton 
+          title={isLoading ? "Saving..." : "Save Card"} 
+          type="primary" 
+          onPress={handleSave}
+          disabled={isLoading}
+          loading={isLoading}
+        />
       </ScrollView>
     </View>
   );
@@ -113,66 +246,100 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   cardContainer: {
-    backgroundColor: colors.cardBackground,
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 20,
-    marginBottom: 84,
+    marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: Platform.OS === 'ios' ? 0.05 : 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.mainTextColor,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 10,
+    gap: 12,
   },
   halfWidth: {
-    width: '48%',
+    flex: 1,
   },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 16,
+    marginTop: 20,
+    paddingVertical: 8,
   },
   checkbox: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: '#ccc',
+    borderColor: colors.stroke,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    marginRight: 12,
   },
   checkedBox: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
+  disabledCheckbox: {
+    opacity: 0.5,
+  },
   checkboxLabel: {
-    fontSize: 14,
-    color: colors.mainTextColor,
+    fontSize: 15,
     fontFamily: fonts.PlusJakartaSans,
+    color: colors.mainTextColor,
+    flex: 1,
+  },
+  disabledText: {
+    opacity: 0.5,
   },
   secureBox: {
-    flexDirection: 'row',
-    backgroundColor: '#EAF4FF',
+    backgroundColor: '#F8FBFF',
     borderRadius: 12,
-    padding: 14,
-    alignItems: 'center',
+    padding: 16,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#E1F0FF',
+  },
+  secureHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   secureTitle: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.primary,
+    marginLeft: 8,
   },
-  secureText: {
-    fontSize: 11,
+  secureFeatures: {
+    gap: 8,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  featureText: {
+    fontSize: 12,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.HighlightText,
-    marginTop: 2,
+    marginLeft: 8,
+    flex: 1,
   },
 });
 

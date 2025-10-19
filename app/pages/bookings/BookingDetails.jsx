@@ -35,6 +35,7 @@ const BookingDetailsScreen = () => {
   vehicle,
   charger,
   no_of_slots,
+  
 } = booking || {};
 
 const stationName = charging_station_id?.station_name ?? 'Unknown Station';
@@ -78,7 +79,7 @@ const batteryGainFor30 = (max_power_output/2) / (vehicleBatteryCapacity* (vehicl
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
               setMenuVisible(false);
-              router.push('/pages/bookings/ReportIssue');
+              router.push({pathname: '/pages/bookings/ReportIssue', params: {bookingId: booking?._id }});
             }}>
               <Text style={styles.menuItem}>Report</Text>
             </TouchableOpacity>
