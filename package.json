@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
-    "@payhere/payhere-mobilesdk-reactnative": "^4.1.0",
     "@mapbox/polyline": "^1.2.1",
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
     "@react-native-async-storage/async-storage": "2.1.2",
@@ -58,7 +57,6 @@
     "react-native-svg": "15.11.2",
     "react-native-toast-message": "^2.3.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-webview": "13.13.5",
     "socket.io-client": "^4.8.1",
     "tailwindcss": "^3.4.17"
   },

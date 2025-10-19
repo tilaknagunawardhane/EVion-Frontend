@@ -12,15 +12,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import useUserData from '../../../../hooks/useUserData';
+import { CardStorageHelper } from '../../../../utils/cardStorageHelper';
 
 import colors from '../../../../constants/color';
 import fonts from '../../../../constants/fonts';
-import { API_BASE_URL } from '@env';
 import { useRouter } from 'expo-router';
-
 
 // Card brand logos
 const visaLogo = require('../../../../assets/visa.png');
@@ -30,46 +27,55 @@ const defaultCardLogo = require('../../../../assets/credit-card.png');
 
 const ManageCardsScreen = () => {
   const navigation = useNavigation();
-  const { user, isLoading: isUserLoading } = useUserData();
   const [cards, setCards] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
 
-  const fetchSavedCards = async () => {
+  // Helper function to get card logo based on card type
+  const getCardLogo = (cardType) => {
+    switch (cardType?.toLowerCase()) {
+      case 'visa':
+        return visaLogo;
+      case 'master':
+        return mastercardLogo;
+      case 'amex':
+        return amexLogo;
+      default:
+        return defaultCardLogo;
+    }
+  };
+
+  // Helper function to format card mask
+  const formatCardMask = (cardNumber) => {
+    if (!cardNumber) return '•••• •••• •••• ••••';
+    
+    // If it's already masked, return as is
+    if (cardNumber.includes('•') || cardNumber.includes('*')) {
+      return cardNumber;
+    }
+    
+    // If it's a full card number, mask it
+    if (cardNumber.length >= 16) {
+      const lastFour = cardNumber.slice(-4);
+      return `•••• •••• •••• ${lastFour}`;
+    }
+    
+    // For stored cards with displayNumber
+    return cardNumber;
+  };
+
+  const loadCards = async () => {
     try {
       setIsLoading(true);
-      if (!user?._id) {
-        setIsLoading(false);
-        return;
-      }
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/wallet/cards/${user._id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch saved cards');
-      }
-
-      setCards(result.cards || []);
-
+      const savedCards = await CardStorageHelper.getCards();
+      setCards(savedCards);
     } catch (error) {
-      console.error('Fetch cards error:', error);
+      console.error('Error loading cards:', error);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
-        textBody: error.message,
+        textBody: 'Failed to load cards',
       });
     } finally {
       setIsLoading(false);
@@ -91,36 +97,20 @@ const ManageCardsScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              const token = await SecureStore.getItemAsync('accessToken');
-              const response = await fetch(`${API_BASE_URL}/api/wallet/cards/${cardId}/${user._id}`, {
-                method: 'DELETE',
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                },
-              });
-
-              const result = await response.json();
-
-              if (!response.ok) {
-                throw new Error(result.message || 'Failed to delete card');
+              const success = await CardStorageHelper.deleteCard(cardId);
+              if (success) {
+                Toast.show({
+                  type: ALERT_TYPE.SUCCESS,
+                  title: 'Success',
+                  textBody: 'Card removed successfully',
+                });
+                loadCards();
               }
-
-              Toast.show({
-                type: ALERT_TYPE.SUCCESS,
-                title: 'Success',
-                textBody: 'Card removed successfully',
-              });
-
-              // Refresh the list
-              fetchSavedCards();
-
             } catch (error) {
-              console.error('Delete card error:', error);
               Toast.show({
                 type: ALERT_TYPE.DANGER,
                 title: 'Error',
-                textBody: error.message,
+                textBody: 'Failed to delete card',
               });
             }
           },
@@ -131,68 +121,31 @@ const ManageCardsScreen = () => {
 
   const setDefaultCard = async (cardId) => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      const response = await fetch(`${API_BASE_URL}/api/wallet/cards/${cardId}/default/${user._id}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to set default card');
+      const success = await CardStorageHelper.setDefaultCard(cardId);
+      if (success) {
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: 'Default card updated successfully',
+        });
+        loadCards();
       }
-
-      Toast.show({
-        type: ALERT_TYPE.SUCCESS,
-        title: 'Success',
-        textBody: 'Default card updated successfully',
-      });
-
-      // Refresh the list
-      fetchSavedCards();
-
     } catch (error) {
-      console.error('Set default card error:', error);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
-        textBody: error.message,
+        textBody: 'Failed to set default card',
       });
     }
   };
 
-  const getCardLogo = (cardType) => {
-    switch (cardType?.toLowerCase()) {
-      case 'visa':
-        return visaLogo;
-      case 'master':
-        return mastercardLogo;
-      case 'amex':
-        return amexLogo;
-      default:
-        return defaultCardLogo;
-    }
-  };
-
-  const formatCardMask = (cardMask) => {
-    // Ensure consistent formatting
-    if (cardMask.includes('•') || cardMask.includes('*')) {
-      return cardMask;
-    }
-    return `•••• ${cardMask.slice(-4)}`;
-  };
-
   useEffect(() => {
-    fetchSavedCards();
+    loadCards();
   }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchSavedCards();
+    loadCards();
   };
 
   if (isLoading) {
@@ -236,16 +189,18 @@ const ManageCardsScreen = () => {
       >
         {cards.length > 0 ? (
           cards.map((card) => (
-            <View key={card._id} style={[
+            <View key={card.id} style={[
               styles.card,
-              card.is_default && styles.defaultCard
+              card.isDefault && styles.defaultCard
             ]}>
               <View style={styles.cardLeft}>
-                <Image source={getCardLogo(card.card_type)} style={styles.cardLogo} />
+                <Image source={getCardLogo(card.type)} style={styles.cardLogo} />
                 <View style={styles.cardInfo}>
-                  <Text style={styles.cardNumber}>{formatCardMask(card.card_mask)}</Text>
-                  <Text style={styles.cardType}>{card.card_type}</Text>
-                  {card.is_default && (
+                  <Text style={styles.cardNumber}>
+                    {card.displayNumber || formatCardMask(card.cardNumber)}
+                  </Text>
+                  <Text style={styles.cardType}>{card.type || 'CARD'}</Text>
+                  {card.isDefault && (
                     <View style={styles.defaultBadge}>
                       <Text style={styles.defaultText}>Default</Text>
                     </View>
@@ -253,17 +208,17 @@ const ManageCardsScreen = () => {
                 </View>
               </View>
               <View style={styles.cardActions}>
-                {!card.is_default && (
+                {!card.isDefault && (
                   <TouchableOpacity 
                     style={styles.iconBtn}
-                    onPress={() => setDefaultCard(card._id)}
+                    onPress={() => setDefaultCard(card.id)}
                   >
                     <MaterialIcons name="star-outline" size={20} color={colors.lightGray} />
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity 
                   style={styles.iconBtn}
-                  onPress={() => deleteCard(card._id)}
+                  onPress={() => deleteCard(card.id)}
                 >
                   <MaterialIcons name="delete-outline" size={20} color={colors.lightGray} />
                 </TouchableOpacity>
@@ -284,8 +239,6 @@ const ManageCardsScreen = () => {
         <TouchableOpacity 
           style={styles.addCardBtn} 
           onPress={() => {
-            // Navigate to add money screen which will trigger PayHere
-            // and potentially save the card token
             router.push('/pages/Profile/Wallet/AddNewCard');
           }}
         >
@@ -297,7 +250,7 @@ const ManageCardsScreen = () => {
         <View style={styles.securityNotice}>
           <Ionicons name="shield-checkmark" size={16} color={colors.primary} />
           <Text style={styles.securityText}>
-            Your card details are securely stored with our payment partner
+            Your card details are securely stored on your device
           </Text>
         </View>
       </ScrollView>

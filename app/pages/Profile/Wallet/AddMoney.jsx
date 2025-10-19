@@ -22,68 +22,15 @@ import { useRouter } from 'expo-router';
 import { API_BASE_URL } from '@env';
 import useUserData from '../../../../hooks/useUserData';
 
-// Card brand logos
-const visaLogo = require('../../../../assets/visa.png');
-const mastercardLogo = require('../../../../assets/mastercard.png');
-const amexLogo = require('../../../../assets/amex.png');
-const defaultCardLogo = require('../../../../assets/credit-card.png');
-
 const AddMoneyScreen = () => {
   const [amount, setAmount] = useState('');
-  const [savedCards, setSavedCards] = useState([]);
-  const [selectedCardId, setSelectedCardId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [saveCard, setSaveCard] = useState(false);
-  const [loadingCards, setLoadingCards] = useState(true);
   const navigation = useNavigation();
   const { user, isLoading: isUserLoading } = useUserData();
   const router = useRouter();
 
   const presetAmounts = [500, 1000, 2000, 5000];
-
-  const fetchSavedCards = async () => {
-    try {
-      setLoadingCards(true);
-      // Wait for user to be available
-      if (!user?._id) {
-        setLoadingCards(false);
-        return;
-      }
-
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/wallet/cards/${user._id}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch saved cards');
-      }
-
-      setSavedCards(result.cards || []);
-      
-      // Auto-select default card if available
-      const defaultCard = result.cards?.find(card => card.is_default);
-      if (defaultCard) {
-        setSelectedCardId(defaultCard._id);
-      }
-
-    } catch (error) {
-      console.error('Fetch cards error:', error);
-      // Don't show error toast here as it's not critical
-    } finally {
-      setLoadingCards(false);
-    }
-  };
 
   const handleAmountPress = (value) => {
     setAmount(value.toString());
@@ -103,48 +50,38 @@ const AddMoneyScreen = () => {
 
     try {
       setIsLoading(true);
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
 
-      const response = await fetch(`${API_BASE_URL}/api/wallet/topup/initiate/${user._id}`, {
+      // Simulate API call to add money
+      const response = await fetch(`${API_BASE_URL}/api/wallet/topup/local/${user._id}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ 
-          amount: topUpAmount,
-          save_card: saveCard 
+          amount: topUpAmount
         }),
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to initiate top-up');
+        throw new Error(result.message || 'Failed to add money');
       }
 
       if (result.success) {
-        // Navigate to payment webview with PayHere data using expo-router
-        router.push({
-          pathname: '/pages/Profile/Wallet/PaymentWebView',
-          params: {
-            paymentData: JSON.stringify(result.payment_data),
-            sandbox: String(result.sandbox),
-            amount: String(topUpAmount),
-          },
-        });
-        
         Toast.show({
           type: ALERT_TYPE.SUCCESS,
           title: 'Success',
-          textBody: 'Redirecting to payment gateway...',
+          textBody: `LKR ${topUpAmount.toLocaleString()} added to your wallet successfully!`,
         });
+        
+        // Navigate back after success
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
       }
     } catch (error) {
-      console.error('Top-up error:', error);
+      console.error('Add money error:', error);
       Toast.show({
         type: ALERT_TYPE.DANGER,
         title: 'Error',
@@ -155,30 +92,8 @@ const AddMoneyScreen = () => {
     }
   };
 
-  const getCardLogo = (cardType) => {
-    switch (cardType?.toLowerCase()) {
-      case 'visa':
-        return visaLogo;
-      case 'master':
-        return mastercardLogo;
-      case 'amex':
-        return amexLogo;
-      default:
-        return defaultCardLogo;
-    }
-  };
-
-  const formatCardMask = (cardMask) => {
-    if (cardMask.includes('•') || cardMask.includes('*')) {
-      return cardMask;
-    }
-    return `•••• ${cardMask.slice(-4)}`;
-  };
-
   useEffect(() => {
-    if (user?._id) {
-      fetchSavedCards();
-    }
+    // Remove card-related functionality
   }, []);
 
   const formatAmount = (val) => {
@@ -234,48 +149,17 @@ const AddMoneyScreen = () => {
           </View>
         </View>
 
-        {/* Saved Cards Section */}
-        {!loadingCards && savedCards.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.sectionLabel}>Saved Payment Methods</Text>
-            {savedCards.map((card) => (
-              <TouchableOpacity
-                key={card._id}
-                style={[
-                  styles.paymentCard,
-                  selectedCardId === card._id && styles.selectedCard,
-                ]}
-                onPress={() => setSelectedCardId(card._id)}
-              >
-                <Image source={getCardLogo(card.card_type)} style={styles.cardLogo} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.cardNumber}>{formatCardMask(card.card_mask)}</Text>
-                  <Text style={styles.cardType}>{card.card_type}</Text>
-                  {card.is_default && <Text style={styles.defaultText}>Default</Text>}
-                </View>
-                <View style={styles.radio}>
-                  {selectedCardId === card._id && <View style={styles.radioSelected} />}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Save Card Option */}
+        {/* Payment Method Info */}
         <View style={styles.card}>
-          <View style={styles.saveCardRow}>
-            <View style={styles.saveCardTextContainer}>
-              <Text style={styles.saveCardLabel}>Save this card for future payments</Text>
-              <Text style={styles.saveCardSubtext}>
-                Your card details will be securely stored with our payment partner
+          <Text style={styles.sectionLabel}>Payment Method</Text>
+          <View style={styles.paymentInfo}>
+            <Ionicons name="wallet-outline" size={24} color={colors.primary} />
+            <View style={styles.paymentTextContainer}>
+              <Text style={styles.paymentTitle}>Direct Wallet Top-up</Text>
+              <Text style={styles.paymentSubtitle}>
+                Amount will be added directly to your wallet balance
               </Text>
             </View>
-            <Switch
-              value={saveCard}
-              onValueChange={setSaveCard}
-              trackColor={{ false: colors.lightGray, true: colors.primary }}
-              thumbColor={colors.white}
-            />
           </View>
         </View>
 
@@ -283,7 +167,7 @@ const AddMoneyScreen = () => {
         <View style={styles.securityNotice}>
           <Ionicons name="lock-closed" size={16} color={colors.primary} />
           <Text style={styles.securityText}>
-            Your payment is secure and encrypted
+            Your transaction is secure
           </Text>
         </View>
       </ScrollView>
@@ -398,77 +282,26 @@ const styles = StyleSheet.create({
   presetTextActive: {
     color: colors.white,
   },
-  paymentCard: {
+  paymentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: colors.stroke,
-    marginBottom: 12,
+    padding: 12,
   },
-  selectedCard: {
-    backgroundColor: '#F0F9FF',
-    borderColor: colors.primary,
-  },
-  cardLogo: {
-    width: 40,
-    height: 30,
-    resizeMode: 'contain',
-    marginRight: 12,
-  },
-  cardNumber: {
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.mainTextColor,
-    marginBottom: 2,
-  },
-  cardType: {
-    fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-  },
-  defaultText: {
-    fontSize: 11,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.primary,
-    marginTop: 2,
-  },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: colors.stroke,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radioSelected: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.primary,
-  },
-  saveCardRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-  },
-  saveCardTextContainer: {
+  paymentTextContainer: {
     flex: 1,
-    marginRight: 12,
+    marginLeft: 12,
   },
-  saveCardLabel: {
-    fontSize: 15,
+  paymentTitle: {
+    fontSize: 16,
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
     marginBottom: 4,
   },
-  saveCardSubtext: {
-    fontSize: 12,
+  paymentSubtitle: {
+    fontSize: 14,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    lineHeight: 16,
+    lineHeight: 18,
   },
   securityNotice: {
     flexDirection: 'row',

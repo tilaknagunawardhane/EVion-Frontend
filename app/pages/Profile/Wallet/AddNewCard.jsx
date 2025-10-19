@@ -15,26 +15,17 @@ import fonts from '../../../../constants/fonts';
 import { useNavigation } from '@react-navigation/native';
 import AppBar from '../../../../components/AppBar';
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
-import { API_BASE_URL } from '@env';
-import useUserData from '../../../../hooks/useUserData';
-import { useRouter } from 'expo-router';
-import PayHere from '@payhere/payhere-mobilesdk-reactnative';
+import { CardStorageHelper } from '../../../../utils/cardStorageHelper';
 
 const AddPaymentMethodScreen = () => {
   const navigation = useNavigation();
-  const router = useRouter();
-  const { user, isLoading: isUserLoading } = useUserData();
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvv, setCvv] = useState('');
   const [cardholderName, setCardholderName] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // No initialization needed - PayHere SDK doesn't require it
-  // Sandbox mode is controlled by the 'sandbox' property in payment object
 
   const formatCardNumber = (text) => {
     const cleaned = text.replace(/\D/g, '');
@@ -50,145 +41,19 @@ const AddPaymentMethodScreen = () => {
     return cleaned;
   };
 
-  // Initiate minimal payment to trigger card tokenization
-  const initiateCardAddition = async () => {
-    try {
-      setIsLoading(true);
-      if (!user?._id) {
-        Toast.show({
-          type: ALERT_TYPE.WARNING,
-          title: 'User not ready',
-          textBody: 'Please wait while we load your account information',
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const token = await SecureStore.getItemAsync('accessToken');
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
-      // Use minimal amount (100 LKR) just to trigger card saving
-      const minimalAmount = 100;
-
-      console.log('Initiating card addition for user:', user._id);
-      const response = await fetch(`${API_BASE_URL}/api/wallet/topup/initiate/${user._id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          amount: minimalAmount,
-          save_card: true 
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error('Failed to initiate card addition:', result);
-        throw new Error(result.message || 'Failed to initiate card addition');
-      }
-
-      if (result.success) {
-        console.log('Payment data received:', result.payment_data);
-        
-        // Prepare PayHere payment object
-        const paymentObject = {
-          sandbox: result.sandbox, // true for sandbox, false for production
-          merchant_id: result.payment_data.merchant_id,
-          notify_url: result.payment_data.notify_url,
-          order_id: result.payment_data.order_id,
-          items: result.payment_data.items,
-          amount: parseFloat(result.payment_data.amount),
-          currency: result.payment_data.currency,
-          first_name: result.payment_data.first_name,
-          last_name: result.payment_data.last_name,
-          email: result.payment_data.email,
-          phone: result.payment_data.phone,
-          address: result.payment_data.address,
-          city: result.payment_data.city,
-          country: result.payment_data.country,
-          delivery_address: result.payment_data.address,
-          delivery_city: result.payment_data.city,
-          delivery_country: result.payment_data.country,
-          custom_1: result.payment_data.custom_1,
-          custom_2: result.payment_data.custom_2,
-          hash: result.payment_data.hash,
-        };
-
-        // Add recurring payment fields if present (for card tokenization)
-        if (result.payment_data.recurrence) {
-          paymentObject.recurrence = result.payment_data.recurrence;
-          paymentObject.duration = result.payment_data.duration;
-        }
-
-        console.log('Starting PayHere payment...');
-        console.log('Sandbox mode:', paymentObject.sandbox);
-
-        // Start PayHere payment
-        PayHere.startPayment(
-          paymentObject,
-          (paymentId) => {
-            console.log('Payment successful with ID:', paymentId);
-            Toast.show({
-              type: ALERT_TYPE.SUCCESS,
-              title: 'Card Added Successfully',
-              textBody: 'Your card has been securely saved.',
-            });
-            setIsLoading(false);
-            
-            // Wait a bit before navigating back
-            setTimeout(() => {
-              router.back();
-            }, 1500);
-          },
-          (error) => {
-            console.error('Payment error:', error);
-            Toast.show({
-              type: ALERT_TYPE.DANGER,
-              title: 'Payment Failed',
-              textBody: error || 'Failed to add card. Please try again.',
-            });
-            setIsLoading(false);
-          },
-          () => {
-            console.log('Payment dismissed by user');
-            Toast.show({
-              type: ALERT_TYPE.WARNING,
-              title: 'Payment Cancelled',
-              textBody: 'You cancelled the payment process.',
-            });
-            setIsLoading(false);
-          }
-        );
-      }
-
-    } catch (error) {
-      console.error('Card addition error:', error);
-      Toast.show({
-        type: ALERT_TYPE.DANGER,
-        title: 'Error',
-        textBody: error.message,
-      });
-      setIsLoading(false);
-    }
-  };
-
   const handleSave = async () => {
-    // Basic validation (optional - for user experience only)
-    if (!cardNumber || cardNumber.replace(/\s/g, '').length < 16) {
+    // Validate card number
+    if (!CardStorageHelper.validateCardNumber(cardNumber)) {
       Toast.show({
         type: ALERT_TYPE.WARNING,
         title: 'Invalid Card',
-        textBody: 'Please enter a valid 16-digit card number',
+        textBody: 'Please enter a valid card number',
       });
       return;
     }
 
-    if (!expiry || expiry.length !== 5) {
+    // Validate expiry date
+    if (!CardStorageHelper.validateExpiry(expiry)) {
       Toast.show({
         type: ALERT_TYPE.WARNING,
         title: 'Invalid Expiry',
@@ -197,6 +62,7 @@ const AddPaymentMethodScreen = () => {
       return;
     }
 
+    // Validate CVV
     if (!cvv || cvv.length < 3) {
       Toast.show({
         type: ALERT_TYPE.WARNING,
@@ -206,37 +72,49 @@ const AddPaymentMethodScreen = () => {
       return;
     }
 
-    Alert.alert(
-      'Add Card Securely',
-      'You will be redirected to our secure payment partner to add your card. A temporary authorization of LKR 100 will be made and immediately refunded.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Continue',
-          onPress: initiateCardAddition,
-        },
-      ]
-    );
-  };
+    try {
+      setIsLoading(true);
 
-  const handleQuickAdd = () => {
-    Alert.alert(
-      'Quick Card Add',
-      'You will be redirected to our secure payment partner to add your card. A temporary authorization of LKR 100 will be made and immediately refunded.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Add Card',
-          onPress: initiateCardAddition,
-        },
-      ]
-    );
+      const cardData = {
+        cardNumber: cardNumber.replace(/\s/g, ''),
+        expiry,
+        cvv,
+        cardholderName,
+        isDefault,
+        lastFour: cardNumber.slice(-4),
+        type: CardStorageHelper.getCardType(cardNumber),
+        displayNumber: CardStorageHelper.formatCardDisplay(cardNumber)
+      };
+
+      const cardId = await CardStorageHelper.saveCard(cardData);
+      
+      if (cardId) {
+        // If this is default, update other cards
+        if (isDefault) {
+          await CardStorageHelper.setDefaultCard(cardId);
+        }
+
+        Toast.show({
+          type: ALERT_TYPE.SUCCESS,
+          title: 'Success',
+          textBody: 'Card saved successfully!',
+        });
+        
+        setTimeout(() => {
+          navigation.goBack();
+        }, 1500);
+      } else {
+        throw new Error('Failed to save card');
+      }
+    } catch (error) {
+      Toast.show({
+        type: ALERT_TYPE.DANGER,
+        title: 'Error',
+        textBody: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -248,31 +126,11 @@ const AddPaymentMethodScreen = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Quick Add Option */}
-        <TouchableOpacity 
-          style={styles.quickAddCard}
-          onPress={handleQuickAdd}
-          disabled={isLoading}
-        >
-          <View style={styles.quickAddIcon}>
-            <Ionicons name="flash" size={24} color={colors.primary} />
-          </View>
-          <View style={styles.quickAddContent}>
-            <Text style={styles.quickAddTitle}>Quick Add</Text>
-            <Text style={styles.quickAddText}>
-              Skip preview and go directly to secure payment
-            </Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={colors.lightGray} />
-        </TouchableOpacity>
-
-        <Text style={styles.divider}>OR</Text>
-
-        {/* Card Preview Section */}
+        {/* Card Details Form */}
         <View style={styles.cardContainer}>
-          <Text style={styles.sectionTitle}>Preview Your Card</Text>
+          <Text style={styles.sectionTitle}>Card Details</Text>
           <Text style={styles.sectionSubtitle}>
-            This helps identify your card (optional)
+            Your card details are stored securely on your device
           </Text>
 
           <InputField
@@ -321,7 +179,7 @@ const AddPaymentMethodScreen = () => {
             editable={!isLoading}
           />
 
-          {/* Checkbox */}
+          {/* Default Card Checkbox */}
           <TouchableOpacity
             style={styles.checkboxContainer}
             onPress={() => !isLoading && setIsDefault(!isDefault)}
@@ -343,35 +201,31 @@ const AddPaymentMethodScreen = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Secure Payment Info */}
+        {/* Security Info */}
         <View style={styles.secureBox}>
           <View style={styles.secureHeader}>
             <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
-            <Text style={styles.secureTitle}>How Card Addition Works</Text>
+            <Text style={styles.secureTitle}>Secure Storage</Text>
           </View>
           <View style={styles.secureFeatures}>
             <View style={styles.featureItem}>
+              <Ionicons name="phone-portrait-outline" size={14} color={colors.primary} />
+              <Text style={styles.featureText}>Card details stored locally on your device</Text>
+            </View>
+            <View style={styles.featureItem}>
               <Ionicons name="lock-closed" size={14} color={colors.primary} />
-              <Text style={styles.featureText}>Redirect to secure payment gateway</Text>
+              <Text style={styles.featureText}>Encrypted using secure storage</Text>
             </View>
             <View style={styles.featureItem}>
-              <Ionicons name="card" size={14} color={colors.primary} />
-              <Text style={styles.featureText}>Enter card details securely</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Ionicons name="key" size={14} color={colors.primary} />
-              <Text style={styles.featureText}>Receive secure token (no card storage)</Text>
-            </View>
-            <View style={styles.featureItem}>
-              <Ionicons name="refresh" size={14} color={colors.primary} />
-              <Text style={styles.featureText}>LKR 100 temporary authorization (refunded)</Text>
+              <Ionicons name="cloud-offline" size={14} color={colors.primary} />
+              <Text style={styles.featureText}>No card data sent to our servers</Text>
             </View>
           </View>
         </View>
 
-        {/* Add Card Button */}
+        {/* Save Card Button */}
         <CustomButton 
-          title={isLoading ? "Processing..." : "Continue to Secure Payment"} 
+          title={isLoading ? "Saving..." : "Save Card"} 
           type="primary" 
           onPress={handleSave}
           disabled={isLoading}
@@ -390,47 +244,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 20,
     paddingBottom: 40,
-  },
-  quickAddCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
-  },
-  quickAddIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#EAF4FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  quickAddContent: {
-    flex: 1,
-  },
-  quickAddTitle: {
-    fontSize: 16,
-    fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.primary,
-    marginBottom: 2,
-  },
-  quickAddText: {
-    fontSize: 13,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.secondaryText,
-  },
-  divider: {
-    textAlign: 'center',
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSans,
-    color: colors.lightGray,
-    marginVertical: 16,
   },
   cardContainer: {
     backgroundColor: colors.white,
