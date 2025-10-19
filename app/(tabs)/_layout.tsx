@@ -1,4 +1,4 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { FontAwesome } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import colors from '../../constants/color';
@@ -24,12 +24,13 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
             }
           };
 
+          // ✅ Valid FontAwesome icon names
           const iconName = {
-            'bookings': 'calendar-plus-o',
-            'Community': 'commenting-o',
-            'Profile': 'user-o',
-            'StartCharging': 'plug',
-            'map': 'map-o'
+            bookings: 'calendar',
+            Community: 'comment-o',
+            Profile: 'user-o',
+            StartCharging: 'plug',
+            map: 'map-o',
           }[route.name];
 
           return (
@@ -40,15 +41,17 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               onPress={onPress}
               style={styles.tabItem}
             >
-              <FontAwesome 
-                name={iconName} 
-                size={20} 
-                color={isFocused ? colors.primary : colors.secondaryText} 
+              <FontAwesome
+                name={iconName}
+                size={22}
+                color={isFocused ? (colors.primary || '#007bff') : (colors.secondaryText || '#888')}
               />
-              <Text style={[
-                styles.tabLabel,
-                isFocused && styles.tabLabelFocused
-              ]}>
+              <Text
+                style={[
+                  styles.tabLabel,
+                  isFocused && styles.tabLabelFocused,
+                ]}
+              >
                 {options.title || route.name}
               </Text>
             </TouchableOpacity>
@@ -67,46 +70,39 @@ export default function TabLayout() {
         headerShown: false,
       }}
     >
-    <Tabs.Screen
+      <Tabs.Screen
         name="map"
         options={{
           title: 'Explore',
           headerShown: false,
-          tabBarIcon: ({ color }) => <FontAwesome size={20} name="map-o" color={color} />,
         }}
       />
-      
+
       <Tabs.Screen
         name="bookings"
         options={{
           title: 'Bookings',
-          tabBarIcon: ({ color }) => <FontAwesome size={26} name="calendar" color={color} />,
         }}
       />
+
       <Tabs.Screen
         name="StartCharging"
         options={{
-          // title: 'Bookings',
-          tabBarIcon: ({ color }) => <FontAwesome size={26} name="calendar" color={color} />,
+          title: 'Charge',
         }}
       />
+
       <Tabs.Screen
         name="Community"
         options={{
           title: 'Community',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="comment-o" color={color} />
-          ),
         }}
       />
+
       <Tabs.Screen
         name="Profile"
-        
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }) => (
-            <FontAwesome name="user-o" size={24} color={color} />
-          ),
         }}
       />
     </Tabs>
@@ -119,26 +115,27 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderTopWidth: 1,
     borderTopColor: '#eee',
+    elevation: 10, // shadow for Android
+    shadowColor: '#000', // shadow for iOS
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   tabBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingTop: 10,
-    paddingLeft:10,
-    paddingRight: 10
   },
   tabItem: {
     alignItems: 'center',
-    padding: 6,
   },
   tabLabel: {
     fontFamily: fonts.PlusJakartaSans,
     fontSize: 12,
-    color: colors.secondaryText,
+    color: colors.secondaryText || '#888',
     marginTop: 4,
   },
   tabLabelFocused: {
-    color: colors.primary,
+    color: colors.primary || '#007bff',
     fontWeight: '600',
   },
 });

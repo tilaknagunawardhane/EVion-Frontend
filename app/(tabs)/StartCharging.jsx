@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import BarcodeScanner from '../../components/BarcodeScanner';
@@ -14,31 +14,38 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const StartChargingScreen = () => {
   const navigation = useNavigation();
   const router = useRouter();
-  const { user } = useUserData(); // Get logged-in user
+  const { user } = useUserData();
+  const { bookingId } = useLocalSearchParams(); // ✅ Receive bookingId from previous page
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [chargerId, setChargerId] = useState('');
 
-  // API call function
+  // ✅ Unified connect function
   const connectCharger = async (connectorId) => {
     if (!user?._id) {
       Alert.alert('Error', 'User not found. Please log in again.');
       return;
     }
 
-    const payload = {
-      connectorId,
-      ev_owner_id: user._id
-    };
-
     try {
-      console.log('Connecting charger with payload:', payload);
-      const response = await fetch(`${API_BASE_URL}/api/ocpp/connect`, {
+      let endpoint = '';
+      let payload = {};
+
+      // ✅ If bookingId exists, use it
+      if (bookingId) {
+        endpoint = `${API_BASE_URL}/api/ocpp/connect-with-booking`;
+        payload = { bookingId, ev_owner_id: user._id };
+        console.log('Connecting using bookingId:', payload);
+      } else {
+        endpoint = `${API_BASE_URL}/api/ocpp/connect`;
+        payload = { connectorId, ev_owner_id: user._id };
+        console.log('Connecting using connectorId:', payload);
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -53,10 +60,11 @@ const StartChargingScreen = () => {
         pathname: '/pages/WaitingConnection',
         params: { 
           userId: user._id, 
-          connectorId 
-  }
-});
- // Navigate to waiting connection
+          connectorId,
+          bookingId: bookingId || null, // ✅ Pass forward if exists
+        },
+      });
+
     } catch (error) {
       console.error('API error:', error);
       Alert.alert('Error', 'Failed to connect charger. Please try again.');
@@ -65,7 +73,7 @@ const StartChargingScreen = () => {
 
   const handleBarCodeScanned = (data) => {
     setIsCameraActive(false);
-    if (data) connectCharger(data); // Use scanned QR as chargerId
+    if (data) connectCharger(data);
   };
 
   const handleManualSubmit = () => {
@@ -89,62 +97,67 @@ const StartChargingScreen = () => {
         </View>
 
         <Text style={styles.subtitle}>
-          Scan the QR code on the charger{'\n'}to start charging
+          {bookingId
+            ? 'Connecting charger with your booking...'
+            : 'Scan the QR code on the charger\n to start charging'}
         </Text>
       </View>
 
       {/* QR Scanner Section */}
-      <View style={styles.qrContainer}>
-        <TouchableOpacity
-          style={styles.qrBox}
-          activeOpacity={0.7}
-          onPress={() => setIsCameraActive(true)}
-          disabled={isCameraActive}
-        >
-          {isCameraActive ? (
-            <BarcodeScanner
-              style={StyleSheet.absoluteFill}
-              onScanned={handleBarCodeScanned}
-            />
-          ) : (
-            <Text style={styles.tapText}>Tap to open camera</Text>
-          )}
+      {!bookingId && (
+        <View style={styles.qrContainer}>
+          <TouchableOpacity
+            style={styles.qrBox}
+            activeOpacity={0.7}
+            onPress={() => setIsCameraActive(true)}
+            disabled={isCameraActive}
+          >
+            {isCameraActive ? (
+              <BarcodeScanner
+                style={StyleSheet.absoluteFill}
+                onScanned={handleBarCodeScanned}
+              />
+            ) : (
+              <Text style={styles.tapText}>Tap to open camera</Text>
+            )}
 
-          {/* Corners */}
-          <View style={[styles.corner, styles.topLeft]} />
-          <View style={[styles.corner, styles.topRight]} />
-          <View style={[styles.corner, styles.bottomLeft]} />
-          <View style={[styles.corner, styles.bottomRight]} />
-        </TouchableOpacity>
-
-        {/* OR separator */}
-        <View style={styles.orContainer}>
-          <View style={styles.line} />
-          <Text style={styles.orText}>or</Text>
-          <View style={styles.line} />
-        </View>
-
-        {/* Manual Input */}
-        <View style={styles.manualInputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Charger ID"
-            placeholderTextColor={colors.secondaryText}
-            value={chargerId}
-            onChangeText={setChargerId}
-          />
-          <TouchableOpacity style={styles.submitButton} onPress={handleManualSubmit}>
-            <Text style={styles.submitText}>Submit</Text>
+            <View style={[styles.corner, styles.topLeft]} />
+            <View style={[styles.corner, styles.topRight]} />
+            <View style={[styles.corner, styles.bottomLeft]} />
+            <View style={[styles.corner, styles.bottomRight]} />
           </TouchableOpacity>
-        </View>
-      </View>
 
-      {/* Footer */}
-      <Text style={styles.footerText}>Point camera to QR</Text>
+          {/* OR separator */}
+          <View style={styles.orContainer}>
+            <View style={styles.line} />
+            <Text style={styles.orText}>or</Text>
+            <View style={styles.line} />
+          </View>
+
+          {/* Manual Input */}
+          <View style={styles.manualInputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter Charger ID"
+              placeholderTextColor={colors.secondaryText}
+              value={chargerId}
+              onChangeText={setChargerId}
+            />
+            <TouchableOpacity style={styles.submitButton} onPress={handleManualSubmit}>
+              <Text style={styles.submitText}>Submit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      <Text style={styles.footerText}>
+        {bookingId ? 'Booking ID detected' : 'Point camera to QR'}
+      </Text>
     </View>
   );
 };
 
+// styles (unchanged)
 const cornerSize = SCREEN_WIDTH * 0.090;
 const cornerThickness = 2;
 const inset = 26;

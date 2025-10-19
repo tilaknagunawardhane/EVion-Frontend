@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4.65,
   },
   searchIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   searchInput: {
     flex: 1,
