@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CircularProgress from '../../components/CircularProgress';
@@ -9,103 +9,116 @@ import CustomButton from '../../components/CustomButton';
 
 const ChargingStopedScreen = () => {
   const router = useRouter();
-  
-  // Battery and charging data
-  const batteryPercentage = 18;
-  const capacity = '24kWh';
-  const chargingPower = '120kW';
-  const chargingTime = '00:12:34';
-  const cost = '1650.00';
+  const params = useLocalSearchParams();
 
-  const handleBackPress = () => {
-    router.back();
-  };
+  // Extract charging session details from params
+  const {
+    batteryPercentage = 18,
+    capacity = '24kWh',
+    chargingPower,
+    chargingTime,
+    totalCost,
+    stationName,
+    startTime,
+    endTime,
+    totalEnergy,
+    costPerKwh,
+    durationMinutes,
+    message,
+  } = params;
 
-  const handleResumePress = () => {
-    router.push('/pages/StartChargeWalk-In');
-  };
+  const handleBackPress = () => router.back();
+
+  const handleResumePress = () => router.push('/pages/StartChargeWalk-In');
 
   const handleFinishChargingPress = () => {
-    router.push('/pages/bookings/ReceiptScreen');
-
-    // Navigate to home or completion screen
-    // router.push('/');
+    // Pass all charging details to ReceiptScreen
+    router.push({
+      pathname: '/pages/bookings/ReceiptScreen',
+      params: {
+        stationName,
+        startTime,
+        endTime,
+        totalEnergy,
+        costPerKwh,
+        durationMinutes,
+        totalCost ,
+      },
+    });
   };
 
-return (
+  return (
     <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-                <Ionicons name="chevron-back" size={24} color={colors.mainTextColor} />
-            </TouchableOpacity>
-            <View style={styles.headerCenter}>
-                <Text style={styles.headerTitle}>Kia EV6</Text>
-                <Text style={styles.headerSubtitle}>Charging Stopped</Text>
-            </View>
-            <TouchableOpacity style={styles.refreshButton}>
-                <Ionicons name="refresh" size={24} color={colors.mainTextColor} />
-            </TouchableOpacity>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={24} color={colors.mainTextColor} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Kia EV6</Text>
+          <Text style={styles.headerSubtitle}>Charging Stopped</Text>
         </View>
+        <TouchableOpacity style={styles.refreshButton}>
+          <Ionicons name="refresh" size={24} color={colors.mainTextColor} />
+        </TouchableOpacity>
+      </View>
 
-        {/* Battery Circle Progress - 65% */}
-        <View style={styles.batteryContainer}>
-            <CircularProgress 
-                percentage={batteryPercentage}
-                size={220}
-                strokeWidth={12}
-                additionalText={capacity}
-                progressColor={colors.primary}
-            />
-        </View>
+      {/* Battery Circle */}
+      <View style={styles.batteryContainer}>
+        <CircularProgress
+          percentage={Number(batteryPercentage)}
+          size={220}
+          strokeWidth={12}
+          additionalText={capacity}
+          progressColor={colors.primary}
+        />
+      </View>
 
-        {/* Charging Info Cards */}
-        <View style={styles.chargingInfoContainer}>
-            <View style={styles.infoCard}>
-                <View style={styles.infoIconContainer}>
-                    <Ionicons name="flash" size={16} color={colors.secondaryText} />
-                </View>
-                <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>Charging Power</Text>
-                    <Text style={styles.infoValue}>{chargingPower}</Text>
-                </View>
-            </View>
-            
-            <View style={styles.infoCard}>
-                <View style={styles.infoIconContainer}>
-                    <Ionicons name="time" size={16} color={colors.secondaryText} />
-                </View>
-                <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>Charging Time</Text>
-                    <Text style={styles.infoValue}>{chargingTime}</Text>
-                </View>
-            </View>
+      {/* Charging Info */}
+      <View style={styles.chargingInfoContainer}>
+        <View style={styles.infoCard}>
+          <View style={styles.infoIconContainer}>
+            <Ionicons name="flash" size={16} color={colors.secondaryText} />
+          </View>
+          <View style={styles.infoTextContainer}>
+            <Text style={styles.infoLabel}>Charging Power</Text>
+            <Text style={styles.infoValue}>{chargingPower}</Text>
+          </View>
         </View>
+        <View style={styles.infoCard}>
+          <View style={styles.infoIconContainer}>
+            <Ionicons name="time" size={16} color={colors.secondaryText} />
+          </View>
+          <View style={styles.infoTextContainer}>
+            <Text style={styles.infoLabel}>Charging Time</Text>
+            <Text style={styles.infoValue}>{chargingTime}</Text>
+          </View>
+        </View>
+      </View>
 
-        {/* Cost Display */}
-        <View style={styles.costContainer}>
-            <Text style={styles.costText}>LKR {cost}</Text>
-        </View>
+      {/* Cost */}
+      <View style={styles.costContainer}>
+        <Text style={styles.costText}>LKR {totalCost}</Text>
+      </View>
 
-        {/* Action Buttons */}
-        <View style={styles.bottomSection}>
-            <CustomButton 
-                title="Resume"
-                onPress={handleResumePress}
-                type="primary"
-                style={[styles.resumeButton, { alignItems: 'center', justifyContent: 'center' }]}
-                textStyle={{ textAlign: 'center' }}
-            />
-            <CustomButton 
-                title="Finish Charging"
-                onPress={handleFinishChargingPress}
-                type="secondary"
-                style={[styles.finishButton, { alignItems: 'center', justifyContent: 'center' }]}
-                textStyle={{ color: colors.primary, textAlign: 'center' }}
-            />
-        </View>
+      {/* Action Buttons */}
+      <View style={styles.bottomSection}>
+        <CustomButton
+          title="Resume"
+          onPress={handleResumePress}
+          type="primary"
+          style={styles.resumeButton}
+        />
+        <CustomButton
+          title="Finish Charging"
+          onPress={handleFinishChargingPress}
+          type="secondary"
+          style={styles.finishButton}
+          textStyle={{ color: colors.primary }}
+        />
+      </View>
     </View>
-);
+  );
 };
 
 const styles = StyleSheet.create({
