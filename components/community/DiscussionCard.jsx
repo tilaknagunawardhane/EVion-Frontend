@@ -15,26 +15,26 @@ import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
 
 const DiscussionCard = ({
+  discussionId, // REQUIRED: ID to send to the parent/API
   hashtags = [],
   title,
   userName,
   timeAgo,
   content,
-  likes = 0,
-  replies = 0,
-  isPinned = false,
+  isPinned = false, 
   userAvatar,
-  onPinToggle,
+  onPinToggle, 
+  onFlagPost, 
   comments = [],
-  onAddComment,
+  onAddComment, 
+  images = [],
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
-  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyingTo, setReplyingTo] = useState(null); 
   const [showFlagModal, setShowFlagModal] = useState(false);
-  const [pinned, setPinned] = useState(isPinned); // Local pin state
 
   const flagReasons = [
     "Spam or unwanted commercial content",
@@ -48,9 +48,9 @@ const DiscussionCard = ({
 
   const handlePinToggle = () => {
     setShowMenu(false);
-    setPinned(prev => !prev);
+    // Call the parent function with the discussionId and the new pin state
     if (onPinToggle) {
-      onPinToggle(!pinned);
+      onPinToggle(discussionId, !isPinned); 
     }
   };
 
@@ -59,19 +59,21 @@ const DiscussionCard = ({
   };
 
   const toggleComments = () => {
-    setShowComments(!showComments);
+    setShowComments(prev => !prev);
+    if (showComments) {
+      setReplyingTo(null);
+      setNewComment("");
+    }
   };
 
   const handleAddComment = () => {
     if (newComment.trim()) {
       if (onAddComment) {
+        // Pass a comment object including replyingTo ID. Parent manages discussionId.
         onAddComment({
-          id: Math.random().toString(36).substring(7),
-          text: newComment,
-          userName: "Current User",
-          timeAgo: "Just now",
-          replies: [],
-          replyingTo: replyingTo,
+          text: newComment.trim(),
+          userName: "Current User", // Placeholder: should be actual current user from auth context
+          replyingTo: replyingTo, 
         });
       }
       setNewComment("");
@@ -79,22 +81,91 @@ const DiscussionCard = ({
     }
   };
 
-  const handleReply = (commentId) => {
+  const handleReply = (commentId, userName) => {
     setReplyingTo(commentId);
     setShowComments(true);
   };
 
   const handleFlag = (reason) => {
     setShowFlagModal(false);
-    Alert.alert(
-      "Post Flagged",
-      `Thank you for reporting this post. Reason: ${reason}`,
-      [{ text: "OK" }]
-    );
+    if (onFlagPost) {
+      onFlagPost(discussionId, reason); 
+    }
+    // The parent component (Discussions.js) handles the API call and provides a successful Alert.
+  };
+  
+  const shortContent = content.length > 150 ? content.substring(0, 150) + "..." : content;
+
+  // Helper function to format date/time
+  const formatCommentTime = (dateString) => {
+    if (!dateString) return "Just now";
+    const date = new Date(dateString);
+    // Simple formatting: 10/17/2025 1:00 AM
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // Function to render comment or reply
+  const CommentItem = ({ comment, isReply = false }) => {
+    // Determine the unique ID (Mongo _id or temp frontend id)
+    const uniqueId = comment._id || comment.id;
+    // Prefer backend user field (user) over frontend placeholder (userName)
+    const commentUser = comment.user || comment.userName;
+    const commentTime = comment.timeAgo || formatCommentTime(comment.created_at);
+    
+    return (
+      <View 
+        key={uniqueId} 
+        style={[
+          styles.commentContainer, 
+          isReply && styles.replyContainer,
+          { borderBottomWidth: isReply ? 0 : 1 } 
+        ]}
+      >
+        <View style={styles.commentHeader}>
+          <Image
+            source={require("../../assets/Jone-Doe.png")} // Replace with actual avatar logic
+            style={styles.commentAvatar}
+          />
+          <View style={styles.commentUserInfo}>
+            <Text style={styles.commentUserName}>{commentUser}</Text> 
+            <Text style={styles.commentTime}>{commentTime}</Text>
+          </View>
+        </View>
+        <Text style={[styles.commentText, {paddingLeft: isReply ? 0 : 32}]}>{comment.text}</Text>
+        
+        {!isReply && (
+          <TouchableOpacity
+            style={styles.replyButton}
+            onPress={() => handleReply(uniqueId, commentUser)}
+          >
+            <Text style={styles.replyButtonText}>Reply</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Render nested replies */}
+        {comment.replies && comment.replies.length > 0 && (
+          <View style={styles.repliesContainer}>
+            {comment.replies.map((reply) => (
+              <CommentItem key={reply._id || reply.id} comment={reply} isReply={true} /> 
+            ))}
+          </View>
+        )}
+      </View>
+    )
   };
 
-  const shortContent = content.length > 150 ? content.substring(0, 150) + "..." : content;
+  // Calculate total count (top-level + nested replies)
+  const totalReplies = comments.reduce((count, comment) => {
+    return count + 1 + (comment.replies?.length || 0);
+  }, 0);
   
+  // Helper to find the name of the user being replied to
+  const getReplyingToName = () => {
+    const parentComment = comments.find(c => (c._id || c.id) === replyingTo);
+    if (!parentComment) return 'a comment'; 
+    return parentComment.user || parentComment.userName || 'a comment';
+  }
+
   return (
     <View style={styles.card}>
       {/* Three dots menu */}
@@ -128,8 +199,23 @@ const DiscussionCard = ({
                 style={styles.menuIcon}
               />
               <Text style={styles.menuText}>
-                {pinned ? "Unpin Post" : "Pin Post"}
+                {isPinned ? "Unpin Post" : "Pin Post"} 
               </Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.menuItem} 
+              onPress={() => {
+                setShowMenu(false); 
+                setShowFlagModal(true);
+              }}
+            >
+              <Ionicons 
+                name="flag-outline" 
+                size={18} 
+                color={colors.mainTextColor} 
+                style={styles.menuIconSpacer} 
+              />
+              <Text style={styles.menuText}>Flag Post</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -150,7 +236,7 @@ const DiscussionCard = ({
       {/* Title and Pin Badge */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>{title}</Text>
-        {pinned && (
+        {isPinned && ( 
           <View style={styles.pinnedBadge}>
             <Image
               source={require("../../assets/pin.png")}
@@ -173,7 +259,27 @@ const DiscussionCard = ({
         </View>
       </View>
 
-      {/* Content with Read More */}
+      {/* ⭐ FIX: NEW Image Display Section */}
+      {images && images.length > 0 && (
+        <View style={styles.imageGallery}>
+          {images.slice(0, 4).map((url, index) => ( 
+            <Image
+              key={index}
+              // The `uri` must be a complete, accessible URL (e.g., from S3, Cloudinary)
+              source={{ uri: url }} 
+              style={[
+                styles.discussionImage,
+                // Layout adjustment based on number of images
+                images.length === 1 && styles.imageFull,
+                images.length === 2 && styles.imageHalf,
+                images.length >= 3 && styles.imageThird,
+              ]}
+              resizeMode="cover"
+            />
+          ))}
+        </View>
+      )}
+
       <View style={styles.hiEveryoneBox}>
         <Text style={styles.hiEveryoneText}>
           {isExpanded ? content : shortContent}
@@ -190,7 +296,6 @@ const DiscussionCard = ({
         )}
       </View>
 
-      {/* Separator Line */}
       <View style={styles.separatorLine} />
 
       {/* Interaction Buttons */}
@@ -204,7 +309,7 @@ const DiscussionCard = ({
             style={styles.replyIcon}
           />
           <Text style={styles.interactionText}>
-            {replies} {replies === 1 ? "Reply" : "Replies"}
+            {totalReplies} {totalReplies === 1 ? "Reply" : "Replies"}
           </Text>
         </TouchableOpacity>
 
@@ -227,45 +332,7 @@ const DiscussionCard = ({
           {comments.length > 0 ? (
             <ScrollView style={styles.commentsList}>
               {comments.map((comment) => (
-                <View key={comment.id} style={styles.commentContainer}>
-                  <View style={styles.commentHeader}>
-                    <Image
-                      source={require("../../assets/Jone-Doe.png")}
-                      style={styles.commentAvatar}
-                    />
-                    <View style={styles.commentUserInfo}>
-                      <Text style={styles.commentUserName}>{comment.userName}</Text>
-                      <Text style={styles.commentTime}>{comment.timeAgo}</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.commentText}>{comment.text}</Text>
-                  <TouchableOpacity 
-                    style={styles.replyButton}
-                    onPress={() => handleReply(comment.id)}
-                  >
-                    <Text style={styles.replyButtonText}>Reply</Text>
-                  </TouchableOpacity>
-                  
-                  {comment.replies && comment.replies.length > 0 && (
-                    <View style={styles.repliesContainer}>
-                      {comment.replies.map((reply) => (
-                        <View key={reply.id} style={styles.replyContainer}>
-                          <View style={styles.commentHeader}>
-                            <Image
-                              source={require("../../assets/Jone-Doe.png")}
-                              style={styles.commentAvatar}
-                            />
-                            <View style={styles.commentUserInfo}>
-                              <Text style={styles.commentUserName}>{reply.userName}</Text>
-                              <Text style={styles.commentTime}>{reply.timeAgo}</Text>
-                            </View>
-                          </View>
-                          <Text style={styles.commentText}>{reply.text}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
+                <CommentItem key={comment._id || comment.id} comment={comment} />
               ))}
             </ScrollView>
           ) : (
@@ -274,24 +341,32 @@ const DiscussionCard = ({
 
           <View style={styles.addCommentContainer}>
             {replyingTo && (
-              <Text style={styles.replyingToText}>
-                Replying to {comments.find(c => c.id === replyingTo)?.userName}
-              </Text>
+              <View style={styles.replyingToBox}>
+                <Text style={styles.replyingToText}>
+                  Replying to {getReplyingToName()}
+                </Text>
+                <TouchableOpacity onPress={() => setReplyingTo(null)}>
+                  <Ionicons name="close-circle" size={16} color={colors.secondaryText} />
+                </TouchableOpacity>
+              </View>
             )}
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Add a comment..."
-              placeholderTextColor={colors.secondaryText}
-              value={newComment}
-              onChangeText={setNewComment}
-              multiline
-            />
-            <TouchableOpacity 
-              style={styles.postCommentButton}
-              onPress={handleAddComment}
-            >
-              <Text style={styles.postCommentButtonText}>Post</Text>
-            </TouchableOpacity>
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                placeholder={replyingTo ? "Add your reply..." : "Add a comment..."}
+                placeholderTextColor={colors.secondaryText}
+                value={newComment}
+                onChangeText={setNewComment}
+                multiline
+              />
+              <TouchableOpacity 
+                style={styles.postCommentButton}
+                onPress={handleAddComment}
+                disabled={!newComment.trim()}
+              >
+                <Text style={styles.postCommentButtonText}>Post</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}
@@ -308,7 +383,7 @@ const DiscussionCard = ({
           activeOpacity={1}
           onPress={() => setShowFlagModal(false)}
         >
-          <View style={styles.flagModalContent}>
+          <View style={styles.flagModalContent} onStartShouldSetResponder={() => true}>
             <Text style={styles.flagModalTitle}>Report this post</Text>
             <Text style={styles.flagModalSubtitle}>Why are you reporting this post?</Text>
             
@@ -342,7 +417,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
-    bordercolor: colors.border,
+    borderColor: colors.border,
     padding: 16,
     position: "relative",
     shadowColor: colors.secondaryText,
@@ -371,44 +446,43 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondaryText,
     marginVertical: 1,
   },
-menuOverlay: {
-  position: "absolute",
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-},
-menuDropdown: {
-  position: "absolute",
-  top: 40,  // adjust relative to three dots button
-  right: 16,
-  backgroundColor: colors.background,
-  borderRadius: 12,
-  paddingVertical: 4,
-  minWidth: 180,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 4 },
-  shadowOpacity: 0.1,
-  shadowRadius: 8,
-  elevation: 6,
-},
-menuItem: {
-  flexDirection: "row",
-  alignItems: "center",
-  paddingVertical: 12,
-  paddingHorizontal: 16,
-},
-menuIcon: {
-  width: 18,
-  height: 18,
-  marginRight: 12,
-  tintColor: colors.mainTextColor,
-},
-menuText: {
-  fontSize: 15,
-  fontFamily: fonts.PlusJakartaSansMedium,
-  color: colors.mainTextColor,
-},
+  modalOverlay: {
+    flex: 1,
+  },
+  menuDropdown: {
+    position: "absolute",
+    top: 40,
+    right: 16,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    paddingVertical: 4,
+    minWidth: 180,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  menuIcon: {
+    width: 18,
+    height: 18,
+    marginRight: 12,
+    tintColor: colors.mainTextColor,
+  },
+  menuIconSpacer: { 
+    marginRight: 12,
+  },
+  menuText: {
+    fontSize: 15,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.mainTextColor,
+  },
   hashtagContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -491,15 +565,35 @@ menuText: {
     color: colors.secondaryText,
     marginTop: 2,
   },
+  // ⭐ NEW IMAGE STYLES
+  imageGallery: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  discussionImage: {
+    height: 120, // Default height for multi-image layout
+    borderRadius: 8,
+    marginBottom: 8,
+    // Add margin or padding here if you can't use `gap`
+  },
+  imageFull: {
+    width: '100%',
+    height: 200, 
+  },
+  imageHalf: {
+    width: '48%', 
+  },
+  imageThird: {
+    width: '30%', 
+    height: 80, 
+  },
+  // END NEW IMAGE STYLES
   hiEveryoneBox: {
     backgroundColor: colors.stroke,
     padding: 12,
     borderRadius: 8,
-    marginBottom: 16,
-  },
-  separator: {
-    height: 1,
-    backgroundColor: colors.stroke,
     marginBottom: 16,
   },
   hiEveryoneText: {
@@ -534,12 +628,6 @@ menuText: {
     marginRight: 16,
     padding: 4,
   },
-  likeIcon: {
-    width: 16,
-    height: 16,
-    marginRight: 6,
-    tintColor: colors.secondaryText,
-  },
   replyIcon: {
     width: 16,
     height: 16,
@@ -551,8 +639,6 @@ menuText: {
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
   },
-
-  // Add these new styles:
   commentsSection: {
     marginTop: 12,
     borderTopWidth: 1,
@@ -560,7 +646,7 @@ menuText: {
     paddingTop: 12,
   },
   commentsList: {
-    maxHeight: 200,
+    maxHeight: 250,
     marginBottom: 12,
   },
   commentContainer: {
@@ -572,7 +658,7 @@ menuText: {
   commentHeader: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 4,
   },
   commentAvatar: {
     width: 24,
@@ -601,7 +687,8 @@ menuText: {
     lineHeight: 16,
   },
   replyButton: {
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-start',
+    marginLeft: 32,
   },
   replyButtonText: {
     fontSize: 12,
@@ -618,6 +705,9 @@ menuText: {
   },
   replyContainer: {
     marginBottom: 8,
+    borderBottomWidth: 0,
+    paddingBottom: 0,
+    marginTop: 8,
   },
   noCommentsText: {
     fontSize: 12,
@@ -629,13 +719,27 @@ menuText: {
   addCommentContainer: {
     marginTop: 8,
   },
+  replyingToBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    backgroundColor: colors.stroke,
+    borderRadius: 8,
+    marginBottom: 4,
+  },
   replyingToText: {
     fontSize: 10,
     fontFamily: fonts.PlusJakartaSans,
     color: colors.secondaryText,
-    marginBottom: 4,
+  },
+  commentInputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
   },
   commentInput: {
+    flex: 1,
     backgroundColor: colors.stroke,
     borderRadius: 8,
     padding: 12,
@@ -643,14 +747,15 @@ menuText: {
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
     minHeight: 40,
-    marginBottom: 8,
+    marginRight: 8,
   },
   postCommentButton: {
-    alignSelf: 'flex-end',
     backgroundColor: colors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 4,
+    height: 40,
+    justifyContent: 'center',
   },
   postCommentButtonText: {
     fontSize: 12,
