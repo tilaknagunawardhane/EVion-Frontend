@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,14 @@ import {
   Alert,
   Modal,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { API_BASE_URL } from '@env';
+import useUserData from '../../../hooks/useUserData';
+import { storeUserData } from '../../../services/authService';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import CustomButton from '../../../components/CustomButton';
@@ -55,8 +61,28 @@ const ProfileFieldComponent = React.memo(({
 ));
 
 const Profile1 = () => {
+  const params = useLocalSearchParams();
+  useEffect(() => {
+    if (params.homeAddress) {
+      setUserInfo(prev => ({
+        ...prev,
+        homeAddress: params.homeAddress
+      }));
+    }
+    if (params.updatedEmail) {
+      // When returning from email verification, update the UI and optionally re-fetch from backend
+      setUserInfo(prev => ({ ...prev, email: params.updatedEmail }));
+      // Also refresh profile from server to keep authoritative state
+      if (user?._id) fetchProfile();
+    }
+    if (params.activeTab) {
+      setActiveTab(params.activeTab);
+    }
+  }, [params.homeAddress, params.updatedEmail]);
   const router = useRouter();
+  const { user, isLoading: isUserLoading, refreshUserData } = useUserData();
   const [activeTab, setActiveTab] = useState('Basic Info');
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(null);
   const [editingValues, setEditingValues] = useState({});
   const [showAddressModal, setShowAddressModal] = useState(false);
@@ -100,10 +126,22 @@ const Profile1 = () => {
 
   const handleUpdate = useCallback(() => {
     if (isEditing) {
+      const newVal = editingValues[isEditing];
       setUserInfo(prev => ({
         ...prev,
-        [isEditing]: editingValues[isEditing]
+        [isEditing]: newVal
       }));
+      // push update to backend (map UI field names to API field names)
+      const makePatch = (field, value) => {
+        if (field === 'name') return { name: value };
+        if (field === 'contactNumber') return { contact_number: value };
+        if (field === 'homeAddress') return { home_address: value };
+        // unsupported field by backend - don't send
+        return null;
+      };
+
+      const patch = makePatch(isEditing, newVal);
+      if (patch) updateProfile(patch);
       setIsEditing(null);
       setEditingValues(prev => ({ ...prev, [isEditing]: '' }));
     }
@@ -120,6 +158,126 @@ const Profile1 = () => {
       homeAddress: fullAddress
     }));
     setShowAddressModal(false);
+  // update backend (backend expects `home_address`)
+  updateProfile({ home_address: fullAddress });
+  };
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  // Fetch profile from backend
+  const fetchProfile = async () => {
+    try {
+      setIsLoading(true);
+      if (!user?._id) return;
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) throw new Error('Not authenticated');
+
+  const response = await fetch(`${API_BASE_URL}/api/evowners/profile/${user._id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const text = await response.text();
+      let result;
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn('Non-JSON response fetching profile:', response.status, text);
+        Toast.show({ type: ALERT_TYPE.ERROR, title: 'Error', textBody: `Server returned non-JSON response (status ${response.status})` });
+        return;
+      }
+
+      if (!response.ok) {
+        Toast.show({ type: ALERT_TYPE.ERROR, title: 'Error', textBody: result.message || 'Failed to fetch profile' });
+        return;
+      }
+
+      // populate local state from API data using backend field names
+      const data = result.data || result;
+      setUserInfo(prev => ({
+        ...prev,
+        name: data.name || prev.name,
+        email: data.email || prev.email,
+        contactNumber: data.contact_number || data.contactNumber || prev.contactNumber,
+        homeAddress: data.home_address || data.homeAddress || prev.homeAddress,
+        
+      }));
+    } catch (error) {
+      console.error('Fetch profile error:', error);
+      Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: error.message || 'Failed to fetch profile' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Update profile on backend
+  const updateProfile = async (patch) => {
+    try {
+      setIsLoading(true);
+      if (!user?._id) throw new Error('User ID not found');
+
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) throw new Error('Not authenticated');
+
+  const response = await fetch(`${API_BASE_URL}/api/evowners/profile/${user._id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(patch),
+      });
+
+      const text = await response.text();
+      let result;
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch (err) {
+        console.warn('Non-JSON response updating profile:', response.status, text);
+        Toast.show({ type: ALERT_TYPE.ERROR, title: 'Error', textBody: `Server returned non-JSON response (status ${response.status})` });
+        return { ok: false, result: { message: text } };
+      }
+
+      if (!response.ok) {
+        Toast.show({ type: ALERT_TYPE.ERROR, title: 'Error', textBody: result.message || 'Failed to update profile' });
+        return { ok: false, result };
+      }
+
+      // Persist updated user data locally so other screens (and next login) show updated info
+      const updated = result.data || result;
+      try {
+        // If backend returned an updated user object, store minimal user info
+        const userToStore = {
+          _id: updated._id || user?._id,
+          email: updated.email || user?.email,
+          name: updated.name || user?.name,
+        };
+        await storeUserData(userToStore);
+        // Ask hook to refresh its cached value
+        if (typeof refreshUserData === 'function') {
+          await refreshUserData();
+        }
+      } catch (err) {
+        console.warn('Failed to persist updated user locally:', err);
+      }
+
+      Toast.show({ type: ALERT_TYPE.SUCCESS, title: 'Success', textBody: result.message || 'Profile updated' });
+      return { ok: true, result };
+    } catch (error) {
+      console.error('Update profile error:', error);
+      Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: error.message || 'Failed to update profile' });
+      return { ok: false, error };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleProfilePictureChange = () => {
@@ -514,6 +672,11 @@ const Profile1 = () => {
 
   return (
     <View style={styles.container}>
+      {(isLoading || isUserLoading) && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      )}
       {/* Header */}
       <View >
         <TouchableOpacity onPress={() => router.push('/')} style={styles.header}>
@@ -577,7 +740,6 @@ const Profile1 = () => {
                 placeholder={userInfo.name}
                 multiline={false}
                 keyboardType="default"
-          
               />
 
               <ProfileFieldComponent
@@ -623,23 +785,11 @@ const Profile1 = () => {
                 placeholder={userInfo.homeAddress}
                 multiline={true}
                 keyboardType="default"
-                onSpecialEdit={() => setShowAddressModal(true)}
+                // Connect to Address.jsx on edit button
+                onSpecialEdit={() => router.push('/pages/Profile/ManageAccount/Address')}
               />
 
-              <ProfileFieldComponent
-                label="Work Place"
-                value={userInfo.workPlace}
-                field="workPlace"
-                isEditingField={isEditing === 'workPlace'}
-                editingValue={editingValues['workPlace'] || ''}
-                onEdit={handleEdit}
-                onUpdate={handleUpdate}
-                onCancel={handleCancel}
-                onValueChange={val => setEditingValues(prev => ({ ...prev, ['workPlace']: val }))}
-                placeholder={userInfo.workPlace}
-                multiline={true}
-                keyboardType="default"
-              />
+              
             </View>
           </>
         )}
@@ -671,7 +821,7 @@ const Profile1 = () => {
 
             <View style={styles.securityDivider} />
 
-            <TouchableOpacity onPress={() => router.push('/pages/Profile/RecoveryPhoneScreen')}>
+            <TouchableOpacity onPress={() => router.push('/pages/Profile/ManageAccount/RecoveryPhone')}>
               <View style={styles.securityItem}>
                 <Text style={styles.securityLabel}>Recovery Phone Number</Text>
                 <Text style={styles.securityArrow}>›</Text>
@@ -1055,6 +1205,18 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.stroke,
     marginHorizontal: 0,
+  },
+
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 99,
   },
 
 });

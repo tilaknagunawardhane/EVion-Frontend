@@ -18,6 +18,8 @@ export default function StationDetailsModal({
   userLocation,
   onClose,
   isVisible,
+  isPartneredStation,
+  router,
 }) {
   if (!station) return null;
 
@@ -86,6 +88,16 @@ export default function StationDetailsModal({
     }).join(', ');
   };
 
+  if(isPartneredStation){
+    console.log('isPartneredStation: ', isPartneredStation)
+  }
+
+  const handleGoToStationDetails = () => {
+    console.log('Navigate to station details:', station.id);
+    router.push(`/pages/StationProfile?stationID=${station.id}`);
+    onClose();
+  };
+
   return (
     <Modal
       visible={isVisible}
@@ -114,6 +126,15 @@ export default function StationDetailsModal({
 
           {/* Content */}
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+
+            {/* Partnered Station Badge */}
+            {isPartneredStation && (
+              <View style={styles.partnerBadge}>
+                <MaterialIcons name="verified" size={18} color={colors.primary} />
+                <Text style={styles.partnerBadgeText}>Partnered Station</Text>
+              </View>
+            )}
+
             {/* Status */}
             {station.statusType && (
               <View style={styles.infoRow}>
@@ -229,6 +250,17 @@ export default function StationDetailsModal({
 
           {/* Action Buttons */}
           <View style={styles.actionButtons}>
+
+            {isPartneredStation && (
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.detailsButton]}
+                onPress={handleGoToStationDetails}
+              >
+                <MaterialIcons name="info" size={20} color={colors.primary} />
+                <Text style={styles.detailsButtonText}>Go to Station Details</Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity 
               style={[styles.actionButton, styles.directionsButton]}
               onPress={handleGetDirections}
@@ -339,4 +371,31 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginLeft: 8,
   },
+  partnerBadge: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: `${colors.primary}15`,
+  paddingVertical: 8,
+  paddingHorizontal: 12,
+  borderRadius: 20,
+  alignSelf: 'flex-start',
+  marginBottom: 16,
+},
+partnerBadgeText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: colors.primary,
+  marginLeft: 6,
+},
+detailsButton: {
+  backgroundColor: '#fff',
+  borderWidth: 1.5,
+  borderColor: colors.primary,
+},
+detailsButtonText: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: colors.primary,
+  marginLeft: 8,
+},
 });
