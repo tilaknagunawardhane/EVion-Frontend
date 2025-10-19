@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Dimensions, Animated, Easing, PanResponder, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import CircularProgress from '../../components/CircularProgress';
@@ -13,17 +13,39 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const POLL_INTERVAL = 3000; // Poll every 3 seconds
 const batteryCapacity = 77; 
 
+// Custom Arrow Icons
+function ArrowForwardIcon({ size = 24, color = 'white' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 4L10.59 5.41L16.17 11H4V13H16.17L10.59 18.59L12 20L20 12L12 4Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
+function ArrowBackIcon({ size = 24, color = 'white' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
 const StartChargeWalkInScreen = () => {
   const router = useRouter();
   const { connectorId, userId } = useLocalSearchParams();
 
   const [chargingData, setChargingData] = useState({
-  totalEnergy: 0, // total kWh delivered
-  chargingPower: '0 kW',
-  chargingTime: '00:00:00',
-  cost: '0.00',
-});
-
+    totalEnergy: 0, // total kWh delivered
+    chargingPower: '0 kW',
+    chargingTime: '00:00:00',
+    cost: '0.00',
+  });
 
   const [isCharging, setIsCharging] = useState(false);
   const [swipeDirection, setSwipeDirection] = useState('right');
@@ -31,105 +53,103 @@ const StartChargeWalkInScreen = () => {
 
   // 🔘 Poll charging data when charging is active
   useEffect(() => {
-  let interval;
-  if (isCharging && connectorId && userId) {
-    interval = setInterval(async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/ocpp/data?connectorId=${connectorId}`);
-        const text = await response.text();
-        let data;
+    let interval;
+    if (isCharging && connectorId && userId) {
+      interval = setInterval(async () => {
         try {
-          data = JSON.parse(text);
-        } catch {
-          console.error('❌ Invalid JSON response:', text);
-          return;
+          const response = await fetch(`${API_BASE_URL}/api/ocpp/data?connectorId=${connectorId}`);
+          const text = await response.text();
+          let data;
+          try {
+            data = JSON.parse(text);
+          } catch {
+            console.error('❌ Invalid JSON response:', text);
+            return;
+          }
+
+          setChargingData({
+            totalEnergy: parseFloat(data.totalEnergy || 0).toFixed(2),// ⚡ total energy in kWh
+            chargingPower: `${parseFloat(data.power || 0).toFixed(2)} kW`,
+            chargingTime: new Date((data.timeElapsed || 0) * 1000).toISOString().substr(11, 8),
+            cost: parseFloat(data.cost || 0).toFixed(2),
+          });
+        } catch (err) {
+          console.error('Error fetching charging status:', err);
         }
+      }, POLL_INTERVAL);
+    }
 
-        setChargingData({
-          totalEnergy: parseFloat(data.totalEnergy || 0).toFixed(2),// ⚡ total energy in kWh
-          chargingPower: `${parseFloat(data.power || 0).toFixed(2)} kW`,
-          chargingTime: new Date((data.timeElapsed || 0) * 1000).toISOString().substr(11, 8),
-          cost: parseFloat(data.cost || 0).toFixed(2),
-        });
-      } catch (err) {
-        console.error('Error fetching charging status:', err);
-      }
-    }, POLL_INTERVAL);
-  }
-
-  return () => {
-    if (interval) clearInterval(interval);
-  };
-}, [isCharging, connectorId, userId]);
-
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isCharging, connectorId, userId]);
 
   // 🔘 Swipe handler to start/stop charging
   const handleSwipeComplete = async (direction) => {
-  if (!connectorId || !userId) return console.warn('⚠️ Missing IDs for charging request.');
+    if (!connectorId || !userId) return console.warn('⚠️ Missing IDs for charging request.');
 
-  if (direction === 'right') {
-    setIsCharging(true);
-    setSwipeDirection('left');
+    if (direction === 'right') {
+      setIsCharging(true);
+      setSwipeDirection('left');
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/ocpp/start`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ connectorId, ev_owner_id: userId }),
-      });
-      const data = await response.json();
-      console.log('OCPP start response:', data);
-    } catch (err) {
-      console.error('Error starting OCPP server:', err);
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ocpp/start`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connectorId, ev_owner_id: userId }),
+        });
+        const data = await response.json();
+        console.log('OCPP start response:', data);
+      } catch (err) {
+        console.error('Error starting OCPP server:', err);
+      }
+
+    } else {
+      setIsCharging(false);
+      setSwipeDirection('right');
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/ocpp/stop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ connectorId, ev_owner_id: userId }),
+        });
+        const data = await response.json();
+        console.log('OCPP stop response:', data);
+
+        // 🔹 Show alert AFTER data is received
+        Alert.alert(
+          'Charging Stopped',
+          'Your charging session has been ended.',
+          [
+            {
+              text: 'View Summary',
+              onPress: () =>
+                router.push({
+                  pathname: '/pages/bookings/ReceiptScreen',
+                  params: {
+                    stationName: data.station_name,
+                    message: data.message,
+                    startTime: data.start_time,
+                    endTime: data.end_time,
+                    date: data.date,
+                    totalEnergy: data.total_energy_kwh,
+                    costPerKwh: data.cost_per_kwh,
+                    totalCost: data.total_cost,
+                    durationMinutes: data.duration_minutes,
+                  },
+                }),
+            },
+            { text: 'OK', style: 'cancel' },
+          ],
+          { cancelable: false }
+        );
+
+      } catch (err) {
+        console.error('Error stopping OCPP server:', err);
+      }
     }
-
-  } else {
-    setIsCharging(false);
-    setSwipeDirection('right');
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/ocpp/stop`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ connectorId, ev_owner_id: userId }),
-      });
-      const data = await response.json();
-      console.log('OCPP stop response:', data);
-
-      // 🔹 Show alert AFTER data is received
-      Alert.alert(
-        'Charging Stopped',
-        'Your charging session has been ended.',
-        [
-          {
-            text: 'View Summary',
-            onPress: () =>
-              router.push({
-                pathname: '/pages/bookings/ReceiptScreen',
-                params: {
-                  stationName: data.station_name,
-                  message: data.message,
-                  startTime: data.start_time,
-                  endTime: data.end_time,
-                  date: data.date,
-                  totalEnergy: data.total_energy_kwh,
-                  costPerKwh: data.cost_per_kwh,
-                  totalCost: data.total_cost,
-                  durationMinutes: data.duration_minutes,
-                },
-              }),
-          },
-          { text: 'OK', style: 'cancel' },
-        ],
-        { cancelable: false }
-      );
-
-    } catch (err) {
-      console.error('Error stopping OCPP server:', err);
-    }
-  }
-};
-
+  };
 
   const chargingInfoItems = [
     { icon: 'flash', label: 'Charging Power', value: chargingData.chargingPower },
@@ -149,13 +169,13 @@ const StartChargeWalkInScreen = () => {
 
       <View style={styles.content}>
         <View style={styles.batteryContainer}>
-                <CircularProgress
-                  percentage={(chargingData.totalEnergy / batteryCapacity) * 100}
-                  size={SCREEN_WIDTH * 0.5}
-                  additionalText={`${chargingData.totalEnergy} kWh`} // show total power
-                  strokeWidth={12}
-                  activeColor={isCharging ? colors.primary : colors.secondaryText}
-                />
+          <CircularProgress
+            percentage={(chargingData.totalEnergy / batteryCapacity) * 100}
+            size={SCREEN_WIDTH * 0.5}
+            additionalText={`${chargingData.totalEnergy} kWh`} // show total power
+            strokeWidth={12}
+            activeColor={isCharging ? colors.primary : colors.secondaryText}
+          />
           <Text style={styles.batteryStatus}>{isCharging ? 'Charging...' : 'Charging not started'}</Text>
         </View>
 
@@ -177,7 +197,7 @@ const StartChargeWalkInScreen = () => {
   );
 };
 
-// ⚙️ Swipe Button Component (unchanged)
+// ⚙️ Swipe Button Component
 const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
   const buttonWidth = SCREEN_WIDTH * 0.8;
   const thumbWidth = SCREEN_HEIGHT * 0.08;
@@ -236,7 +256,11 @@ const SwipeButton = ({ direction, isCharging, onSwipeComplete }) => {
           { transform: [{ translateX: pan }], width: thumbWidth, height: thumbWidth, borderRadius: thumbWidth / 2 },
         ]}
       >
-        <Ionicons name={direction === 'right' ? 'arrow-forward' : 'arrow-back'} size={24} color="white" />
+        {direction === 'right' ? (
+          <ArrowForwardIcon size={24} color="white" />
+        ) : (
+          <ArrowBackIcon size={24} color="white" />
+        )}
       </Animated.View>
       <Text style={styles.swipeText}>{direction === 'right' ? 'Swipe to start charging' : 'Swipe to stop charging'}</Text>
     </View>
