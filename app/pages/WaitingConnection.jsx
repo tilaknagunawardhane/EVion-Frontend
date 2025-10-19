@@ -4,18 +4,25 @@ import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+
 const WaitingConnectionScreen = () => {
   const router = useRouter();
+  const { userId, connectorId } = useLocalSearchParams();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      router.push('/pages/ChargeConnected');
+      router.push({
+        pathname: '/pages/ChargeConnected',
+        params: { userId, connectorId }
+      });
     }, 4000);
     return () => clearTimeout(timeout);
   }, []);
+
 
   return (
     <View style={styles.container}>
