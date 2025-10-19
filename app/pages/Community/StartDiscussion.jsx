@@ -8,7 +8,8 @@ import {
   Platform,
   Image,
   TouchableOpacity,
-  Text
+  Text,
+  ActivityIndicator // Added for explicit loading indicator (though YourThoughtsHeader may handle it)
 } from "react-native";
 import { useRouter } from "expo-router";
 import { API_BASE_URL } from '@env';
@@ -17,10 +18,15 @@ import colors from "../../../constants/color";
 import fonts from "../../../constants/fonts";
 import YourThoughtsHeader from "../../../components/community/YourThoughtsHeader";
 import CustomTextInput from "../../../components/CustomTextInput";
+// 🔑 IMPORT THE AUTH HOOK
+import { useAuth } from '../../../context/AuthContext'; // ⚠️ VERIFY THIS PATH!
 const BACKEND_URL = API_BASE_URL;
 
 
 const YourThoughts = () => {
+  // 🔑 USE THE HOOK TO GET THE CURRENT USER
+  const { user, isLoading: isAuthLoading } = useAuth();
+  
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedImages, setSelectedImages] = useState([]);
@@ -90,6 +96,16 @@ const YourThoughts = () => {
   };
 
   const handleShare = async () => {
+    // 🔑 Dynamic User Check
+    if (!user) {
+        Alert.alert("Login Required", "You must be logged in to share a discussion.");
+        return;
+    }
+    
+    // 🔑 Get dynamic user details
+    const currentUserName = user.name || user.userName || user.email;
+    const currentUserId = user._id || user.id;
+
     if (!title.trim()) {
       Alert.alert("Error", "Please add a title for your discussion");
       return;
@@ -106,7 +122,9 @@ const YourThoughts = () => {
       const hashtags = extractHashtags(description);
 
       const discussionData = {
-        user: "Jhon Joe", // replace with actual logged-in user if available
+        // 🔑 Use dynamic user data
+        user: currentUserName, // Display name
+        userId: currentUserId, // Unique ID for backend linking
         title,
         description,
         hashtags,
@@ -114,6 +132,10 @@ const YourThoughts = () => {
       };
 
       console.log("Posting discussion to backend:", discussionData);
+
+      // Assuming your API requires an Authorization header for authenticated actions
+      // You should generally pass the auth token here, but based on your previous code 
+      // where you didn't have a token, I'll stick to passing user data in the body.
 
       const response = await fetch(
         `${BACKEND_URL}/api/discussions/create-discussion`,
@@ -151,6 +173,16 @@ const YourThoughts = () => {
     }
   };
 
+  // Optionally show a loading state while fetching auth context
+  if (isAuthLoading) {
+    return (
+        <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={{color: colors.secondaryText, marginTop: 10}}>Loading user data...</Text>
+        </View>
+    );
+  }
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -162,6 +194,8 @@ const YourThoughts = () => {
         onAttach={pickImage}
         onPost={handleShare}
         isSubmitting={isSubmitting}
+        // Disable posting if not logged in
+        postDisabled={isSubmitting || !user} 
       />
 
       <ScrollView 
@@ -178,17 +212,29 @@ const YourThoughts = () => {
           minHeight={50}
           maxLength={100}
           inputStyle={styles.titleInput}
+          editable={!!user} // Disable if not logged in
         />
 
         <CustomTextInput
-          placeholder="Add description here (Use '#' to add keywords eg: #ChargingStations)"
+          placeholder={!user ? "Please log in to start a discussion." : "Add description here (Use '#' to add keywords eg: #ChargingStations)"}
           value={description}
           onChangeText={setDescription}
           multiline={true}
           minHeight={150}
           inputStyle={styles.descriptionInput}
           maxLength={1000}
+          editable={!!user} // Disable if not logged in
         />
+        
+        {/* Login Prompt */}
+        {!user && (
+            <View style={styles.loginPrompt}>
+                <Text style={styles.loginPromptText}>You must be logged in to create a discussion.</Text>
+                <TouchableOpacity onPress={() => router.push("/login")}>
+                    <Text style={styles.loginButtonText}>Login Now</Text>
+                </TouchableOpacity>
+            </View>
+        )}
 
         {extractHashtags(description).length > 0 && (
           <View style={styles.hashtagContainer}>
@@ -203,7 +249,7 @@ const YourThoughts = () => {
           </View>
         )}
 
-        {selectedImages.length > 0 && (
+        {(selectedImages.length > 0 || user) && ( // Show image section if images are present OR user is logged in
           <View style={styles.imagesContainer}>
             <Text style={styles.sectionTitle}>Attached Images ({selectedImages.length}/4)</Text>
             <ScrollView 
@@ -218,18 +264,22 @@ const YourThoughts = () => {
                     style={styles.image} 
                     onError={() => console.log("Failed to load image")}
                   />
-                  <TouchableOpacity 
-                    style={styles.removeImageButton}
-                    onPress={() => handleRemoveImage(index)}
-                  >
-                    <Text style={styles.removeImageText}>×</Text>
-                  </TouchableOpacity>
+                  {/* Remove button only visible if user is logged in */}
+                  {!!user && ( 
+                    <TouchableOpacity 
+                      style={styles.removeImageButton}
+                      onPress={() => handleRemoveImage(index)}
+                    >
+                      <Text style={styles.removeImageText}>×</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ))}
-              {selectedImages.length < 4 && (
+              {selectedImages.length < 4 && !!user && ( // Only show add button if user is logged in
                 <TouchableOpacity 
                   style={styles.addImageButton}
                   onPress={pickImage}
+                  disabled={!user}
                 >
                   <Text style={styles.addImageText}>+</Text>
                 </TouchableOpacity>
@@ -238,7 +288,7 @@ const YourThoughts = () => {
           </View>
         )}
 
-        {selectedImages.length === 0 && (
+        {selectedImages.length === 0 && !!user && (
           <TouchableOpacity 
             style={styles.attachButton}
             onPress={pickImage}
@@ -262,6 +312,12 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: colors.background,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
   content: { 
     flex: 1, 
     paddingHorizontal: 16, 
@@ -276,6 +332,25 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans, 
     lineHeight: 20, 
     paddingTop: 16,
+  },
+  loginPrompt: {
+    backgroundColor: colors.stroke,
+    borderRadius: 8,
+    padding: 15,
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  loginPromptText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.secondaryText,
+    marginBottom: 5,
+  },
+  loginButtonText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansBold,
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
   hashtagContainer: { 
     marginTop: 8, 
@@ -366,6 +441,20 @@ const styles = StyleSheet.create({
   attachIcon: { 
     width: 16, 
     height: 16, 
+    tintColor: colors.primary, // Assuming you want a tint
+    marginRight: 8,
+  },
+  attachButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    marginTop: 10,
+    alignSelf: 'flex-start',
+  },
+  attachText: {
+    fontSize: 14,
+    fontFamily: fonts.PlusJakartaSansMedium,
+    color: colors.primary,
   }
 });
 
