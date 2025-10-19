@@ -22,15 +22,27 @@ const PlanTripScreen = () => {
   const [startingLocation, setStartingLocation] = useState('');
   const [destination, setDestination] = useState('');
   const [additionalDestinations, setAdditionalDestinations] = useState([]);
-  const [selectedVehicle, setSelectedVehicle] = useState('BYD Atto 3');
-  const [batteryLevel, setBatteryLevel] = useState('80%');
+  const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [batteryLevel, setBatteryLevel] = useState('80');
   const [passengers, setPassengers] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
 
-  // useEffect(()=> {
-  //   console.log('startingLocation: ', startingLocation);
-  //   console.log('destination: ', destination);
-  // }, [startingLocation, destination])
+  useEffect(()=> {
+    console.log('startingLocation: ', startingLocation);
+    console.log('destination: ', destination);
+  }, [startingLocation, destination]);
+
+  useEffect(() => {
+    console.log('selectedVehicle: ', selectedVehicle);
+  }, [selectedVehicle]);
+
+  useEffect(() => {
+    console.log('batteryLevel: ', batteryLevel);
+  }, [batteryLevel]);
+
+  useEffect(() => {
+    console.log('passengers: ', passengers);
+  }, [passengers]);
 
   const handleRoute = () => {
     if (startingLocation && destination && passengers && batteryLevel) {
@@ -42,7 +54,23 @@ const PlanTripScreen = () => {
 
   const handleConfirm = () => {
     setModalVisible(false);
-    router.push('/pages/LoadingScreen');
+
+    const tripData = {
+      startingLocation,
+      destination,
+      additionalDestinations: additionalDestinations.filter(dest => dest.trim() !== ''),
+      selectedVehicle,
+      batteryLevel,
+      passengers,
+    };
+
+    router.push({
+      pathname: '/(tabs)/map',
+      params: {
+        tripData: JSON.stringify(tripData),
+        fromTripPlanner: 'true'
+      }
+    });
   };
 
   const handleCancel = () => {

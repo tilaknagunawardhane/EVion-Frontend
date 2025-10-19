@@ -74,7 +74,7 @@ const InputWithIcon = ({
 
   const handlePlaceSuggestionPress = (place) => {
     const description = place.description;
-    console.log('Tapped suggestion:', description); // Debug log
+    console.log('Tapped suggestion:', place); // Debug log
 
     closeSuggestions();
     setSuggestions([]);

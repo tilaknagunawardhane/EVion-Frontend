@@ -31,18 +31,21 @@ import ChargingStationMarker from '../../components/maps/ChargingStationMarker';
 // Utils
 import { getDistanceFromLatLonInKm } from '../../utils/mapUtils';
 // import polyline from '@mapbox/polyline';
+import { useLocalSearchParams } from 'expo-router';
 
 const OPEN_CHARGE_MAP_API_URL = 'https://api.openchargemap.io/v3/poi';
 
 export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef(null);
+  const params = useLocalSearchParams();
   
   // State management
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const [chargingStations, setChargingStations] = useState([]);
   const [partneredChargingStations, setPartneredChargingStations] = useState([]);
+  const [filteredChargingStations, setFilteredChargingStations] = useState([]); 
   const [selectedStation, setSelectedStation] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [stationsLoaded, setStationsLoaded] = useState(false);
@@ -50,12 +53,19 @@ export default function MapScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [startLocation, setStartLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null); //for tripPlanner
   const [routePolyline, setRoutePolyline] = useState(null);
 
+  // const [selectedVehicle, setSelectedVehicle] = useState('');
+  // const [batteryLevel, setBatteryLevel] = useState('');
+  // const [passengers, setPassengers] = useState('');
+
   useEffect(() => {
+    console.log('location: ', location);
     console.log('startLocation: ', startLocation);
     console.log('selectedLocation: ', selectedLocation);
-  }, [startLocation, selectedLocation]);
+    console.log('destinationLocation: ', destinationLocation);
+  }, [location, startLocation, selectedLocation, destinationLocation]);
 
   useEffect(() => {
     // chargingStations.forEach(station => console.log(station.address));
@@ -82,6 +92,26 @@ export default function MapScreen() {
     }
   }, [location, mapLoaded]);
 
+  //getting parameters from trip planner page
+  useEffect(() => {
+    if (params.tripData && params.fromTripPlanner === 'true') {
+      try {
+        const tripData = JSON.parse(params.tripData);
+        console.log('Received trip data:', tripData);
+        
+        // Process the starting location and destination
+        handleTripPlanSearch(tripData.startingLocation, tripData.destination);
+        
+        // Store trip data if you need other info
+        // setTripPlanData(tripData);
+        
+      } catch (error) {
+        console.error('Error parsing trip data:', error);
+      }
+    }
+  }, [params.tripData, params.fromTripPlanner]);
+
+
   const getUserLocation = async () => {
     try {
       console.log('Requesting location permissions...');
@@ -95,10 +125,10 @@ export default function MapScreen() {
           latitude: 6.9271,
           longitude: 79.8612,
         });
-        setStartLocation({
-          latitude: 6.9271,
-          longitude: 79.8612,
-        }); // setting user location as the starting location
+        // setStartLocation({
+        //   latitude: 6.9271,
+        //   longitude: 79.8612,
+        // }); // setting user location as the starting location
         return;
       }
 
@@ -130,22 +160,22 @@ export default function MapScreen() {
           longitude: 79.8612,
           accuracy: loc.coords.accuracy,
         });
-        setStartLocation({
-          latitude: 6.9271, // Colombo
-          longitude: 79.8612,
-          accuracy: loc.coords.accuracy,
-        }); // setting user location as the starting location
+        // setStartLocation({
+        //   latitude: 6.9271, // Colombo
+        //   longitude: 79.8612,
+        //   accuracy: loc.coords.accuracy,
+        // }); // setting user location as the starting location
       } else {
         setLocation({
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
           accuracy: loc.coords.accuracy,
         });
-        setStartLocation({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-          accuracy: loc.coords.accuracy,
-        }); // setting user location as the starting location
+        // setStartLocation({
+        //   latitude: loc.coords.latitude,
+        //   longitude: loc.coords.longitude,
+        //   accuracy: loc.coords.accuracy,
+        // }); // setting user location as the starting location
       }
       
       setErrorMsg(null);
@@ -204,6 +234,7 @@ export default function MapScreen() {
       console.log(`Loaded ${stations.length} charging stations`);
       setChargingStations(stations);
       setStationsLoaded(true);
+      setFilteredChargingStations([]);
       
     } catch (error) {
       console.error('Error loading charging stations:', error);
@@ -220,8 +251,8 @@ export default function MapScreen() {
         id: station._id,
         title: station.station_name || 'Charging Station',
         description: 'No description available',
-        latitude: station.latitude,
-        longitude: station.longitude,
+        latitude: station.location.latitude,
+        longitude: station.location.longitude,
         address: station.address,
         town: station.city,
         // postcode: station.AddressInfo?.Postcode,
@@ -238,24 +269,28 @@ export default function MapScreen() {
     console.log(`Loaded ${stations.length} partnered charging stations`);
     setPartneredChargingStations(stations);
     setPartneredStationsLoaded(true);
+    setFilteredChargingStations([]);
 
   } catch (error) {
     console.error('Error loading partnered stations:', error);
-    Alert.alert('Error', 'Failed to load charging stations');
+    // Alert.alert('Error', 'Failed to load charging stations');
     setPartneredStationsLoaded(true);
   }
 };
 
-  const handleGetRoute = async (destination) => {
-    if (!destination || !startLocation) return;
+  const handleGetRoute = async (source, destination) => {
+  if (!source || !destination) {
+    Alert.alert('Error', 'Both source and destination are required');
+    return;
+  }
 
-    let filteredStations = [];
+  let filteredStations = [];
 
-    try {
-      setStationsLoaded(false);
+  try {
+    setStationsLoaded(false);
 
-    // route polyline from Google Directions API
-    const googleDirectionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation.latitude},${startLocation.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
+    // Route polyline from Google Directions API
+    const googleDirectionsUrl = `https://maps.googleapis.com/maps/api/directions/json?origin=${source.latitude},${source.longitude}&destination=${destination.latitude},${destination.longitude}&key=${GOOGLE_MAPS_API_KEY}`;
     const directionsResponse = await axios.get(googleDirectionsUrl);
     
     if (
@@ -263,33 +298,36 @@ export default function MapScreen() {
       directionsResponse.data.routes.length === 0
     ) {
       Alert.alert('Error', 'No route found');
+      setStationsLoaded(true);
       return;
     }
 
-    // encoded polyline
+    // Encoded polyline
     const encodedPolyline = directionsResponse.data.routes[0].overview_polyline.points;
-    console.log('encodedPolyline: ', encodedPolyline)
+    console.log('encodedPolyline: ', encodedPolyline);
 
     const response = await axios.post(`${API_BASE_URL}/api/common/filteredChargingStations`, {
-        startLat: startLocation.latitude,
-        startLng: startLocation.longitude,
-        endLat: destination.latitude,
-        endLng: destination.longitude,
-        polyline: encodedPolyline,
+      source: source,
+      destination: destination,
+      startLat: source.latitude,
+      startLng: source.longitude,
+      endLat: destination.latitude,
+      endLng: destination.longitude,
+      polyline: encodedPolyline,
     });
 
     filteredStations = response.data;
     console.log('Filtered charging stations:', filteredStations.length);
 
-    } catch (error) {
-      console.error('Failed to fetch filtered stations:', error);
-      Alert.alert('Error', 'Failed to get route with charging stations');
-    } finally {
-      console.log('finally');
-      setChargingStations(filteredStations);
-      setStationsLoaded(true);
-    }
-  };
+  } catch (error) {
+    console.error('Failed to fetch filtered stations:', error);
+    Alert.alert('Error', 'Failed to get route with charging stations');
+  } finally {
+    console.log('finally');
+    setFilteredChargingStations(filteredStations);
+    setStationsLoaded(true);
+  }
+};
 
   const centerMapOnUserLocation = () => {
     if (!location || !mapRef.current) return;
@@ -302,9 +340,10 @@ export default function MapScreen() {
     }, 1000);
   };
 
-  const handleMarkerPress = (station) => {
+  const handleMarkerPress = (station, isPartneredStation=false) => {
     console.log('Marker pressed:', station.title);
-    setSelectedStation(station);
+    setSelectedStation({ ...station, isPartneredStation });
+    // console.log('selectedStation set with:', { ...station, isPartneredStation });
     
     // Center map on selected station
     if (mapRef.current) {
@@ -397,6 +436,68 @@ export default function MapScreen() {
     setSelectedStation(null);
   };
 
+
+  //for tripPlanner
+  const handleTripPlanSearch = async (startQuery, destQuery) => {
+    try {
+      setSelectedLocation(null);
+
+      // Geocode starting location
+      if (startQuery) {
+        const startGeocoded = await Location.geocodeAsync(startQuery);
+        if (startGeocoded.length > 0) {
+          const startCoords = startGeocoded[0];
+          setStartLocation({
+            latitude: startCoords.latitude,
+            longitude: startCoords.longitude,
+            name: startQuery,
+          });
+          console.log('Starting location set:', startQuery);
+        }
+      }
+
+      // Geocode destination
+      if (destQuery) {
+        const destGeocoded = await Location.geocodeAsync(destQuery);
+        if (destGeocoded.length > 0) {
+          const destCoords = destGeocoded[0];
+          setDestinationLocation({
+            latitude: destCoords.latitude,
+            longitude: destCoords.longitude,
+            name: destQuery,
+          });
+          setSelectedLocation(destCoords); // Set as selected for marker display
+          console.log('Destination set:', destQuery);
+          
+          // Center map to show both locations
+          if (mapRef.current && startLocation) {
+            // Calculate region that shows both points
+            const minLat = Math.min(startLocation.latitude, destCoords.latitude);
+            const maxLat = Math.max(startLocation.latitude, destCoords.latitude);
+            const minLng = Math.min(startLocation.longitude, destCoords.longitude);
+            const maxLng = Math.max(startLocation.longitude, destCoords.longitude);
+            
+            const midLat = (minLat + maxLat) / 2;
+            const midLng = (minLng + maxLng) / 2;
+            const latDelta = (maxLat - minLat) * 1.5; // Add padding
+            const lngDelta = (maxLng - minLng) * 1.5;
+            
+            mapRef.current.animateToRegion({
+              latitude: midLat,
+              longitude: midLng,
+              latitudeDelta: Math.max(latDelta, 0.05),
+              longitudeDelta: Math.max(lngDelta, 0.05),
+            }, 1000);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Trip plan search error:', error);
+      Alert.alert('Error', 'Failed to process trip locations');
+    }
+  };
+
+
   // Show loading screen while getting location
   if (!location) {
     return <LoadingOverlay message="Getting your location..." />;
@@ -431,7 +532,7 @@ export default function MapScreen() {
         <UserLocationMarker location={location} />
 
         {/* Charging Station Markers */}
-        {chargingStations.map(station => (
+        {filteredChargingStations.length === 0 && chargingStations.map(station => (
           <ChargingStationMarker
             key={station.id}
             station={station}
@@ -441,11 +542,21 @@ export default function MapScreen() {
         ))}
 
         {/* Partnered Charging Station Markers */}
-        {partneredChargingStations.map(station => (
+        {filteredChargingStations.length === 0 && partneredChargingStations?.map(station => (
           <ChargingStationMarker
             key={station.id}
             station={station}
-            onPress={() => handleMarkerPress(station)}
+            onPress={() => handleMarkerPress(station, true)}
+            isSelected={selectedStation?.id === station.id}
+          />
+        ))}
+
+        {/* filteredChargingStations markers */}
+        {filteredChargingStations?.map(station => (
+          <ChargingStationMarker
+            key={station.id}
+            station={station}
+            onPress={() => handleMarkerPress(station, true)}
             isSelected={selectedStation?.id === station.id}
           />
         ))}
@@ -458,22 +569,39 @@ export default function MapScreen() {
           />
         )}
 
-        {startLocation && selectedLocation && (
+        {/* Show trip planner route if both start and destination are set */}
+        {startLocation && destinationLocation ? (
           <MapViewDirections
             origin={startLocation}
+            destination={destinationLocation}
+            apikey={GOOGLE_MAPS_API_KEY}
+            strokeWidth={4}
+            strokeColor="blue"
+            onReady={result => {
+              console.log(`Trip Route - Distance: ${result.distance} km`);
+              console.log(`Trip Route - Duration: ${result.duration} min`);
+            }}
+            onError={errorMessage => {
+              console.error('Trip route error:', errorMessage);
+            }}
+          />
+        ) : location && selectedLocation ? (
+          /* Show route from start location to manually selected location */
+          <MapViewDirections
+            origin={location}
             destination={selectedLocation}
             apikey={GOOGLE_MAPS_API_KEY}
             strokeWidth={4}
             strokeColor="blue"
             onReady={result => {
-              console.log(`Distance: ${result.distance} km`);
-              console.log(`Duration: ${result.duration} min`);
+              console.log(`Manual Route - Distance: ${result.distance} km`);
+              console.log(`Manual Route - Duration: ${result.duration} min`);
             }}
             onError={errorMessage => {
-              console.error(errorMessage);
+              console.error('Manual route error:', errorMessage);
             }}
           />
-        )}
+        ) : null}
 
       </MapView>
 
@@ -498,15 +626,21 @@ export default function MapScreen() {
           userLocation={location}
           onClose={handleCloseModal}
           isVisible={!!selectedStation}
+          isPartneredStation={selectedStation.isPartneredStation}
+          router={router}
         />
       )}
 
       {/* get-route button */}
-      {selectedLocation && !selectedStation && (
+      {((startLocation && destinationLocation) || (location && selectedLocation && !selectedStation)) && (
         <View style={styles.routeButtonContainer}>
           <TouchableOpacity
             style={styles.routeButton}
-            onPress={() => handleGetRoute(selectedLocation)}
+            onPress={() => {
+              const source = startLocation || location;
+              const destination = destinationLocation || selectedLocation;
+              handleGetRoute(source, destination);
+            }}
           >
             <MaterialIcons name="alt-route" size={22} color="#fff" />
             <Text style={styles.routeButtonText}>Get Route with Charging Stations</Text>
