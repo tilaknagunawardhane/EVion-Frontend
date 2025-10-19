@@ -10,90 +10,163 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  Alert, 
 } from "react-native";
-import DiscussionCard from "../../components/community/DiscussionCard";
+// Ensure this path is correct based on your file structure
+import DiscussionCard from "../../components/community/DiscussionCard"; 
 import CustomButton from "../../components/CustomButton";
 import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
 import { router } from "expo-router";
-import { API_BASE_URL } from "@env";
+// Ensure you have configured API_BASE_URL in your environment setup
+import { API_BASE_URL } from "@env"; 
 
-const fallbackDiscussions = [
-  {
-    id: 1,
-    hashtags: ["EVrange", "realworldperformance"],
-    title: "Realistic Range vs. Manufacturer Claimed Range - What Are You Getting?",
-    user: "John Doe",
-    createdAt: new Date().toISOString(),
-    description:
-      "Hi everyone, I recently bought an EV and noticed that the real-world range...",
-    likes: 18,
-    isPinned: false,
-    comments: [
-      {
-        id: "c1",
-        text: "I have the same experience with my EV.",
-        user: "Sarah Johnson",
-        timeAgo: "2 hrs ago",
-        replies: [],
-      },
-    ],
-  },
-];
 
 const Discussions = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");
-  const [currentUser] = useState("John Doe"); // Replace with auth user later
+  // 🔑 IMPORTANT: Replace with actual auth user identifier (e.g., user ID or username)
+  const [currentUser] = useState("Current User"); 
   const [discussionsData, setDiscussionsData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch discussions from backend
-  useEffect(() => {
-    const fetchDiscussions = async () => {
-      try {
-        const response = await fetch(
-          `${API_BASE_URL}/api/discussions/get-discussions`
-        );
-        const json = await response.json();
-        if (json.success) {
-          setDiscussionsData(json.data);
-        } else {
-          setDiscussionsData(fallbackDiscussions);
-        }
-      } catch (error) {
-        console.error("Error fetching discussions:", error);
+  // Function to refresh all discussions
+  const fetchDiscussions = async (setLoadingState = true) => {
+    if (setLoadingState) setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/discussions/get-discussions`
+      );
+      const json = await response.json();
+      if (json.success) {
+        // Map backend _id to frontend id for consistency
+        setDiscussionsData(json.data.map(d => ({ ...d, id: d.id || d._id }))); 
+      } else {
+        console.error("API Fetch Error:", json.message || "Unknown error");
         setDiscussionsData(fallbackDiscussions);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching discussions:", error);
+      setDiscussionsData(fallbackDiscussions);
+    } finally {
+      if (setLoadingState) setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchDiscussions();
   }, []);
 
-  const handleAddComment = (discussionId, newComment) => {
-    setDiscussionsData((prevData) =>
-      prevData.map((discussion) => {
-        if (discussion.id === discussionId) {
-          const updatedComments = [
-            ...discussion.comments,
-            {
-              ...newComment,
-              id: Math.random().toString(36).substring(7),
-              replies: [],
-            },
-          ];
-          return {
-            ...discussion,
-            comments: updatedComments,
-          };
+  // Handler for Pin/Unpin
+  const handleTogglePinStatus = async (discussionId, newPinnedState) => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/discussions/discussions/${discussionId}/pin`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isPinned: newPinnedState }),
         }
-        return discussion;
-      })
-    );
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        setDiscussionsData(prevData =>
+          prevData.map(d =>
+            d.id === discussionId ? { ...d, isPinned: json.data } : d
+          )
+        );
+        Alert.alert(
+          "Success",
+          `Discussion ${newPinnedState ? 'pinned' : 'unpinned'} successfully.`
+        );
+      } else {
+        throw new Error(json.message || `Failed to ${newPinnedState ? 'pin' : 'unpin'} post.`);
+      }
+    } catch (error) {
+      console.error("Error toggling pin status:", error);
+      Alert.alert("Error", error.message || "Could not toggle pin status.");
+      fetchDiscussions(false); 
+    }
   };
 
+  // Helper to map frontend reason to backend enum (e.g., 'spam', 'harassment')
+  const mapFlagReason = (reason) => {
+    if (reason.toLowerCase().includes('spam')) return 'spam';
+    if (reason.toLowerCase().includes('harassment') || reason.toLowerCase().includes('abusive')) return 'harassment';
+    return 'other';
+  };
+  
+  // Handler for Flagging (UPDATED)
+  const handleFlagPost = async (discussionId, reason) => {
+    const backendReason = mapFlagReason(reason);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/discussions/discussions/${discussionId}/flag`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            reason: backendReason,
+            flaggedBy: currentUser // 🎯 NOW INCLUDES THE FLAGGING USER
+          }),
+        }
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        Alert.alert("Post Reported", json.message);
+        fetchDiscussions(false); 
+      } else {
+        throw new Error(json.message || "Failed to flag post.");
+      }
+    } catch (error) {
+      console.error("Error flagging post:", error);
+      Alert.alert("Error", error.message || "Could not flag post.");
+    }
+  };
+
+  // Handler for Commenting and Replying
+  const handleAddComment = async (discussionId, commentData) => {
+    const { text, userName, replyingTo } = commentData; 
+    
+    const endpoint = `/api/discussions/discussions/${discussionId}/comments`;
+    
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}${endpoint}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            text, 
+            user: userName, 
+            replyingTo      
+          }),
+        }
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        fetchDiscussions(false); 
+      } else {
+        throw new Error(json.message || "Failed to post comment/reply.");
+      }
+    } catch (error) {
+      console.error("Error adding comment/reply:", error);
+      Alert.alert("Error", error.message || "Could not post comment/reply.");
+    }
+  };
+
+
+  // Filtering and Rendering Logic
   const renderContent = () => {
     if (loading) {
       return (
@@ -110,7 +183,7 @@ const Discussions = () => {
       filteredDiscussions = discussionsData.filter((d) => d.isPinned);
     } else if (activeTab === "My Discussions") {
       filteredDiscussions = discussionsData.filter(
-        (d) => d.user === currentUser
+        (d) => d.user === currentUser 
       );
     }
 
@@ -127,7 +200,7 @@ const Discussions = () => {
             {activeTab === "Pins"
               ? "No pinned discussions yet"
               : activeTab === "My Discussions"
-              ? "You haven't started any discussions yet"
+              ? `You haven't started any discussions as "${currentUser}" yet`
               : searchText
               ? "No discussions found with that title"
               : "No discussions found"}
@@ -141,6 +214,7 @@ const Discussions = () => {
         {filteredDiscussions.map((discussion) => (
           <DiscussionCard
             key={discussion.id}
+            discussionId={discussion.id} 
             hashtags={discussion.hashtags}
             title={discussion.title}
             userName={discussion.user}
@@ -150,13 +224,19 @@ const Discussions = () => {
             replies={discussion.comments?.length || 0}
             isPinned={discussion.isPinned}
             comments={discussion.comments}
-            onAddComment={(comment) => handleAddComment(discussion.id, comment)}
+            // ⭐ FIX: Pass the images array to the card component
+            images={discussion.images} 
+            // ------------------------------------
+            onAddComment={(comment) => handleAddComment(discussion.id, comment)} 
+            onPinToggle={handleTogglePinStatus} 
+            onFlagPost={handleFlagPost}     
           />
         ))}
         <View style={styles.bottomPadding} />
       </ScrollView>
     );
   };
+  
 
   return (
     <View style={styles.container}>
@@ -352,6 +432,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.secondaryText,
     fontFamily: fonts.PlusJakartaSans,
+    textAlign: 'center',
+    paddingHorizontal: 30,
   },
   loadingContainer: {
     flex: 1,
