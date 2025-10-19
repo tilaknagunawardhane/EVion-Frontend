@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
-import colors from '../../../constants/color';
+import * as SecureStore from 'expo-secure-store';
+import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import { API_BASE_URL } from '@env';
+import useUserData from '../../../../hooks/useUserData';
+import { storeUserData } from '../../../../services/authService';
+import colors from '../../../../constants/color';
+import { useRouter } from 'expo-router';
 
-const RecoveryPhoneScreen = ({ navigation }) => {
+const RecoveryPhoneScreen = () => {
   const [recoveryPhone, setRecoveryPhone] = useState('+94');
 
   const isRecoveryPhoneValid = () => {
@@ -24,13 +30,98 @@ const RecoveryPhoneScreen = ({ navigation }) => {
     setRecoveryPhone(formatted);
   };
 
-  const handleUpdate = () => {
-    Alert.alert('Success', 'Recovery phone number updated successfully');
-  };
+  const { user, refreshUserData } = useUserData();
+  const router = useRouter();
 
+  const handleUpdate = async () => {
+    if (!isRecoveryPhoneValid()) return;
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (!token) throw new Error('Not authenticated');
+
+      // Resolve user id: prefer hook, else fall back to SecureStore stored values
+      let userId = user && user._id ? user._id : null;
+      if (!userId) {
+        const storedId = await SecureStore.getItemAsync('userID');
+        if (storedId) userId = storedId;
+        else {
+          const storedUser = await SecureStore.getItemAsync('user');
+          if (storedUser) {
+            try {
+              const parsed = JSON.parse(storedUser);
+              if (parsed && parsed._id) {
+                userId = parsed._id;
+                // persist userID for future quick loads
+                await SecureStore.setItemAsync('userID', String(parsed._id));
+              }
+            } catch (err) {
+              // ignore parse error
+            }
+          }
+        }
+      }
+
+      if (!userId) throw new Error('User not found');
+
+      const payload = { recovery_phone: recoveryPhone, recoveryPhone };
+      // Debug: log userId and payload (do NOT log token)
+      console.debug('Recovery phone request:', { userId, payload });
+
+      const response = await fetch(`${API_BASE_URL}/api/evowners/profile/${userId}/recovery-phone`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const text = await response.text();
+      let result = {};
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch (err) {
+        // Log full text for debugging and show more informative toast
+        console.error('Non-JSON response updating recovery phone:', response.status, text);
+        const short = text && text.length > 200 ? text.slice(0, 200) + '...' : text;
+        Toast.show({ type: ALERT_TYPE.DANGER, title: 'Server Error', textBody: `Server returned unexpected response (status ${response.status}): ${short}` });
+        return;
+      }
+
+      if (!response.ok) {
+        const msg = result && (result.message || result.error) ? (result.message || result.error) : `Failed to update recovery phone (status ${response.status})`;
+        console.error('Recovery phone update failed:', response.status, result);
+        Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: msg });
+        return;
+      }
+
+      // Persist if returned - merge with existing user so we don't lose _id or other fields
+      try {
+        const updated = result.data || result;
+        // If backend returned a partial object (e.g., only recovery_phone), merge with current user
+        const mergedUser = {
+          ...(user || {}),
+          ...(updated || {}),
+        };
+        await storeUserData(mergedUser);
+        if (typeof refreshUserData === 'function') await refreshUserData();
+      } catch (err) {
+        console.warn('Failed to persist user after recovery phone update:', err);
+      }
+
+      Toast.show({ type: ALERT_TYPE.SUCCESS, title: 'Success', textBody: result.message || 'Recovery phone updated' });
+      // Navigate to Profile1 Security tab
+      router.push({ pathname: '/pages/Profile/Profile1', params: { activeTab: 'Security' } });
+    } catch (error) {
+      console.error('Update recovery phone error:', error);
+      // If it's a fetch/response error it might include a 'message' or 'stack'
+      const msg = error && error.message ? error.message : 'Failed to update recovery phone';
+      Toast.show({ type: ALERT_TYPE.DANGER, title: 'Error', textBody: msg });
+    }
+  };
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation?.goBack?.()}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backButtonText}>‹</Text>
       </TouchableOpacity>
       <Text style={styles.title}>Recovery Phone</Text>
