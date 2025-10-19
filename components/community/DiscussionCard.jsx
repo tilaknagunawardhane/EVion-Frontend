@@ -1,3 +1,5 @@
+// src/components/DiscussionCard.js
+
 import React, { useState } from "react";
 import {
   View,
@@ -13,6 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
+import { useAuth } from '../../context/AuthContext'; 
 
 const DiscussionCard = ({
   discussionId, // REQUIRED: ID to send to the parent/API
@@ -29,6 +32,9 @@ const DiscussionCard = ({
   onAddComment, 
   images = [],
 }) => {
+  // 2. USE THE HOOK TO GET THE CURRENT USER
+  const { user } = useAuth();
+  
   const [showMenu, setShowMenu] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -67,12 +73,24 @@ const DiscussionCard = ({
   };
 
   const handleAddComment = () => {
+    // 3. DYNAMICALLY GET USER DATA
+    // Use optional chaining (?.) and logical OR (||) for safe access and fallbacks
+    // If your user object has 'displayName' use: user?.displayName
+    const currentUserName = user?.name || user?.email || "Anonymous User"; 
+    const currentUserId = user?._id || user?.id || null; // Sending ID is crucial for the backend
+
+    if (!user) {
+        Alert.alert("Authentication Required", "You must be logged in to post a comment.");
+        return;
+    }
+    
     if (newComment.trim()) {
       if (onAddComment) {
         // Pass a comment object including replyingTo ID. Parent manages discussionId.
         onAddComment({
           text: newComment.trim(),
-          userName: "Current User", // Placeholder: should be actual current user from auth context
+          userName: currentUserName, // <-- Now dynamic!
+          userId: currentUserId,     // <-- Added for completeness/best practice
           replyingTo: replyingTo, 
         });
       }
@@ -358,15 +376,24 @@ const DiscussionCard = ({
                 value={newComment}
                 onChangeText={setNewComment}
                 multiline
+                // Disable input if user is not logged in
+                editable={!!user}
               />
               <TouchableOpacity 
-                style={styles.postCommentButton}
+                style={[styles.postCommentButton, (!newComment.trim() || !user) && styles.disabledButton]}
                 onPress={handleAddComment}
-                disabled={!newComment.trim()}
+                disabled={!newComment.trim() || !user}
               >
-                <Text style={styles.postCommentButtonText}>Post</Text>
+                <Text style={styles.postCommentButtonText}>
+                  {user ? "Post" : "Login"}
+                </Text>
               </TouchableOpacity>
             </View>
+            {!user && (
+                <Text style={styles.loginPromptText}>
+                    You must be logged in to post or reply.
+                </Text>
+            )}
           </View>
         </View>
       )}
@@ -565,7 +592,6 @@ const styles = StyleSheet.create({
     color: colors.secondaryText,
     marginTop: 2,
   },
-  // ⭐ NEW IMAGE STYLES
   imageGallery: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -573,10 +599,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   discussionImage: {
-    height: 120, // Default height for multi-image layout
+    height: 120, 
     borderRadius: 8,
     marginBottom: 8,
-    // Add margin or padding here if you can't use `gap`
   },
   imageFull: {
     width: '100%',
@@ -589,7 +614,6 @@ const styles = StyleSheet.create({
     width: '30%', 
     height: 80, 
   },
-  // END NEW IMAGE STYLES
   hiEveryoneBox: {
     backgroundColor: colors.stroke,
     padding: 12,
@@ -761,6 +785,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.background,
+  },
+  disabledButton: { 
+    backgroundColor: colors.secondaryText,
+    opacity: 0.7,
+  },
+  loginPromptText: { 
+    fontSize: 10,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
+    textAlign: 'center',
+    marginTop: 4,
   },
   separatorLine: {
     height: 1,
