@@ -3,9 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'reac
 import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { API_BASE_URL } from '@env';
-import useUserData from '../../../../hooks/useUserData';
-import { storeUserData } from '../../../../services/authService';
-import colors from '../../../../constants/color';
+import useUserData from '../../../hooks/useUserData';
+import { storeUserData } from '../../../services/authService';
+import colors from '../../../constants/color';
 import { useRouter } from 'expo-router';
 
 const RecoveryPhoneScreen = () => {
