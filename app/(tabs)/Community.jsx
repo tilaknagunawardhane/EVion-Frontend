@@ -20,13 +20,34 @@ import fonts from "../../constants/fonts";
 import { router } from "expo-router";
 // Ensure you have configured API_BASE_URL in your environment setup
 import { API_BASE_URL } from "@env"; 
+// 🔑 1. IMPORT THE AUTH HOOK
+import { useAuth } from "../../context/AuthContext"; // ⚠️ VERIFY PATH
 
+// Helper function to derive a reliable username for display/comparison
+const getUsernameForComparison = (user) => {
+    if (!user) return "Guest";
+    // Prioritize username or name
+    const nameOrUsername = user?.userName || user?.name;
+    if (nameOrUsername) return nameOrUsername;
+    // Fallback: Use the part of the email before the @ sign
+    if (user.email) {
+        return user.email.split('@')[0];
+    }
+    return "Guest";
+};
 
 const Discussions = () => {
+  // 🔑 2. USE THE HOOK TO GET USER DATA
+  const { user } = useAuth();
+  
   const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");
-  // 🔑 IMPORTANT: Replace with actual auth user identifier (e.g., user ID or username)
-  const [currentUser] = useState("Current User"); 
+  
+  // 🔑 3. DERIVE USER ID and NAME from context
+  const currentUserId = user?._id || user?.id || null;
+  // Use the helper for a consistent name
+  const currentUserName = getUsernameForComparison(user); 
+  
   const [discussionsData, setDiscussionsData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,11 +64,9 @@ const Discussions = () => {
         setDiscussionsData(json.data.map(d => ({ ...d, id: d.id || d._id }))); 
       } else {
         console.error("API Fetch Error:", json.message || "Unknown error");
-        setDiscussionsData(fallbackDiscussions);
       }
     } catch (error) {
       console.error("Error fetching discussions:", error);
-      setDiscussionsData(fallbackDiscussions);
     } finally {
       if (setLoadingState) setLoading(false);
     }
@@ -59,6 +78,12 @@ const Discussions = () => {
 
   // Handler for Pin/Unpin
   const handleTogglePinStatus = async (discussionId, newPinnedState) => {
+    // Basic check for admin/moderator permission for pinning
+    if (!user /* || !user.role === 'admin' */) {
+        Alert.alert("Permission Denied", "You must have moderator privileges to pin a post.");
+        return;
+    }
+
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/discussions/discussions/${discussionId}/pin`,
@@ -101,6 +126,11 @@ const Discussions = () => {
   
   // Handler for Flagging (UPDATED)
   const handleFlagPost = async (discussionId, reason) => {
+    if (!currentUserId) {
+        Alert.alert("Login Required", "Please log in to report a post.");
+        return;
+    }
+    
     const backendReason = mapFlagReason(reason);
 
     try {
@@ -113,7 +143,7 @@ const Discussions = () => {
           },
           body: JSON.stringify({ 
             reason: backendReason,
-            flaggedBy: currentUser // 🎯 NOW INCLUDES THE FLAGGING USER
+            flaggedByUserId: currentUserId // 🎯 Using the dynamic user ID
           }),
         }
       );
@@ -133,8 +163,13 @@ const Discussions = () => {
 
   // Handler for Commenting and Replying
   const handleAddComment = async (discussionId, commentData) => {
-    const { text, userName, replyingTo } = commentData; 
+    const { text, userName, userId, replyingTo } = commentData; 
     
+    if (!userId) {
+        Alert.alert("Login Required", "You must be logged in to post a comment.");
+        return;
+    }
+
     const endpoint = `/api/discussions/discussions/${discussionId}/comments`;
     
     try {
@@ -147,7 +182,8 @@ const Discussions = () => {
           },
           body: JSON.stringify({ 
             text, 
-            user: userName, 
+            user: userName,         // 🔑 Dynamic user name for display
+            userId: userId,         // 🔑 Dynamic user ID for linking
             replyingTo      
           }),
         }
@@ -182,8 +218,12 @@ const Discussions = () => {
     if (activeTab === "Pins") {
       filteredDiscussions = discussionsData.filter((d) => d.isPinned);
     } else if (activeTab === "My Discussions") {
+      // 🔑 CORRECTED FILTER LOGIC
+      // Compare both ID (most reliable) and Name (using case-insensitive for robustness)
       filteredDiscussions = discussionsData.filter(
-        (d) => d.user === currentUser 
+        (d) => 
+          (currentUserId && d.userId === currentUserId) || 
+          (d.user?.toLowerCase() === currentUserName?.toLowerCase()) // Case-insensitive check
       );
     }
 
@@ -200,7 +240,7 @@ const Discussions = () => {
             {activeTab === "Pins"
               ? "No pinned discussions yet"
               : activeTab === "My Discussions"
-              ? `You haven't started any discussions as "${currentUser}" yet`
+              ? `You haven't started any discussions as "${currentUserName}" yet` // 🔑 Dynamic Name
               : searchText
               ? "No discussions found with that title"
               : "No discussions found"}
@@ -224,9 +264,7 @@ const Discussions = () => {
             replies={discussion.comments?.length || 0}
             isPinned={discussion.isPinned}
             comments={discussion.comments}
-            // ⭐ FIX: Pass the images array to the card component
             images={discussion.images} 
-            // ------------------------------------
             onAddComment={(comment) => handleAddComment(discussion.id, comment)} 
             onPinToggle={handleTogglePinStatus} 
             onFlagPost={handleFlagPost}     
@@ -270,7 +308,14 @@ const Discussions = () => {
           style={styles.startDiscussionButton}
           textStyle={styles.startDiscussionText}
           icon={require("../../assets/Pencil.png")}
-          onPress={() => router.push("/pages/Community/StartDiscussion")}
+          onPress={() => {
+            if (user) {
+              router.push("/pages/Community/StartDiscussion");
+            } else {
+              Alert.alert("Login Required", "You must be logged in to start a new discussion.");
+              // Optionally navigate to login screen: router.push("/login");
+            }
+          }}
         />
       </View>
 
