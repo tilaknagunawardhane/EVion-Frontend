@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,11 @@ const PlanTripScreen = () => {
   const [batteryLevel, setBatteryLevel] = useState('80%');
   const [passengers, setPassengers] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+
+  // useEffect(()=> {
+  //   console.log('startingLocation: ', startingLocation);
+  //   console.log('destination: ', destination);
+  // }, [startingLocation, destination])
 
   const handleRoute = () => {
     if (startingLocation && destination && passengers && batteryLevel) {
@@ -80,6 +85,7 @@ const PlanTripScreen = () => {
                   placeholder="From (Starting Location)"
                   value={startingLocation}
                   onChangeText={setStartingLocation}
+                  enableAutocomplete={true}
                 />
               </View>
 
@@ -89,6 +95,7 @@ const PlanTripScreen = () => {
                   placeholder="To (Destination)"
                   value={destination}
                   onChangeText={setDestination}
+                  enableAutocomplete={true}
                 />
               </View>
 
@@ -102,6 +109,7 @@ const PlanTripScreen = () => {
                     placeholder={`Destination ${index + 2}`}
                     value={dest}
                     onChangeText={(text) => handleDestinationChange(text, index)}
+                    enableAutocomplete={true}
                   />
                   <TouchableOpacity
                     style={styles.removeButton}
