@@ -9,13 +9,47 @@ import {
   ScrollView,
   Dimensions
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import { router } from 'expo-router';
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import RatingsFeedback from '../../components/RatingsFeedback';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// SVG Icons as components
+const ChevronBackIcon = ({ size = 24, color = '#000' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M15 18L9 12L15 6" 
+      stroke={color} 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+const StarOutlineIcon = ({ size = 24, color = '#000' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
+      stroke={color} 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+    />
+  </Svg>
+);
+
+const StarFilledIcon = ({ size = 24, color = '#000' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path 
+      d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
+      fill={color}
+    />
+  </Svg>
+);
 
 const Ratings1 = () => {
   const [selectedRating, setSelectedRating] = useState(0);
@@ -102,11 +136,17 @@ const Ratings1 = () => {
           onPress={() => handleStarPress(ratingValue)}
           style={styles.starButton}
         >
-          <Ionicons
-            name={isSelected ? "star" : "star-outline"}
-            size={SCREEN_WIDTH * 0.08} // Responsive star size
-            color={isSelected ? colors.primary : colors.secondaryText}
-          />
+          {isSelected ? (
+            <StarFilledIcon 
+              size={SCREEN_WIDTH * 0.08} 
+              color={colors.primary}
+            />
+          ) : (
+            <StarOutlineIcon 
+              size={SCREEN_WIDTH * 0.08} 
+              color={colors.secondaryText}
+            />
+          )}
         </TouchableOpacity>
       );
     });
@@ -119,10 +159,9 @@ const Ratings1 = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <Ionicons 
-            name="chevron-back" 
+          <ChevronBackIcon 
             size={SCREEN_WIDTH * 0.06} 
-            color={colors.mainTextColor} 
+            color={colors.mainTextColor}
           />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>How was Your Experience?</Text>
@@ -216,7 +255,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: SCREEN_WIDTH * 0.8,
     maxWidth: 400,
-    // marginBottom: SCREEN_HEIGHT * 0.05,
   },
   starButton: {
     padding: SCREEN_WIDTH * 0.03,
