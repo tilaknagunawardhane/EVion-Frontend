@@ -10,38 +10,44 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import useUserData from '../../hooks/useUserData';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const ProfileScreen1 = ({ route }) => {
+  const { user, isLoading: isUserLoading } = useUserData();
+
   // Remove user function (no backend logic)
   const removeUser = () => {
     router.push('/pages/SignInScreen');
   };
+  
   // Margin between quick access cards
   const cardMargin = 12;
   // Card size for quick access cards
   const cardSize = SCREEN_WIDTH < 375 ? 90 : 110;
   // Responsive flag for small screens
   const isSmallScreen = SCREEN_WIDTH < 375;
-  // No backend logic required
-  
   // Avatar size for profile image
   const avatarSize = SCREEN_WIDTH < 375 ? 60 : 80;
 
-  // Sample user data (in a real app, this would come from props or state management)
-  const userData = {
-    name: 'Vishwani Vilochaṇa',
-    email: 'vishwani2002@gmail.com',
-    profileImage: null, // can be a URI if available
-    vehicles: [
-      { id: 1, name: 'BYD', image: require('../../assets/byd.png') },
-    ],
-    walletBalance: 2500,
-    recentActivity: 12,
-  };
+  // Sample vehicle data (you can replace this with actual user vehicles if available)
+  const vehicleData = [
+    { id: 1, name: 'BYD', image: require('../../assets/byd.png') },
+  ];
+
+  // Show loading indicator while user data is being fetched
+  if (isUserLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1 }}>
@@ -59,9 +65,9 @@ const ProfileScreen1 = ({ route }) => {
           onPress={() => router.push('/pages/Profile/Profile1')}
         >
           <View style={[styles.avatarWrapper, { width: avatarSize, height: avatarSize }]}> 
-            {userData.profileImage ? (
+            {user?.profileImage ? (
               <Image 
-                source={require('../../assets/avatar.png')} 
+                source={{ uri: user.profileImage }} 
                 style={styles.avatar} 
               />
             ) : (
@@ -74,11 +80,11 @@ const ProfileScreen1 = ({ route }) => {
           </View>
           <View style={styles.userInfo}>
             <Text style={styles.userName} numberOfLines={1} ellipsizeMode="tail">
-              {userData.name}
+              {user?.name || 'User Name'}
             </Text>
             <TouchableOpacity onPress={() => router.push('/pages/Profile/Profile1')} activeOpacity={0.7}>
               <Text style={[styles.userEmail, { color: colors.primary, textDecorationLine: 'underline' }]} numberOfLines={1} ellipsizeMode="tail">
-                {userData.email}
+                {user?.email || 'user@example.com'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -107,6 +113,9 @@ const ProfileScreen1 = ({ route }) => {
               resizeMode="contain"
             />
             <Text style={styles.cardLabel}>My EVs</Text>
+            {/* {user?.vehicles && user.vehicles.length > 0 && (
+              <Text style={styles.cardBadge}>{user.vehicles.length}</Text>
+            )} */}
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.card, { 
@@ -122,6 +131,7 @@ const ProfileScreen1 = ({ route }) => {
               resizeMode="contain"
             />
             <Text style={styles.cardLabel}>Wallet</Text>
+           
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.card, { 
@@ -136,6 +146,7 @@ const ProfileScreen1 = ({ route }) => {
               resizeMode="contain"
             />
             <Text style={styles.cardLabel}>Activity</Text>
+          
           </TouchableOpacity>
         </View>
 
@@ -163,6 +174,7 @@ const ProfileScreen1 = ({ route }) => {
             />
             <Text style={styles.listLabel}>Favourites</Text>
           </TouchableOpacity>
+         
           <TouchableOpacity 
             style={styles.listItem} 
             onPress={() => router.push('/pages/FaultReport')}
@@ -174,11 +186,10 @@ const ProfileScreen1 = ({ route }) => {
             />
             <Text style={styles.listLabel}>Fault Reports</Text>
           </TouchableOpacity>
+         
           <TouchableOpacity 
             style={styles.listItem} 
-            // onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
-          onPress={() => router.push({pathname: '/pages/bookings/ReportIssue', params: { bookingId: '68a6c105b056f6456292bdd7' }})}
-
+            onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
           >
             <Image 
               source={require('../../assets/privacy.png')} 
@@ -189,7 +200,7 @@ const ProfileScreen1 = ({ route }) => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={styles.listItem} 
-            onPress={() => router.push({pathname: '/pages/StationProfile', params: { stationID: '687d2ec70e0c0b8ef0b4186c' }})}
+            onPress={() => router.push('/pages/Profile/PrivacyPolicy')}
           >
             <Image 
               source={require('../../assets/help.png')} 
@@ -225,6 +236,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     padding: SCREEN_WIDTH < 375 ? 15 : 20,
     paddingTop: SCREEN_HEIGHT * 0.07,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    fontFamily: fonts.PlusJakartaSans,
+    color: colors.secondaryText,
   },
   headerRow: {
     flexDirection: 'row',
