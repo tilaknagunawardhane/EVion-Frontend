@@ -32,6 +32,7 @@ import ChargingStationMarker from '../../components/maps/ChargingStationMarker';
 import { getDistanceFromLatLonInKm } from '../../utils/mapUtils';
 // import polyline from '@mapbox/polyline';
 import { useLocalSearchParams } from 'expo-router';
+import useUserData from '../../hooks/useUserData';
 
 const OPEN_CHARGE_MAP_API_URL = 'https://api.openchargemap.io/v3/poi';
 
@@ -73,6 +74,8 @@ export default function MapScreen() {
   const router = useRouter();
   const mapRef = useRef(null);
   const params = useLocalSearchParams();
+  const { user } = useUserData();
+  
   
   // State management
   const [location, setLocation] = useState(null);
@@ -89,10 +92,8 @@ export default function MapScreen() {
   const [startLocation, setStartLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null); //for tripPlanner
   const [routePolyline, setRoutePolyline] = useState(null);
+  const [tripPlanData, setTripPlanData] = useState(null);
 
-  // const [selectedVehicle, setSelectedVehicle] = useState('');
-  // const [batteryLevel, setBatteryLevel] = useState('');
-  // const [passengers, setPassengers] = useState('');
 
   useEffect(() => {
     console.log('location: ', location);
@@ -136,8 +137,7 @@ export default function MapScreen() {
         // Process the starting location and destination
         handleTripPlanSearch(tripData.startingLocation, tripData.destination);
         
-        // Store trip data if you need other info
-        // setTripPlanData(tripData);
+        setTripPlanData(tripData);
         
       } catch (error) {
         console.error('Error parsing trip data:', error);
@@ -348,6 +348,8 @@ export default function MapScreen() {
       endLat: destination.latitude,
       endLng: destination.longitude,
       polyline: encodedPolyline,
+      ...(tripPlanData && { tripData: tripPlanData }), // Only include if exists
+      user: user,
     });
 
     filteredStations = response.data;
