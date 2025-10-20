@@ -12,10 +12,88 @@ import {
 } from 'react-native';
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { API_BASE_URL } from '@env';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import Svg, { Path } from 'react-native-svg';
+
+// SVG Icon Components
+function BackIcon({ size = 24, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18L9 12L15 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function EditIcon({ size = 24, color = colors.secondaryText }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M18.5 2.50001C18.8978 2.10219 19.4374 1.87869 20 1.87869C20.5626 1.87869 21.1022 2.10219 21.5 2.50001C21.8978 2.89784 22.1213 3.4374 22.1213 4.00001C22.1213 4.56262 21.8978 5.10219 21.5 5.50001L12 15L8 16L9 12L18.5 2.50001Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ChargingIcon({ size = 24, color = 'white' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M14.5 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7.5L14.5 2Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M14 2V8H20"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M12 18V12L9 15H13L10 18"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function RemoveIcon({ size = 24, color = '#E53935' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 const VehicleProfileScreen = () => {
   const router = useRouter();
@@ -142,14 +220,17 @@ const VehicleProfileScreen = () => {
       {/* App Bar */}
       <View style={styles.appBar}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={colors.mainTextColor} />
+          <BackIcon size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.title}>{vehicle.make_info?.make || 'Vehicle'}</Text>
-        <TouchableOpacity onPress={() => router.push({
-          pathname: '/pages/Profile/UpdateVehicle1',
-          params: { userID, vehicleID }
-        })}>
-          <Text style={styles.edit}>Edit</Text>
+        <TouchableOpacity 
+          onPress={() => router.push({
+            pathname: '/pages/Profile/UpdateVehicle1',
+            params: { userID, vehicleID }
+          })}
+          style={styles.editButton}
+        >
+          <EditIcon size={20} color={colors.secondaryText} />
         </TouchableOpacity>
       </View>
 
@@ -233,6 +314,7 @@ const VehicleProfileScreen = () => {
           style={styles.chargeNowButton}
           onPress={() => router.push('/pages/StartChargingModal')}
         >
+          <ChargingIcon size={20} color="white" />
           <Text style={styles.chargeNowText}>Charge Now</Text>
         </TouchableOpacity>
 
@@ -260,7 +342,10 @@ const VehicleProfileScreen = () => {
           {isDeactivating ? (
             <ActivityIndicator color="#E53935" />
           ) : (
-            <Text style={styles.removeText}>Remove Vehicle</Text>
+            <>
+              <RemoveIcon size={20} color="#E53935" />
+              <Text style={styles.removeText}>Remove Vehicle</Text>
+            </>
           )}
         </TouchableOpacity>
       </ScrollView>
@@ -320,10 +405,8 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
   },
-  edit: {
-    fontSize: 14,
-    fontFamily: fonts.PlusJakartaSansMedium,
-    color: colors.secondaryText,
+  editButton: {
+    padding: 4,
   },
   subtitle: {
     fontSize: 14,
@@ -416,6 +499,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
   },
   chargeNowText: {
     color: 'white',
@@ -433,6 +519,9 @@ const styles = StyleSheet.create({
     marginTop: 0,
     padding: 12,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
   },
   removeText: {
     color: '#E53935',
