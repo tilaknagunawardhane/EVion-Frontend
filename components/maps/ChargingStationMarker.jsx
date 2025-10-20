@@ -1,8 +1,20 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Marker } from 'react-native-maps';
-import { MaterialIcons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
 import colors from '../../constants/color';
+
+// Custom EV Station Icon Component
+function EVStationIcon({ size = 24, color = '#fff' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M16.41 4H6V20H16V8.41L16.41 4ZM14 20H8V6H14V20ZM19.5 3.5L17.5 5.5V13C17.5 13.83 18.17 14.5 19 14.5C19.83 14.5 20.5 13.83 20.5 13V5L19.5 3.5ZM10 18H12V14H10V18ZM10 12H12V8H10V12Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
 
 export default function ChargingStationMarker({ station, onPress, isSelected = false }) {
   if (!station) return null;
@@ -43,8 +55,7 @@ export default function ChargingStationMarker({ station, onPress, isSelected = f
           { backgroundColor: markerColor },
           isSelected && styles.selectedMarkerInner
         ]}>
-          <MaterialIcons 
-            name="ev-station" 
+          <EVStationIcon 
             size={isSelected ? 28 : 24} 
             color="#fff" 
           />

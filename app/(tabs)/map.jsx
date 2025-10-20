@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import * as Location from 'expo-location';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { MaterialIcons } from '@expo/vector-icons';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import colors from '../../constants/color';
 import MapViewDirections from 'react-native-maps-directions';
@@ -35,6 +35,40 @@ import { useLocalSearchParams } from 'expo-router';
 import useUserData from '../../hooks/useUserData';
 
 const OPEN_CHARGE_MAP_API_URL = 'https://api.openchargemap.io/v3/poi';
+
+// Custom Icon Components
+function MyLocationIcon({ size = 24, color = '#fff' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8ZM20.94 11C20.48 6.83 17.17 3.52 13 3.06V1H11V3.06C6.83 3.52 3.52 6.83 3.06 11H1V13H3.06C3.52 17.17 6.83 20.48 11 20.94V23H13V20.94C17.17 20.48 20.48 17.17 20.94 13H23V11H20.94ZM12 19C8.13 19 5 15.87 5 12C5 8.13 8.13 5 12 5C15.87 5 19 8.13 19 12C19 15.87 15.87 19 12 19Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
+function RouteIcon({ size = 24, color = '#fff' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M19 15.18V7C19 5.9 18.1 5 17 5H13V2.59C13 2.26 12.74 2 12.41 2C12.26 2 12.12 2.05 12.01 2.15L8.15 5.85C7.93 6.06 7.93 6.4 8.15 6.61L12.01 10.31C12.22 10.52 12.56 10.52 12.77 10.31C12.87 10.21 12.92 10.07 12.92 9.92V7.5H16.5V15.18C15.91 15.6 15.5 16.26 15.5 17C15.5 18.1 16.4 19 17.5 19C18.6 19 19.5 18.1 19.5 17C19.5 16.26 19.09 15.6 19 15.18ZM6.5 17C6.5 15.9 5.6 15 4.5 15C3.4 15 2.5 15.9 2.5 17C2.5 18.1 3.4 19 4.5 19C5.6 19 6.5 18.1 6.5 17ZM7 8.82V17C7 18.1 7.9 19 9 19H11V21.41C11 21.74 11.26 22 11.59 22C11.74 22 11.88 21.95 11.99 21.85L15.85 18.15C16.07 17.94 16.07 17.6 15.85 17.39L11.99 13.69C11.78 13.48 11.44 13.48 11.23 13.69C11.13 13.79 11.08 13.93 11.08 14.08V16.5H9.5V8.82C10.09 8.4 10.5 7.74 10.5 7C10.5 5.9 9.6 5 8.5 5C7.4 5 6.5 5.9 6.5 7C6.5 7.74 6.91 8.4 7 8.82Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
+function AltRouteIcon({ size = 22, color = '#fff' }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M9.78 11.16L10.05 11.43L10.32 11.16C10.71 10.77 11.34 10.77 11.73 11.16L12 11.43L12.27 11.16C12.66 10.77 13.29 10.77 13.68 11.16C14.07 11.55 14.07 12.18 13.68 12.57L12.71 13.54C12.32 13.93 11.69 13.93 11.3 13.54L10.32 12.57C9.93 12.18 9.93 11.55 10.32 11.16C10.51 10.97 10.77 10.88 11.05 10.88C11.32 10.88 11.59 10.97 11.78 11.16M9.41 4.41L8.71 5.11L7 6.82C5.9 7.92 5.9 9.68 7 10.78L7.71 11.49C8.17 11.95 8.9 11.95 9.37 11.49C9.83 11.03 9.83 10.3 9.37 9.83L8.66 9.12C8.27 8.73 8.27 8.1 8.66 7.71L10.37 6L11.07 5.3L11.78 6L13.49 7.71C13.88 8.1 13.88 8.73 13.49 9.12L12.78 9.83C12.32 10.3 12.32 11.03 12.78 11.49C13.25 11.95 13.98 11.95 14.44 11.49L15.15 10.78C16.25 9.68 16.25 7.92 15.15 6.82L13.44 5.11L12.73 4.41C12.36 4.03 11.75 4.03 11.37 4.41L10.66 5.11L10 5.77L9.34 5.11L8.64 4.41C8.27 4.03 7.65 4.03 7.28 4.41M14.59 19.59L15.3 18.88L17 17.17C18.1 16.07 18.1 14.31 17 13.21L16.29 12.5C15.83 12.04 15.1 12.04 14.63 12.5C14.17 12.97 14.17 13.7 14.63 14.16L15.34 14.87C15.73 15.26 15.73 15.89 15.34 16.28L13.63 17.99L12.93 18.7L12.22 17.99L10.51 16.28C10.12 15.89 10.12 15.26 10.51 14.87L11.22 14.16C11.68 13.7 11.68 12.97 11.22 12.5C10.76 12.04 10.03 12.04 9.56 12.5L8.85 13.21C7.75 14.31 7.75 16.07 8.85 17.17L10.56 18.88L11.27 19.59C11.64 19.96 12.25 19.96 12.63 19.59L13.34 18.88L14 18.22L14.66 18.88L15.37 19.59C15.74 19.96 16.36 19.96 16.73 19.59C17.1 19.22 17.1 18.6 16.73 18.23L16.02 17.52L14.59 19.59Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
 
 export default function MapScreen() {
   const router = useRouter();
@@ -420,8 +454,8 @@ export default function MapScreen() {
     } catch (error) {
       console.error('Search error:', error);
       Alert.alert('Error', 'Failed to search location');
-    }
-  };
+    }
+  };
 
   const handleReCenter = () => {
     centerMapOnUserLocation();
@@ -644,7 +678,7 @@ export default function MapScreen() {
               handleGetRoute(source, destination);
             }}
           >
-            <MaterialIcons name="alt-route" size={22} color="#fff" />
+            <AltRouteIcon size={22} color="#fff" />
             <Text style={styles.routeButtonText}>Get Route with Charging Stations</Text>
           </TouchableOpacity>
         </View>
@@ -657,7 +691,7 @@ export default function MapScreen() {
           style={[styles.fab, styles.recenterFab]}
           onPress={handleReCenter}
         >
-          <MaterialIcons name="my-location" size={24} color="#fff" />
+          <MyLocationIcon size={24} color="#fff" />
         </TouchableOpacity>
 
         {/* Trip Plan Button */}
@@ -665,7 +699,7 @@ export default function MapScreen() {
           style={[styles.fab, styles.tripPlanFab]}
           onPress={handleTripPlan}
         >
-          <MaterialIcons name="route" size={24} color="#fff" />
+          <RouteIcon size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 

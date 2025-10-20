@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
 } from 'react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios';
 import { GOOGLE_MAPS_API_KEY } from '@env';
@@ -169,9 +170,9 @@ export default function SearchContainer({
     <View style={styles.container}>
       {/* Search Input */}
       <View style={styles.searchBox}>
-        <MaterialIcons 
+        <FontAwesome 
           name="search" 
-          size={24} 
+          size={20} 
           color={colors.gray} 
           style={styles.searchIcon}
         />
@@ -187,11 +188,11 @@ export default function SearchContainer({
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
-            <MaterialIcons name="clear" size={20} color={colors.gray} />
+            <FontAwesome name="times-circle" size={18} color={colors.gray} />
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-          <MaterialIcons name="search" size={20} color="#fff" />
+          <FontAwesome name="search" size={16} color="#fff" />
         </TouchableOpacity>
       </View>
 

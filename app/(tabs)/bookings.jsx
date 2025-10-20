@@ -8,18 +8,18 @@ import {
 } from 'react-native';
 import BookingCard from '../../components/BookingCard';
 import CompletedBookingCard from '../../components/CompletedBookingCard';
+import CancelledBookingCard from '../../components/CancelledBookingCard'; // Add this import
 import colors from '../../constants/color';
 import fonts from '../../constants/fonts';
 import { API_BASE_URL } from '@env';
-import { useRouter , useLocalSearchParams} from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import useUserData from '../../hooks/useUserData';
 
 const BookingsScreen = () => {
   const { user } = useUserData();
   const [activeTab, setActiveTab] = useState('Upcoming');
   const router = useRouter();
-    const params = useLocalSearchParams();
-  
+  const params = useLocalSearchParams();
 
   const [bookingsData, setBookingsData] = useState({
     Upcoming: [],
@@ -32,60 +32,54 @@ const BookingsScreen = () => {
   useEffect(() => {
     if (!user) {
       console.log('No user detected');
-      return; // do nothing until user is loaded
+      return;
     }
 
-  const fetchBookings = async () => {
-    try {
-      const endpointMap = {
-        Upcoming: 'getUserUpcomingBookings',
-        Completed: 'getUserCompletedBookings',
-        Cancelled: 'getUserCancelledBookings',
-      };
-      const endpoint = endpointMap[activeTab];
-      const url = `${API_BASE_URL}/api/bookings/${endpoint}?ev_user_id=${user._id}`;
-      console.log('Fetching from:', url);
+    const fetchBookings = async () => {
+      try {
+        const endpointMap = {
+          Upcoming: 'getUserUpcomingBookings',
+          Completed: 'getUserCompletedBookings',
+          Cancelled: 'getUserCancelledBookings', // Add this endpoint
+        };
+        const endpoint = endpointMap[activeTab];
+        const url = `${API_BASE_URL}/api/bookings/${endpoint}?ev_user_id=${user._id}`;
+        // console.log('Fetching from:', url);
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      // console.log('Response status:', response.status);
-      // console.log('Response headers:', response.headers);
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Non-JSON response:', text);
+          throw new Error(`Server returned non-JSON response (status: ${response.status})`);
+        }
 
-      // Check if response is JSON
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('Non-JSON response:', text);
-      throw new Error(`Server returned non-JSON response (status: ${response.status})`);
-    }
-      const data = await response.json();
-      // console.log('API Response:', data);
+        const data = await response.json();
 
-      if (response.ok) {
-        setBookingsData((prev) => ({
-          ...prev,
-          [activeTab]: data || [],
-        }));
-      } else {
-        console.error('Error:', data.message || 'No message provided');
+        if (response.ok) {
+          setBookingsData((prev) => ({
+            ...prev,
+            [activeTab]: data || [],
+          }));
+        } else {
+          console.error('Error:', data.message || 'No message provided');
+        }
+      } catch (error) {
+        console.error('Fetch error:', error.message);
+        console.error('Error stack:', error.stack);
       }
-    } catch (error) {
-      console.error('Fetch error:', error.message);
-      console.error('Error stack:', error.stack);
-    }
 
-    console.log('bookingsDataActive: ', bookingsData[activeTab]);
-  };
+      // console.log('bookingsDataActive: ', bookingsData[activeTab]);
+    };
 
     fetchBookings();
-    // console.log('user: ', user);
   }, [activeTab, user]);
-
 
   const renderBookings = () => {
     const bookings = bookingsData[activeTab];
@@ -97,15 +91,16 @@ const BookingsScreen = () => {
       );
     }
 
-     if (!Array.isArray(bookings)) {
-    return (
-      <Text style={styles.noBookingsText}>
-        Loading {activeTab.toLowerCase()} bookings...
-      </Text>
-    );
-  }
+    if (!Array.isArray(bookings)) {
+      return (
+        <Text style={styles.noBookingsText}>
+          Loading {activeTab.toLowerCase()} bookings...
+        </Text>
+      );
+    }
 
     return bookings.map((booking, index) => {
+      // For Completed bookings
       if (activeTab === 'Completed') {
         return (
           <TouchableOpacity
@@ -121,14 +116,32 @@ const BookingsScreen = () => {
           </TouchableOpacity>
         );
       }
-      // For Upcoming and Cancelled, use pathname as well
+
+      // For Cancelled bookings - use the new CancelledBookingCard
+      if (activeTab === 'Cancelled') {
+        return (
+          <TouchableOpacity
+            key={index}
+            onPress={() =>
+              router.push({
+                pathname: '/pages/bookings/CancelledBookingDetailsScreen',
+                params: { booking: JSON.stringify(booking) },
+              })
+            }
+          >
+            <CancelledBookingCard {...booking} />
+          </TouchableOpacity>
+        );
+      }
+
+      // For Upcoming bookings
       return (
         <TouchableOpacity
           key={index}
           onPress={() =>
             router.push({
               pathname: '/pages/bookings/BookingDetails',
-              params: { booking : JSON.stringify(booking) },
+              params: { booking: JSON.stringify(booking) },
             })
           }
         >
@@ -141,15 +154,14 @@ const BookingsScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.headerRow}>
-      <Text style={styles.title}>My Bookings</Text>
-      <TouchableOpacity
-        style={styles.bookingButton}
-        onPress={() => router.push('/pages/bookings/AddBooking')}
-      >
-        <Text style={styles.addBookingText}>Add Booking</Text>
-      </TouchableOpacity>
-    </View>
-
+        <Text style={styles.title}>My Bookings</Text>
+        <TouchableOpacity
+          style={styles.bookingButton}
+          onPress={() => router.push('/pages/bookings/AddBooking')}
+        >
+          <Text style={styles.addBookingText}>Add Booking</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Tabs */}
       <View style={styles.tabs}>
