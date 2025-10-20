@@ -160,7 +160,7 @@ const ProfileScreen1 = ({ route }) => {
               width: cardSize,
               height: cardSize * 0.9 
             }]} 
-            onPress={() => router.push('/pages/Profile/Activity')}
+            onPress={() => router.push('/pages/Profile/Activity/SessionHistory')}
           >
             <Image 
               source={require('../../assets/activity.png')} 
