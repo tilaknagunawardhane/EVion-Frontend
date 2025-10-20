@@ -23,8 +23,94 @@ import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import { useLocalSearchParams } from 'expo-router';
 import useUserData from '../../hooks/useUserData';
+import Svg, { Path } from 'react-native-svg';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Custom Icon Components
+function BackIcon({ size = 24, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18L9 12L15 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function HeartIcon({ size = 24, color = colors.danger, filled = false }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path
+        d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z"
+        stroke={color}
+        strokeWidth={filled ? 0 : 2}
+        fill={filled ? color : 'none'}
+      />
+    </Svg>
+  );
+}
+
+function NavigationIcon({ size = 44, color = colors.primary }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 2L3 21H21L12 2Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M12 6V18"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M12 18L16 14"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function StarIcon({ size = 20, color = colors.star, filled = true }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path
+        d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+        stroke={color}
+        strokeWidth={filled ? 0 : 2}
+        fill={filled ? color : 'none'}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ReportIcon({ size = 20, color = colors.danger }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 9V11M12 15H12.01M5.07183 19H18.9282C20.4678 19 21.4301 17.3333 20.6603 16L13.7321 4C12.9623 2.66667 11.0377 2.66667 10.2679 4L3.33975 16C2.56995 17.3333 3.53223 19 5.07183 19Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 const ChargingStationScreen = () => {
   const router = useRouter();
@@ -193,7 +279,7 @@ const ChargingStationScreen = () => {
             style={styles.stationImage}
           />
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Image source={require('../../assets/back-icon.png')} style={styles.backIcon} />
+            <BackIcon size={SCREEN_WIDTH * 0.06} />
           </TouchableOpacity>
         </View>
 
@@ -201,16 +287,14 @@ const ChargingStationScreen = () => {
         <View style={styles.topRow}>
           <Text style={styles.title}>{stationData.station_name}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 0 }}>
-            <TouchableOpacity onPress={toggleBookmark}>
-              <MaterialCommunityIcons
-                name={bookmarked ? 'heart' : 'heart-outline'}
-                size={24}
-                color={bookmarked ? colors.danger : colors.danger}
-                style={styles.icon}
+            <TouchableOpacity onPress={toggleBookmark} style={styles.bookmarkButton}>
+              <HeartIcon 
+                size={SCREEN_WIDTH * 0.06} 
+                filled={bookmarked}
               />
             </TouchableOpacity>
-            <TouchableOpacity>
-              <MaterialCommunityIcons name="navigation" size={44} color={colors.primary} />
+            <TouchableOpacity style={styles.navigationButton}>
+              <NavigationIcon size={SCREEN_WIDTH * 0.1} />
             </TouchableOpacity>
           </View>
         </View>
@@ -228,18 +312,25 @@ const ChargingStationScreen = () => {
             </Text>
           </View>
           <View style={styles.ratingRow}>
-            <Image source={require('../../assets/star.png')} style={styles.starIcon} />
+            <StarIcon size={SCREEN_WIDTH * 0.04} />
             <Text style={styles.ratingText}>
               {averageRating.toFixed(1)} ({stationData.ratings?.length || 0} Reviews)
             </Text>
           </View>
           <TouchableOpacity
+            style={styles.reportButton}
             onPress={() => router.push({
               pathname: '/pages/StationReport',
-              params: { stationId: stationId, station_name: stationData.station_name, station_address: stationData.address, station_city: stationData.city }
+              params: { 
+                stationId: stationId, 
+                station_name: stationData.station_name, 
+                station_address: stationData.address, 
+                station_city: stationData.city 
+              }
             })}
           >
-            <Text style={styles.reportText} >Report</Text>
+            <ReportIcon size={SCREEN_WIDTH * 0.04} />
+            <Text style={styles.reportText}>Report</Text>
           </TouchableOpacity>
         </View>
 
@@ -262,7 +353,6 @@ const ChargingStationScreen = () => {
                     status: connectorType.status === 'available' ? 'Available' : 'Unavailable',
                     connectorType: connectorType.connector?.type_name || 'Unknown',
                     connectorID: connectorType.connector_id ? `#${connectorType.connector_id.slice(-4).toUpperCase()}` : '#N/A',
-                    // For the actual connector document ID, you can also store it separately if needed
                     connectorDocumentId: connectorType.connector?._id,
                     connectorImage: connectorType.connector_img
                       ? { uri: `${API_BASE_URL}${connectorType.connector_img}` }
@@ -362,12 +452,11 @@ const ChargingStationScreen = () => {
                     station_city: stationData.city,
                     chargerId: selectedConnector?.charger?._id,
                     charger_name: selectedConnector?.charger?.charger_name,
-                    // Use the correct path based on your data structure
-                    connectorId: currentConnector?.connector_id, // The connector document ID
-                    connectorTypesId: currentConnector?._id, // The connector_types document ID
+                    connectorId: currentConnector?.connector_id,
+                    connectorTypesId: currentConnector?._id,
                     connector_type: currentConnector?.connector?.type_name,
-                    connector_status: currentConnector?.status, // This is directly on connectorType
-                    connector_img: currentConnector?.connector_img // This is directly on connectorType
+                    connector_status: currentConnector?.status,
+                    connector_img: currentConnector?.connector_img
                   }
                 });
                 setShowBottomPopup(false);
@@ -383,7 +472,6 @@ const ChargingStationScreen = () => {
   );
 };
 
-// Add these new styles to your existing StyleSheet
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: {
@@ -417,9 +505,10 @@ const styles = StyleSheet.create({
     left: SCREEN_WIDTH * 0.04,
     backgroundColor: colors.background,
     padding: SCREEN_WIDTH * 0.02,
-    borderRadius: 20
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  backIcon: { width: SCREEN_WIDTH * 0.045, height: SCREEN_WIDTH * 0.045, tintColor: colors.mainTextColor },
   topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -430,9 +519,17 @@ const styles = StyleSheet.create({
   title: {
     fontSize: SCREEN_WIDTH < 375 ? 18 : 20,
     fontFamily: fonts.PlusJakartaSansBold,
-    color: colors.mainTextColor
+    color: colors.mainTextColor,
+    flex: 1,
+    marginRight: 10,
   },
-  icon: { width: SCREEN_WIDTH * 0.075, height: SCREEN_WIDTH * 0.075, marginLeft: SCREEN_WIDTH * 0.02 },
+  bookmarkButton: {
+    padding: 5,
+    marginRight: 5,
+  },
+  navigationButton: {
+    padding: 5,
+  },
   subtitle: {
     fontSize: SCREEN_WIDTH < 375 ? 12 : 14,
     fontFamily: fonts.PlusJakartaSans,
@@ -456,23 +553,21 @@ const styles = StyleSheet.create({
     color: colors.background,
     fontFamily: fonts.PlusJakartaSansBold,
     fontSize: SCREEN_WIDTH < 375 ? 10 : 12,
-
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center'
   },
-  starIcon: {
-    width: SCREEN_WIDTH * 0.035,
-    height: SCREEN_WIDTH * 0.035,
-    tintColor: colors.star,
-    marginRight: SCREEN_WIDTH * 0.01
+  reportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   ratingText: {
     fontSize: SCREEN_WIDTH < 375 ? 10 : 12,
-
     fontFamily: fonts.PlusJakartaSans,
-    color: colors.mainTextColor
+    color: colors.mainTextColor,
+    marginLeft: 4,
   },
   reportText: {
     fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
@@ -483,15 +578,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
-
     fontFamily: fonts.PlusJakartaSansBold,
     color: colors.mainTextColor,
-    marginHorizontal: SCREEN_WIDTH * 0.05
+    marginHorizontal: SCREEN_WIDTH * 0.05,
+    marginBottom: SCREEN_HEIGHT * 0.01,
   },
   noConnectors: {
     marginHorizontal: SCREEN_WIDTH * 0.06,
     color: colors.secondaryText,
-    fontFamily: fonts.PlusJakartaSans
+    fontFamily: fonts.PlusJakartaSans,
+    fontSize: 14,
+    marginTop: 10,
   },
   modalOverlay: {
     flex: 1,
@@ -518,6 +615,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.lightBackground,
     borderRadius: 12,
     padding: SCREEN_WIDTH * 0.04,
+    marginHorizontal: SCREEN_WIDTH * 0.04,
   },
   chargerTitle: {
     fontSize: SCREEN_WIDTH < 375 ? 14 : 16,
@@ -527,7 +625,6 @@ const styles = StyleSheet.create({
   },
   connectorSubtitle: {
     fontSize: SCREEN_WIDTH < 375 ? 12 : 16,
-
     fontFamily: fonts.PlusJakartaSansMedium,
     color: colors.secondaryText,
     marginBottom: SCREEN_HEIGHT * 0.01,
@@ -539,7 +636,6 @@ const styles = StyleSheet.create({
     marginBottom: SCREEN_HEIGHT * 0.02,
     textAlign: 'center',
   },
-
 });
 
 export default ChargingStationScreen;
