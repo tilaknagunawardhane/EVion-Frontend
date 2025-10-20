@@ -9,9 +9,9 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as SecureStore from 'expo-secure-store';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
+import Svg, { Path } from 'react-native-svg';
 
 import AppBar from '../../../components/AppBar';
 import colors from '../../../constants/color';
@@ -19,6 +19,31 @@ import fonts from '../../../constants/fonts';
 import { router } from 'expo-router';
 import { API_BASE_URL } from '@env';
 import useUserData from '../../../hooks/useUserData';
+
+// SVG Icon Components
+function HeartIcon({ size = 24, color = colors.danger, filled = false }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? color : 'none'}>
+      <Path
+        d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z"
+        stroke={color}
+        strokeWidth={filled ? 0 : 2}
+        fill={filled ? color : 'none'}
+      />
+    </Svg>
+  );
+}
+
+function ToolsIcon({ size = 24, color = colors.warning }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M21.71 20.29L20.29 21.71C20.1 21.9 19.85 22 19.59 22C19.33 22 19.08 21.9 18.89 21.71L16.25 19.07C15.38 19.43 14.45 19.62 13.5 19.62C9.85 19.62 6.9 16.67 6.9 13.02C6.9 11.34 7.51 9.78 8.55 8.55L3.5 3.5C3.11 3.11 3.11 2.47 3.5 2.08C3.89 1.69 4.53 1.69 4.92 2.08L9.97 7.13C11.2 6.09 12.76 5.48 14.44 5.48C18.09 5.48 21.04 8.43 21.04 12.08C21.04 13.03 20.85 13.96 20.49 14.83L23.13 17.47C23.52 17.86 23.52 18.5 23.13 18.89L21.71 20.29ZM10.54 15.46C11.48 16.4 12.92 16.4 13.86 15.46L19.91 9.41C19.96 9.36 19.96 9.28 19.91 9.23L18.09 7.41C18.04 7.36 17.96 7.36 17.91 7.41L11.86 13.46C10.92 14.4 10.92 15.84 11.86 16.78L10.54 15.46Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
 
 const FavouritesScreen = () => {
   const { user, isLoading: isUserLoading } = useUserData();
@@ -157,10 +182,10 @@ const FavouritesScreen = () => {
                 station.isFavourite && styles.bookmarkWrapperActive
               ]}
             >
-              <MaterialCommunityIcons
-                name={station.isFavourite ? 'heart' : 'heart-outline'}
+              <HeartIcon
                 size={24}
-                color={station.isFavourite ? colors.danger : colors.danger}
+                filled={station.isFavourite}
+                color={colors.danger}
               />
             </TouchableOpacity>
           </View>
@@ -186,11 +211,7 @@ const FavouritesScreen = () => {
               <Text style={styles.stationAddress}>{station.address}</Text>
             </View>
             <View style={styles.maintenanceIconWrapper}>
-              <MaterialCommunityIcons
-                name="tools"
-                size={24}
-                color={colors.warning}
-              />
+              <ToolsIcon size={24} color={colors.warning} />
             </View>
           </View>
         </View>
