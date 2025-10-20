@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,116 +9,272 @@ import {
   Platform,
   StatusBar,
   Image,
+  ActivityIndicator,
+  Alert, 
 } from "react-native";
-import DiscussionCard from "../../components/community/DiscussionCard";
-// import BottomNavigation from "../../components/BottomNavigation";
+// Ensure this path is correct based on your file structure
+import DiscussionCard from "../../components/community/DiscussionCard"; 
 import CustomButton from "../../components/CustomButton";
 import colors from "../../constants/color";
 import fonts from "../../constants/fonts";
 import { router } from "expo-router";
+// Ensure you have configured API_BASE_URL in your environment setup
+import { API_BASE_URL } from "@env"; 
+// 🔑 1. IMPORT THE AUTH HOOK
+import { useAuth } from "../../context/AuthContext"; // ⚠️ VERIFY PATH
 
+// Helper function to derive a reliable username for display/comparison
+const getUsernameForComparison = (user) => {
+    if (!user) return "Guest";
+    // Prioritize username or name
+    const nameOrUsername = user?.userName || user?.name;
+    if (nameOrUsername) return nameOrUsername;
+    // Fallback: Use the part of the email before the @ sign
+    if (user.email) {
+        return user.email.split('@')[0];
+    }
+    return "Guest";
+};
 
 const Discussions = () => {
-  const [activeTab, setActiveTab] = useState("Pins");
+  // 🔑 2. USE THE HOOK TO GET USER DATA
+  const { user } = useAuth();
+  
+  const [activeTab, setActiveTab] = useState("All");
   const [searchText, setSearchText] = useState("");
-const [discussionsData, setDiscussionsData] = useState([
-    {
-      id: 1,
-      hashtags: ["EVrange", "realworldperformance"],
-      title: "Realistic Range vs. Manufacturer Claimed Range - What Are You Getting?",
-      userName: "John Doe",
-      timeAgo: "3 hrs ago",
-      content: "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. For example, my EV is supposed to do 450 km per charge, but I barely get 320 km, even with careful driving. I'm trying to understand what factors actually affect this - things like AC usage, passenger load, or terrain. Can other EV users share their experiences? How much range are you realistically getting, and what are your driving conditions like? Also, any tips to improve range would be great.",
-      likes: 18,
-      replies: 2,
-      isPinned: false,
-      comments: [
-        {
-          id: "c1",
-          text: "I have the same experience with my EV. The advertised range is always under ideal conditions.",
-          userName: "Sarah Johnson",
-          timeAgo: "2 hrs ago",
-          replies: [
-            {
-              id: "r1",
-              text: "Exactly! They test these in perfect weather with no AC.",
-              userName: "Mike Chen",
-              timeAgo: "1 hr ago"
-            }
-          ]
-        },
-        {
-          id: "c2",
-          text: "Try reducing your speed on highways. I get 20% more range at 100km/h vs 120km/h.",
-          userName: "Raj Patel",
-          timeAgo: "1 hr ago",
-          replies: []
-        }
-      ]
-    },
-    {
-      id: 2,
-      hashtags: ["chargingissues", "bugs", "crowcharging"],
-      title: "BYD Atto 3 vs Nissan Leaf - Which is Better for Long Trips?",
-      userName: "John Doe",
-      timeAgo: "3 hrs ago",
-      content: "Hi everyone, I recently bought an EV and noticed that the real-world range I'm getting on a full charge is significantly lower than the manufacturer's advertised range. Read More",
-      likes: 18,
-      replies: 0,
-      isPinned: true,
-      comments: []
-    },
-  ]);
+  
+  // 🔑 3. DERIVE USER ID and NAME from context
+  const currentUserId = user?._id || user?.id || null;
+  // Use the helper for a consistent name
+  const currentUserName = getUsernameForComparison(user); 
+  
+  const [discussionsData, setDiscussionsData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddComment = (discussionId, newComment) => {
-    setDiscussionsData(prevData => 
-      prevData.map(discussion => {
-        if (discussion.id === discussionId) {
-          const updatedComments = [
-            ...discussion.comments,
-            {
-              ...newComment,
-              id: Math.random().toString(36).substring(7),
-            }
-          ];
-          return {
-            ...discussion,
-            comments: updatedComments,
-            replies: updatedComments.length + 
-                    updatedComments.reduce((sum, c) => sum + (c.replies?.length || 0), 0)
-          };
-        }
-        return discussion;
-      })
-    );
+  // Function to refresh all discussions
+  const fetchDiscussions = async (setLoadingState = true) => {
+    if (setLoadingState) setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/discussions/get-discussions`
+      );
+      const json = await response.json();
+      if (json.success) {
+        // Map backend _id to frontend id for consistency
+        setDiscussionsData(json.data.map(d => ({ ...d, id: d.id || d._id }))); 
+      } else {
+        console.error("API Fetch Error:", json.message || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Error fetching discussions:", error);
+    } finally {
+      if (setLoadingState) setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    fetchDiscussions();
+  }, []);
+
+  // Handler for Pin/Unpin
+  const handleTogglePinStatus = async (discussionId, newPinnedState) => {
+    // Basic check for admin/moderator permission for pinning
+    if (!user /* || !user.role === 'admin' */) {
+        Alert.alert("Permission Denied", "You must have moderator privileges to pin a post.");
+        return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/discussions/discussions/${discussionId}/pin`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ isPinned: newPinnedState }),
+        }
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        setDiscussionsData(prevData =>
+          prevData.map(d =>
+            d.id === discussionId ? { ...d, isPinned: json.data } : d
+          )
+        );
+        Alert.alert(
+          "Success",
+          `Discussion ${newPinnedState ? 'pinned' : 'unpinned'} successfully.`
+        );
+      } else {
+        throw new Error(json.message || `Failed to ${newPinnedState ? 'pin' : 'unpin'} post.`);
+      }
+    } catch (error) {
+      console.error("Error toggling pin status:", error);
+      Alert.alert("Error", error.message || "Could not toggle pin status.");
+      fetchDiscussions(false); 
+    }
+  };
+
+  // Helper to map frontend reason to backend enum (e.g., 'spam', 'harassment')
+  const mapFlagReason = (reason) => {
+    if (reason.toLowerCase().includes('spam')) return 'spam';
+    if (reason.toLowerCase().includes('harassment') || reason.toLowerCase().includes('abusive')) return 'harassment';
+    return 'other';
+  };
+  
+  // Handler for Flagging (UPDATED)
+  const handleFlagPost = async (discussionId, reason) => {
+    if (!currentUserId) {
+        Alert.alert("Login Required", "Please log in to report a post.");
+        return;
+    }
+    
+    const backendReason = mapFlagReason(reason);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/discussions/discussions/${discussionId}/flag`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            reason: backendReason,
+            flaggedByUserId: currentUserId // 🎯 Using the dynamic user ID
+          }),
+        }
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        Alert.alert("Post Reported", json.message);
+        fetchDiscussions(false); 
+      } else {
+        throw new Error(json.message || "Failed to flag post.");
+      }
+    } catch (error) {
+      console.error("Error flagging post:", error);
+      Alert.alert("Error", error.message || "Could not flag post.");
+    }
+  };
+
+  // Handler for Commenting and Replying
+  const handleAddComment = async (discussionId, commentData) => {
+    const { text, userName, userId, replyingTo } = commentData; 
+    
+    if (!userId) {
+        Alert.alert("Login Required", "You must be logged in to post a comment.");
+        return;
+    }
+
+    const endpoint = `/api/discussions/discussions/${discussionId}/comments`;
+    
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}${endpoint}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            text, 
+            user: userName,         // 🔑 Dynamic user name for display
+            userId: userId,         // 🔑 Dynamic user ID for linking
+            replyingTo      
+          }),
+        }
+      );
+      const json = await response.json();
+
+      if (json.success) {
+        fetchDiscussions(false); 
+      } else {
+        throw new Error(json.message || "Failed to post comment/reply.");
+      }
+    } catch (error) {
+      console.error("Error adding comment/reply:", error);
+      Alert.alert("Error", error.message || "Could not post comment/reply.");
+    }
+  };
+
+
+  // Filtering and Rendering Logic
   const renderContent = () => {
-    const filteredDiscussions = activeTab === "Pins" 
-      ? discussionsData.filter(discussion => discussion.isPinned)
-      : discussionsData;
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading all discussions...</Text>
+        </View>
+      );
+    }
+
+    let filteredDiscussions = discussionsData;
+
+    if (activeTab === "Pins") {
+      filteredDiscussions = discussionsData.filter((d) => d.isPinned);
+    } else if (activeTab === "My Discussions") {
+      // 🔑 CORRECTED FILTER LOGIC
+      // Compare both ID (most reliable) and Name (using case-insensitive for robustness)
+      filteredDiscussions = discussionsData.filter(
+        (d) => 
+          (currentUserId && d.userId === currentUserId) || 
+          (d.user?.toLowerCase() === currentUserName?.toLowerCase()) // Case-insensitive check
+      );
+    }
+
+    if (searchText) {
+      filteredDiscussions = filteredDiscussions.filter((d) =>
+        d.title.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    if (filteredDiscussions.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyStateText}>
+            {activeTab === "Pins"
+              ? "No pinned discussions yet"
+              : activeTab === "My Discussions"
+              ? `You haven't started any discussions as "${currentUserName}" yet` // 🔑 Dynamic Name
+              : searchText
+              ? "No discussions found with that title"
+              : "No discussions found"}
+          </Text>
+        </View>
+      );
+    }
 
     return (
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {filteredDiscussions.map((discussion) => (
           <DiscussionCard
             key={discussion.id}
+            discussionId={discussion.id} 
             hashtags={discussion.hashtags}
             title={discussion.title}
-            userName={discussion.userName}
-            timeAgo={discussion.timeAgo}
-            content={discussion.content}
+            userName={discussion.user}
+            timeAgo={new Date(discussion.createdAt).toLocaleString()}
+            content={discussion.description}
             likes={discussion.likes}
-            replies={discussion.replies}
+            replies={discussion.comments?.length || 0}
             isPinned={discussion.isPinned}
             comments={discussion.comments}
-            onAddComment={(comment) => handleAddComment(discussion.id, comment)}
+            images={discussion.images} 
+            onAddComment={(comment) => handleAddComment(discussion.id, comment)} 
+            onPinToggle={handleTogglePinStatus} 
+            onFlagPost={handleFlagPost}     
           />
         ))}
         <View style={styles.bottomPadding} />
       </ScrollView>
     );
   };
+  
 
   return (
     <View style={styles.container}>
@@ -131,7 +287,7 @@ const [discussionsData, setDiscussionsData] = useState([
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder="Search by Keywords"
+          placeholder="Search by title"
           placeholderTextColor={colors.secondaryText}
           value={searchText}
           onChangeText={setSearchText}
@@ -152,12 +308,28 @@ const [discussionsData, setDiscussionsData] = useState([
           style={styles.startDiscussionButton}
           textStyle={styles.startDiscussionText}
           icon={require("../../assets/Pencil.png")}
-          onPress={()=> router.push('/pages/Community/StartDiscussion')}
+          onPress={() => {
+            if (user) {
+              router.push("/pages/Community/StartDiscussion");
+            } else {
+              Alert.alert("Login Required", "You must be logged in to start a new discussion.");
+              // Optionally navigate to login screen: router.push("/login");
+            }
+          }}
         />
       </View>
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "All" && styles.activeTab]}
+          onPress={() => setActiveTab("All")}
+        >
+          <Text style={[styles.tabText, activeTab === "All" && styles.activeTabText]}>
+            All Discussions
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.tab, activeTab === "Pins" && styles.activeTab]}
           onPress={() => setActiveTab("Pins")}
@@ -167,32 +339,24 @@ const [discussionsData, setDiscussionsData] = useState([
               source={require("../../assets/pin.png")}
               style={[
                 styles.pinIcon,
-                { tintColor: activeTab === "Pins" ? colors.primary : colors.secondaryText },
+                {
+                  tintColor:
+                    activeTab === "Pins" ? colors.primary : colors.secondaryText,
+                },
               ]}
             />
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "Pins" && styles.activeTabText,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "Pins" && styles.activeTabText]}>
               Pins
             </Text>
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.tab,
-            activeTab === "My Discussions" && styles.activeTab,
-          ]}
+          style={[styles.tab, activeTab === "My Discussions" && styles.activeTab]}
           onPress={() => setActiveTab("My Discussions")}
         >
           <Text
-            style={[
-              styles.tabText,
-              activeTab === "My Discussions" && styles.activeTabText,
-            ]}
+            style={[styles.tabText, activeTab === "My Discussions" && styles.activeTabText]}
           >
             My Discussions
           </Text>
@@ -201,9 +365,6 @@ const [discussionsData, setDiscussionsData] = useState([
 
       {/* Content */}
       {renderContent()}
-
-      {/* Bottom Navigation */}
-      {/* <BottomNavigation activeTab="Community" /> */}
     </View>
   );
 };
@@ -239,10 +400,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.PlusJakartaSans,
     color: colors.mainTextColor,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
@@ -251,10 +409,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     top: 14,
-  },
-  searchIconText: {
-    fontSize: 16,
-    color: colors.secondaryText,
   },
   searchIconImage: {
     width: 40,
@@ -284,11 +438,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: 16,
     marginBottom: 20,
+    justifyContent: "space-between",
   },
   tab: {
     paddingVertical: 8,
     paddingHorizontal: 4,
-    marginRight: 24,
   },
   activeTab: {
     borderBottomWidth: 2,
@@ -312,6 +466,29 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 100,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: colors.secondaryText,
+    fontFamily: fonts.PlusJakartaSans,
+    textAlign: 'center',
+    paddingHorizontal: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center",
+    marginTop: 50,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.secondaryText,
   },
 });
 

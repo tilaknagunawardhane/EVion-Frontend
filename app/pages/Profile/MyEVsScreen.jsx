@@ -12,13 +12,56 @@ import {
 import colors from '../../../constants/color';
 import fonts from '../../../constants/fonts';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { API_BASE_URL } from '@env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ALERT_TYPE, Toast } from 'react-native-alert-notification';
 import CustomButton from '../../../components/CustomButton';
 import useUserData from '../../../hooks/useUserData';
 import * as SecureStore from 'expo-secure-store';
+import Svg, { Path } from 'react-native-svg';
+
+// SVG Icon Components
+function BackIcon({ size = 24, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18L9 12L15 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function AddIcon({ size = 24, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 4V20M4 12H20"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ChevronForwardIcon({ size = 20, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M9 18L15 12L9 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 const MyEVsScreen = () => {
   const router = useRouter();
@@ -106,11 +149,11 @@ const MyEVsScreen = () => {
     <View style={styles.container}>
       <View style={styles.appBar}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={colors.mainTextColor} />
+          <BackIcon size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
         <Text style={styles.title}>My EVs</Text>
         <TouchableOpacity onPress={handleAddVehicle}>
-          <Ionicons name="add-circle-outline" size={24} color={colors.mainTextColor} />
+          <AddIcon size={24} color={colors.mainTextColor} />
         </TouchableOpacity>
       </View>
 
@@ -138,7 +181,6 @@ const MyEVsScreen = () => {
             <TouchableOpacity
               key={vehicle._id || index}
               style={styles.card}
-              // In your MyEVsScreen where you navigate:
               onPress={() =>
                 router.push({
                   pathname: '/pages/Profile/VehicleProfile',
@@ -148,11 +190,9 @@ const MyEVsScreen = () => {
                   },
                 })
               }
-
             >
               <Image
-                source={
-                  require('../../../assets/Ford.png')}
+                source={require('../../../assets/Ford.png')}
                 style={styles.image}
               />
               <View style={styles.info}>
@@ -163,7 +203,7 @@ const MyEVsScreen = () => {
                 <Text style={styles.year}>{vehicle.manufactured_year || 'N/A'}</Text>
                 <Text style={styles.kW}>{vehicle.battery_capacity ? `${vehicle.battery_capacity}kWh` : 'N/A'}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.mainTextColor} />
+              <ChevronForwardIcon size={20} color={colors.mainTextColor} />
             </TouchableOpacity>
           ))
         )}

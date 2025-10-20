@@ -55,9 +55,9 @@ const BookingConfirmationModal = ({ visible, onClose, onConfirm }) => {
           </View>
           
           {/* Note */}
-          <Text style={styles.note}>
+          {/* <Text style={styles.note}>
             Note: A 3% service fee will be added to your charging cost as a booking fee.
-          </Text>
+          </Text> */}
 
           {/* Action Buttons */}
           <View style={styles.buttonRow}>
