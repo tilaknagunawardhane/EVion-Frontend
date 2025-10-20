@@ -8,11 +8,102 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '../../../constants/color.js';
 import fonts from '../../../constants/fonts.js';
+import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
+
+// SVG Icon Components
+function ArrowBackIcon({ size = 24, color = colors.black }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18L9 12L15 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function CloseCircleIcon({ size = 24, color = colors.white }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2"/>
+      <Path
+        d="M15 9L9 15M9 9L15 15"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function ArrowBackRefundIcon({ size = 20, color = colors.success }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M20 12H4M4 12L10 6M4 12L10 18"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function InformationCircleIcon({ size = 20, color = colors.warning }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2"/>
+      <Path
+        d="M12 16V12M12 8H12.01"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function RefreshIcon({ size = 20, color = colors.white }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M19.5 12C19.5 16.1421 16.1421 19.5 12 19.5C7.85786 19.5 4.5 16.1421 4.5 12C4.5 7.85786 7.85786 4.5 12 4.5C15.18 4.5 17.859 6.34171 19.031 9"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M19.5 4.5V9H15"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function AlertCircleIcon({ size = 20, color = colors.secondary }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2"/>
+      <Path
+        d="M12 8V12M12 16H12.01"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
 
 const CancelledBookingDetailsScreen = () => {
   const router = useRouter();
@@ -75,7 +166,7 @@ const CancelledBookingDetailsScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBackToBookings}>
-          <Icon name="arrow-back" size={24} color={colors.black} />
+          <ArrowBackIcon size={24} color={colors.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cancelled Booking Details</Text>
         <View style={{ width: 24 }} /> {/* Spacer for alignment */}
@@ -83,13 +174,13 @@ const CancelledBookingDetailsScreen = () => {
 
       {/* Cancellation Status Banner */}
       <View style={styles.cancellationBanner}>
-        <Icon name="close-circle" size={24} color={colors.white} />
+        <CloseCircleIcon size={24} color={colors.white} />
         <Text style={styles.cancellationBannerText}>Booking Cancelled</Text>
       </View>
 
       {/* Station Info */}
       <View style={styles.stationBox}>
-        <Image source={{ uri: 'https://i.ibb.co/SKQ5ZBk/station.png' }} style={styles.stationImage} />
+        <Image source={require('../../../assets/Station.jpg')} style={styles.stationImage} />
         <View style={styles.stationText}>
           <Text style={styles.stationName}>{stationName}</Text>
           <Text style={styles.stationLocation}>{address}</Text>
@@ -109,7 +200,7 @@ const CancelledBookingDetailsScreen = () => {
       {refundInfo.amount > 0 ? (
         <View style={styles.refundCard}>
           <View style={styles.refundHeader}>
-            <Icon name="arrow-back" size={20} color={colors.success} />
+            <ArrowBackRefundIcon size={20} color={colors.success} />
             <Text style={styles.refundTitle}>Refund Processed</Text>
           </View>
           <View style={styles.refundAmountSection}>
@@ -124,7 +215,7 @@ const CancelledBookingDetailsScreen = () => {
       ) : (
         <View style={styles.noRefundCard}>
           <View style={styles.noRefundContent}>
-            <Icon name="information-circle" size={20} color={colors.warning} />
+            <InformationCircleIcon size={20} color={colors.warning} />
             <Text style={styles.noRefundText}>No refund was processed for this cancellation</Text>
           </View>
         </View>
@@ -170,7 +261,7 @@ const CancelledBookingDetailsScreen = () => {
         onPress={handleBookAgain}
       >
         <View style={styles.rebookButtonContent}>
-          <Icon name="refresh" size={20} color={colors.white} />
+          <RefreshIcon size={20} color={colors.white} />
           <Text style={styles.rebookButtonText}>Book Again at This Station</Text>
         </View>
       </TouchableOpacity>
@@ -180,7 +271,7 @@ const CancelledBookingDetailsScreen = () => {
         onPress={handleAddReport}
       >
         <View style={styles.reportButtonContent}>
-          <Icon name="alert-circle" size={20} color={colors.secondary} />
+          <AlertCircleIcon size={20} color={colors.secondary} />
           <Text style={styles.reportButtonText}>Add Booking Report</Text>
         </View>
       </TouchableOpacity>

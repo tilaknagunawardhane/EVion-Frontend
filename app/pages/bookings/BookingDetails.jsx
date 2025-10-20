@@ -10,12 +10,111 @@ import {
   Pressable,
   Alert,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import colors from '../../../constants/color.js';
 import fonts from '../../../constants/fonts.js';
 import { API_BASE_URL } from '@env';
+import Svg, { Path, Circle, Rect, Line } from 'react-native-svg';
+
+// SVG Icon Components
+function ArrowBackIcon({ size = 24, color = colors.black }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M15 18L9 12L15 6"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function EllipsisVerticalIcon({ size = 24, color = colors.black }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="6" r="1" fill={color} />
+      <Circle cx="12" cy="12" r="1" fill={color} />
+      <Circle cx="12" cy="18" r="1" fill={color} />
+    </Svg>
+  );
+}
+
+function CloseIcon({ size = 24, color = colors.black }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M18 6L6 18M6 6L18 18"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ArrowForwardCircleIcon({ size = 28, color = colors.primary }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2"/>
+      <Path
+        d="M12 16L16 12L12 8"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M8 12H16"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function EvStationIcon({ size = 24, color = colors.primary }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M19.77 7.23L19.78 7.22L16.06 3.5L15 4.56L17.11 6.67C16.17 7.03 15.5 7.93 15.5 9C15.5 10.38 16.62 11.5 18 11.5C18.36 11.5 18.69 11.42 19 11.29V18.5C19 19.05 18.55 19.5 18 19.5C17.45 19.5 17 19.05 17 18.5V14C17 12.9 16.1 12 15 12H14V5C14 3.9 13.1 3 12 3H6C4.9 3 4 3.9 4 5V21H14V13.5H15.5V18.5C15.5 19.88 16.62 21 18 21C19.38 21 20.5 19.88 20.5 18.5V9C20.5 8.31 20.22 7.68 19.77 7.23Z"
+        fill={color}
+      />
+      <Path
+        d="M18 10C18.5523 10 19 9.55228 19 9C19 8.44772 18.5523 8 18 8C17.4477 8 17 8.44772 17 9C17 9.55228 17.4477 10 18 10Z"
+        fill={color}
+      />
+    </Svg>
+  );
+}
+
+function FlashIcon({ size = 20, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M13 10V3L4 14H11V21L20 10H13Z"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function CashIcon({ size = 20, color = colors.mainTextColor }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect x="2" y="6" width="20" height="12" rx="2" stroke={color} strokeWidth="2"/>
+      <Circle cx="12" cy="12" r="2" stroke={color} strokeWidth="2"/>
+      <Path d="M6 12H6.01M18 12H18.01" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  );
+}
 
 const BookingDetailsScreen = () => {
   const router = useRouter();
@@ -132,7 +231,7 @@ const BookingDetailsScreen = () => {
             onPress={() => setCancelConfirmVisible(false)}
             disabled={cancelling}
           >
-            <Icon name="close" size={20} color={colors.black} />
+            <CloseIcon size={20} color={colors.black} />
           </TouchableOpacity>
 
           <Text style={styles.cancelTitle}>Cancel Booking</Text>
@@ -202,11 +301,11 @@ const BookingDetailsScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Icon name="arrow-back" size={24} color={colors.black} />
+          <ArrowBackIcon size={24} color={colors.black} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Booking Details</Text>
         <TouchableOpacity onPress={() => setMenuVisible(true)}>
-          <Icon name="ellipsis-vertical" size={24} color={colors.black} />
+          <EllipsisVerticalIcon size={24} color={colors.black} />
         </TouchableOpacity>
       </View>
 
@@ -232,7 +331,7 @@ const BookingDetailsScreen = () => {
         <View style={styles.infoOverlay}>
           <View style={styles.infoModal}>
             <TouchableOpacity style={{ alignSelf: 'flex-end' }} onPress={() => setInfoVisible(false)}>
-              <Icon name="close" size={24} color={colors.black} />
+              <CloseIcon size={24} color={colors.black} />
             </TouchableOpacity>
             <Text style={styles.infoTitle}>Cancellation Policy</Text>
             <Text style={styles.infoItem}>• <Text style={styles.bold}>80% refund</Text> if cancelled within 30 minutes of booking</Text>
@@ -251,13 +350,13 @@ const BookingDetailsScreen = () => {
 
       {/* Station Info */}
       <View style={styles.stationBox}>
-        <Image source={{ uri: 'https://i.ibb.co/SKQ5ZBk/station.png' }} style={styles.stationImage} />
+        <Image source={require('../../../assets/Station.jpg')} style={styles.stationImage} />
         <View style={styles.stationText}>
           <Text style={styles.stationName}>{stationName}</Text>
           <Text style={styles.stationLocation}>{address}</Text>
         </View>
         <TouchableOpacity>
-          <Icon name="arrow-forward-circle" size={28} color={colors.primary} />
+          <ArrowForwardCircleIcon size={28} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
@@ -273,15 +372,15 @@ const BookingDetailsScreen = () => {
       {/* Charger Info */}
       <View style={styles.chargerCard}>
         <View style={styles.row}>
-          <MaterialCommunityIcons name="ev-station" size={24} color={colors.primary} />
+          <EvStationIcon size={24} color={colors.primary} />
           <Text style={styles.chargerType}>{connectorType}</Text>
           {/* <Text style={styles.chargerId}>ID: #E0299</Text> */}
         </View>
         <Text style={styles.label}>Battery Gain:</Text>
         <Text style={styles.value}>~ +{batteryGainFor30.toFixed(2)}% in 30 mins</Text>
         <View style={styles.infoRow}>
-          <Text style={styles.iconText}><Icon name="flash" size={20} /> {max_power_output}kWh ({chargerPowerType})</Text>
-          <Text style={styles.iconText}><Icon name="cash" size={20} /> LKR 55.00 /kW</Text>
+          <Text style={styles.iconText}><FlashIcon size={20} /> {max_power_output}kWh ({chargerPowerType})</Text>
+          <Text style={styles.iconText}><CashIcon size={20} /> LKR 55.00 /kW</Text>
         </View>
       </View>
 
@@ -316,7 +415,6 @@ const BookingDetailsScreen = () => {
     </ScrollView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: { padding: 20, backgroundColor: colors.white, paddingTop: 60 },
