@@ -252,7 +252,7 @@ const VehicleProfileScreen = () => {
         <View style={styles.imageAndStatsRow}>
           <Image
             source={
-              require('../../../assets/Ford.png')
+              require('../../../assets/car2.png')
             }
             style={styles.image}
             defaultSource={require('../../../assets/Ford.png')}
