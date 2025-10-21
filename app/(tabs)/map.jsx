@@ -93,6 +93,7 @@ export default function MapScreen() {
   const [destinationLocation, setDestinationLocation] = useState(null); //for tripPlanner
   const [routePolyline, setRoutePolyline] = useState(null);
   const [tripPlanData, setTripPlanData] = useState(null);
+  const [routeDistanceInKm, setRouteDistanceInKm] = useState(0);
 
 
   useEffect(() => {
@@ -350,14 +351,31 @@ export default function MapScreen() {
       polyline: encodedPolyline,
       ...(tripPlanData && { tripData: tripPlanData }), // Only include if exists
       user: user,
+      routeDistanceInKm: routeDistanceInKm,
     });
+    const { stations, meta } = response.data;
 
-    filteredStations = response.data;
+    if (meta.needsCharging === false) {
+      Alert.alert(
+          'Good News! 🎉', 
+          `${meta.message} You have ${meta.surplusRange} km of extra range.`,
+          [{ text: 'OK' }]
+      );
+    }
+
+    filteredStations = stations || [];
     console.log('Filtered charging stations:', filteredStations.length);
 
   } catch (error) {
     console.error('Failed to fetch filtered stations:', error);
-    Alert.alert('Error', 'Failed to get route with charging stations');
+    
+    // Extract error message from response
+    const errorMessage = error.response?.data?.message 
+        || error.response?.data?.error 
+        || error.message 
+        || 'Failed to get route with charging stations';
+    
+    Alert.alert('Error', errorMessage);
   } finally {
     console.log('finally');
     setFilteredChargingStations(filteredStations);
@@ -616,6 +634,7 @@ export default function MapScreen() {
             onReady={result => {
               console.log(`Trip Route - Distance: ${result.distance} km`);
               console.log(`Trip Route - Duration: ${result.duration} min`);
+              setRouteDistanceInKm(result.distance);
             }}
             onError={errorMessage => {
               console.error('Trip route error:', errorMessage);
@@ -632,6 +651,7 @@ export default function MapScreen() {
             onReady={result => {
               console.log(`Manual Route - Distance: ${result.distance} km`);
               console.log(`Manual Route - Duration: ${result.duration} min`);
+              setRouteDistanceInKm(result.distance);
             }}
             onError={errorMessage => {
               console.error('Manual route error:', errorMessage);
