@@ -192,7 +192,7 @@ const MyEVsScreen = () => {
               }
             >
               <Image
-                source={require('../../../assets/Ford.png')}
+                source={require('../../../assets/car2.png')}
                 style={styles.image}
               />
               <View style={styles.info}>
